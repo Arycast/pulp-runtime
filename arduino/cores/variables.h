@@ -306,6 +306,16 @@
 #define  MSBFIRST         1
 
 /**
+	* keyword for numbering base for String()
+	* implement as global keyword, instead of private defintion of String class
+	* so we don't have to use class as prefix or namespace
+	* e.g. String::HEX
+	*/
+#define  BIN            2
+#define  DEC           10
+#define  HEX           16
+
+/**
 	* **************************************************
 	* Data Types
 	* **************************************************
