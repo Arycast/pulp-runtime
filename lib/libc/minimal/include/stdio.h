@@ -17,11 +17,20 @@
 #ifndef __RTIO_STDIO_H__
 #define __RTIO_STDIO_H__
 
+#include <stddef.h> /* for size_t */
+
+#include "compatibility.h"
+
 typedef int FILE;
 
 #define stdin  ((FILE *) 1)
 #define stdout ((FILE *) 2)
 #define stderr ((FILE *) 3)
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 int puts(const char *s);
 
@@ -34,5 +43,13 @@ int puts(const char *s);
 int sprintf(char *str, const char *fmt, ...) ;
 
 int fputc(int c, FILE *stream);
+
+/* needed by g++ */
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE * restrict stream);
+int fputs(const char * restrict s, FILE * restrict stream);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

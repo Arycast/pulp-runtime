@@ -1,35 +1,76 @@
 ifdef USE_IBEX
-PULP_LDFLAGS +=
+#PULP_LDFLAGS +=
+
+PULP_ASFLAGS += -D__ibex__ -U__riscv__ -UARCHI_CORE_HAS_PULPV2 -DRV_ISA_RV32
 PULP_CFLAGS += -D__ibex__ -U__riscv__ -UARCHI_CORE_HAS_PULPV2 -DRV_ISA_RV32
+PULP_CXXFLAGS += -D__ibex__ -U__riscv__ -UARCHI_CORE_HAS_PULPV2 -DRV_ISA_RV32
+
+PULP_ARCH_ASFLAGS ?= -march=rv32imc
 PULP_ARCH_CFLAGS ?= -march=rv32imc
-PULP_ARCH_LDFLAGS ?= -march=rv32imc
+PULP_ARCH_CXXFLAGS ?= -march=rv32imc
+
+PULP_ARCH_ASM_LDFLAGS ?= -march=rv32imc
+PULP_ARCH_C_LDFLAGS ?= -march=rv32imc
+PULP_ARCH_CXX_LDFLAGS ?= -march=rv32imc
+
 PULP_ARCH_OBJDFLAGS ?= -Mmarch=rv32imc
 else ifdef USE_CV32E40P
-PULP_LDFLAGS +=
+#PULP_LDFLAGS +=
+PULP_ASFLAGS += -D__cv32e40p__ -U__riscv__ -UARCHI_CORE_HAS_PULPV2
 PULP_CFLAGS += -D__cv32e40p__ -U__riscv__ -UARCHI_CORE_HAS_PULPV2
+PULP_CXXFLAGS += -D__cv32e40p__ -U__riscv__ -UARCHI_CORE_HAS_PULPV2
 ifdef CONFIG_USE_ZFINX
+PULP_ARCH_ASFLAGS ?=  -march=rv32imc_zfinx_xcorev -mno-pulp-hwloop
 PULP_ARCH_CFLAGS ?=  -march=rv32imc_zfinx_xcorev -mno-pulp-hwloop
-PULP_ARCH_LDFLAGS ?=  -march=rv32imc_zfinx_xcorev -mno-pulp-hwloop
+PULP_ARCH_CXXFLAGS ?=  -march=rv32imc_zfinx_xcorev -mno-pulp-hwloop
+
+PULP_ARCH_ASM_LDFLAGS ?=  -march=rv32imc_zfinx_xcorev -mno-pulp-hwloop
+PULP_ARCH_C_LDFLAGS ?=  -march=rv32imc_zfinx_xcorev -mno-pulp-hwloop
+PULP_ARCH_CXX_LDFLAGS ?=  -march=rv32imc_zfinx_xcorev -mno-pulp-hwloop
 else
+PULP_ARCH_ASFLAGS ?=  -march=rv32imfc_xcorev -mno-pulp-hwloop
 PULP_ARCH_CFLAGS ?=  -march=rv32imfc_xcorev -mno-pulp-hwloop
-PULP_ARCH_LDFLAGS ?=  -march=rv32imfc_xcorev -mno-pulp-hwloop
+PULP_ARCH_CXXFLAGS ?=  -march=rv32imfc_xcorev -mno-pulp-hwloop
+
+PULP_ARCH_ASM_LDFLAGS ?=  -march=rv32imfc_xcorev -mno-pulp-hwloop
+PULP_ARCH_C_LDFLAGS ?=  -march=rv32imfc_xcorev -mno-pulp-hwloop
+PULP_ARCH_CXX_LDFLAGS ?=  -march=rv32imfc_xcorev -mno-pulp-hwloop
 endif
 PULP_ARCH_OBJDFLAGS ?=
 else
-PULP_LDFLAGS      +=
+#PULP_LDFLAGS      +=
+PULP_ASFLAGS       +=  -D__riscv__
 PULP_CFLAGS       +=  -D__riscv__
+PULP_CXXFLAGS       +=  -D__riscv__
+
+PULP_ARCH_ASFLAGS ?=  -march=rv32imfcxpulpv2
 PULP_ARCH_CFLAGS ?=  -march=rv32imfcxpulpv2
-PULP_ARCH_LDFLAGS ?=  -march=rv32imfcxpulpv2
+PULP_ARCH_CXXFLAGS ?=  -march=rv32imfcxpulpv2
+
+PULP_ARCH_ASM_LDFLAGS ?=  -march=rv32imfcxpulpv2
+PULP_ARCH_C_LDFLAGS ?=  -march=rv32imfcxpulpv2
+PULP_ARCH_CXX_LDFLAGS ?=  -march=rv32imfcxpulpv2
+
 PULP_ARCH_OBJDFLAGS ?= -Mmarch=rv32imfcxpulpv2
 endif
 
+PULP_ASFLAGS    += -fdata-sections -ffunction-sections -include chips/pulpissimo/config.h -I$(PULPRT_HOME)/include/chips/pulpissimo
 PULP_CFLAGS    += -fdata-sections -ffunction-sections -include chips/pulpissimo/config.h -I$(PULPRT_HOME)/include/chips/pulpissimo
-PULP_OMP_CFLAGS    += -fopenmp -mnativeomp
-PULP_LDFLAGS += -nostartfiles -nostdlib -Wl,--gc-sections -L$(PULPRT_HOME)/kernel -Tchips/pulpissimo/link.ld -lgcc
+PULP_CXXFLAGS    += -fdata-sections -ffunction-sections -fnothrow-opt -fno-rtti -include chips/pulpissimo/config.h -I$(PULPRT_HOME)/include/chips/pulpissimo
 
+PULP_OMP_CFLAGS    += -fopenmp -mnativeomp
+
+PULP_ASM_LDFLAGS += -nostartfiles -nostdlib -Wl,--gc-sections -L$(PULPRT_HOME)/kernel -Tchips/pulpissimo/link.ld -lgcc
+PULP_C_LDFLAGS += -nostartfiles -nostdlib -Wl,--gc-sections -L$(PULPRT_HOME)/kernel -Tchips/pulpissimo/link.ld -lgcc
+PULP_CXX_LDFLAGS += -nostartfiles -nostdlib -Wl,--gc-sections -L$(PULPRT_HOME)/kernel -Tchips/pulpissimo/link.ld -lgcc -lstdc++
+
+PULP_AS = riscv32-unknown-elf-gcc
 PULP_CC = riscv32-unknown-elf-gcc
+PULP_CXX = riscv32-unknown-elf-g++
 PULP_AR ?= riscv32-unknown-elf-ar
-PULP_LD ?= riscv32-unknown-elf-gcc
+PULP_LD_AS ?= riscv32-unknown-elf-gcc
+PULP_LD_C ?= riscv32-unknown-elf-gcc
+PULP_LD_CXX ?= riscv32-unknown-elf-g++
 PULP_OBJDUMP ?= riscv32-unknown-elf-objdump
 PULP_GDB ?= riscv32-unknown-elf-gdb
 
@@ -55,9 +96,9 @@ soc_eu/version=2
 
 
 # FLL
-PULP_SRCS     += kernel/fll-v$(fll/version).c
-PULP_SRCS     += kernel/freq-domains.c
-PULP_SRCS     += kernel/chips/pulpissimo/soc.c
+PULP_C_SRCS     += kernel/fll-v$(fll/version).c
+PULP_C_SRCS     += kernel/freq-domains.c
+PULP_C_SRCS     += kernel/chips/pulpissimo/soc.c
 
 
 include $(PULPRT_HOME)/rules/pulpos/configs/default.mk

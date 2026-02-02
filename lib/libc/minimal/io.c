@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
+#include <stdbool.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include "hal/pulp.h"
 #include <stdint.h>
+#include "compatibility.h"
 #include "io.h"
 #include <pulp.h>
 
@@ -398,4 +400,43 @@ int pos_io_stop()
 #endif
 
   return 0;
+}
+
+/* needed by g++ */
+size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE * restrict stream)
+{
+    const char *ptr_c = (const char *) ptr;
+
+    size_t i, j;
+
+    bool is_error = false;
+
+    for (i = 0; (! is_error) && (i < nmemb); ++i)
+    {
+        for (j = 0; (! is_error) && (j < size); ++j)
+        {
+            int c = *ptr_c++;
+
+            /* make sure fputc success */
+            if (fputc((int) c, stream) != c)
+            {
+                is_error = true;
+            }
+
+            if (is_error) break;
+        }
+
+        if (is_error) break;
+    }
+
+    return i;
+}
+
+/* needed by g++ */
+int fputs(const char * restrict s, FILE * restrict stream)
+{
+    /* ignore stream and reuse puts */
+    (void) stream;
+
+    return puts(s);
 }

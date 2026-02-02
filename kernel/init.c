@@ -18,6 +18,7 @@
 #include "pulp.h"
 
 #include "io.h"
+#include "dynamic_memory.h"
 
 
 typedef void (*fptr)(void);

@@ -17,8 +17,29 @@
 #ifndef __POS_IMPLEM_ALLOC_POOL_H__
 #define __POS_IMPLEM_ALLOC_POOL_H__
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void pos_allocs_init();
 
-void alloc_init_l1(int cid);
+#if defined(ARCHI_HAS_L1)
+void  alloc_init_l1(int cid);
+void *pi_l1_malloc(int cid, int size);
+void  pi_l1_free(int cid, void *chunk, int size);
+#endif
+
+void *pi_l2_malloc(int size);
+void  pi_l2_free(void *_chunk, int size);
+
+#if defined(ARCHI_HAS_FC_TCDM)
+void *pi_fc_tcdm_malloc(int size);
+void  pi_fc_tcdm_free(void *_chunk, int size);
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif
