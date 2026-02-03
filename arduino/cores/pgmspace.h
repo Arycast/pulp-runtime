@@ -43,7 +43,7 @@
 #define    pgm_read_u8(address)                     __pgm_read_value_from_pointer(uint8_t, address)
 #define    pgm_read_i8(address)                     __pgm_read_value_from_pointer(int8_t, address)
 #define    pgm_read_short(address)                  __pgm_read_value_from_pointer(short, address)
-#define    pgm_read_unsigned_short(address)         __pgm_read_value_from_pointer(unsigned_short, address)
+#define    pgm_read_unsigned_short(address)         __pgm_read_value_from_pointer(unsigned short, address)
 #define    pgm_read_u16(address)                    __pgm_read_value_from_pointer(uint16_t, address)
 #define    pgm_read_i16(address)                    __pgm_read_value_from_pointer(int16_t, address)
 #define    pgm_read_int(address)                    __pgm_read_value_from_pointer(int, address)
