@@ -11,35 +11,75 @@ version=1.0.0
 
 ## Compiler global definitions
 
-#compiler.path=
+compiler.path={runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/bin
 
-compiler.c.cmd=cc
+compiler.S.cmd=riscv32-unknown-elf-gcc
+compiler.S.flags=-c -ggdb
+
+compiler.c.cmd=riscv32-unknown-elf-gcc
 compiler.c.flags=-c -ggdb
 
-compiler.cpp.cmd=c++
+compiler.cpp.cmd=riscv32-unknown-elf-g++
 compiler.cpp.flags=-c -ggdb
 
-compiler.ar.cmd=ar
+compiler.ar.cmd=riscv32-unknown-elf-ar
 compiler.ar.flags=rcs
 
 
 ## Linking
 
 compiler.c.elf.flags=
-compiler.c.elf.cmd=c++
+compiler.c.elf.cmd=riscv32-unknown-elf-g++
 
 compiler.libraries.ldflags=
 
+## Compile S files
+recipe.S.o.pattern="{compiler.path}/{compiler.S.cmd}" {compiler.S.flags} {includes} "{source_file}" -o "{object_file}"
 
 ## Compile c files
-recipe.c.o.pattern="{compiler.c.cmd}" {compiler.c.flags} {includes} "{source_file}" -o "{object_file}"
+recipe.c.o.pattern="{compiler.path}/{compiler.c.cmd}" {compiler.c.flags} {includes} "{source_file}" -o "{object_file}"
 
 ## Compile c++ files
-recipe.cpp.o.pattern="{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} "{source_file}" -o "{object_file}"
+recipe.cpp.o.pattern="{compiler.path}/{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} "{source_file}" -o "{object_file}"
 
 ## Create archives
-recipe.ar.pattern="{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
+recipe.ar.pattern="{compiler.path}/{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
 
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.c.elf.cmd}" {compiler.c.elf.flags} -o "{build.path}/{build.project_name}.elf" {object_files} {compiler.libraries.ldflags} "{archive_file_path}" "-L{build.path}"
+recipe.c.combine.pattern="{compiler.path}/{compiler.c.elf.cmd}" {compiler.c.elf.flags} -o "{build.path}/{build.project_name}.elf" {object_files} {compiler.libraries.ldflags} "{archive_file_path}" "-L{build.path}"
+
+
+# support for debugging
+
+# If the debug.executable property is not present or is empty debugging will not be allowed.
+# absolute path to the compiled binary of the sketch
+debug.executable="{build.path}/{build.project_name}.elf"
+
+# a unique identifier of the required toolchain, currently we support gcc (and compatible) only
+debug.toolchain=gdb
+
+# absolute path to the toolchain directory
+debug.toolchain.path="{runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/bin"
+
+# prefix of the toolchain (for example arm-none-eabi-)
+debug.toolchain.prefix=riscv32-unknown-elf-
+
+
+# a unique identifier of the required debug server, currently we support only openocd
+debug.server=openocd
+# absolute path to the SVD descriptor.
+debug.svd_file=
+
+# OpenOCD server specific configurations:
+
+# absolute path to the OpenOCD directory
+debug.server.openocd.path="{runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/bin"
+
+# absolute path to the OpenOCD scripts directory
+debug.server.openocd.scripts_dir="{runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/share/openocd/scripts"
+
+# if there is only one OpenOCD script to run, this directive con be used instead of the debug.server.openocd.scripts.N (this directive is ignored if debug.server.openocd.scripts.N is present)
+#debug.server.openocd.script=
+# is a list of OpenOCD script files to run, where N is a number (a sequence of non-consecutive numbers is allowed)
+#debug.server.openocd.scripts.N=
