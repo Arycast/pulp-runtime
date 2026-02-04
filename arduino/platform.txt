@@ -54,13 +54,13 @@ recipe.c.combine.pattern="{compiler.path}/{compiler.c.elf.cmd}" {compiler.c.elf.
 
 # If the debug.executable property is not present or is empty debugging will not be allowed.
 # absolute path to the compiled binary of the sketch
-debug.executable="{build.path}/{build.project_name}.elf"
+debug.executable={build.path}/{build.project_name}.elf
 
 # a unique identifier of the required toolchain, currently we support gcc (and compatible) only
 debug.toolchain=gdb
 
 # absolute path to the toolchain directory
-debug.toolchain.path="{runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/bin"
+debug.toolchain.path={runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/bin
 
 # prefix of the toolchain (for example arm-none-eabi-)
 debug.toolchain.prefix=riscv32-unknown-elf-
@@ -74,10 +74,10 @@ debug.svd_file=
 # OpenOCD server specific configurations:
 
 # absolute path to the OpenOCD directory
-debug.server.openocd.path="{runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/bin"
+debug.server.openocd.path={runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/bin
 
 # absolute path to the OpenOCD scripts directory
-debug.server.openocd.scripts_dir="{runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/share/openocd/scripts"
+debug.server.openocd.scripts_dir={runtime.tools.pulp-riscv-gnu-toolchain_riscv-openocd.path}/share/openocd/scripts
 
 # if there is only one OpenOCD script to run, this directive con be used instead of the debug.server.openocd.scripts.N (this directive is ignored if debug.server.openocd.scripts.N is present)
 #debug.server.openocd.script=
