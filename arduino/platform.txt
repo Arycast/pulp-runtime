@@ -1,0 +1,45 @@
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+name=Indonesia Chip Design Collaborative Center (ICDEC)
+version=1.0.0
+
+
+## Compiler global definitions
+
+#compiler.path=
+
+compiler.c.cmd=cc
+compiler.c.flags=-c -ggdb
+
+compiler.cpp.cmd=c++
+compiler.cpp.flags=-c -ggdb
+
+compiler.ar.cmd=ar
+compiler.ar.flags=rcs
+
+
+## Linking
+
+compiler.c.elf.flags=
+compiler.c.elf.cmd=c++
+
+compiler.libraries.ldflags=
+
+
+## Compile c files
+recipe.c.o.pattern="{compiler.c.cmd}" {compiler.c.flags} {includes} "{source_file}" -o "{object_file}"
+
+## Compile c++ files
+recipe.cpp.o.pattern="{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} "{source_file}" -o "{object_file}"
+
+## Create archives
+recipe.ar.pattern="{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
+
+
+## Combine gc-sections, archives, and objects
+recipe.c.combine.pattern="{compiler.c.elf.cmd}" {compiler.c.elf.flags} -o "{build.path}/{build.project_name}.elf" {object_files} {compiler.libraries.ldflags} "{archive_file_path}" "-L{build.path}"

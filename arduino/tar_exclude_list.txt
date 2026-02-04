@@ -1,0 +1,94 @@
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+
+# we don't need to include any files/folders in .gitignore
+# since tar command in create_package script already use
+# --exclude-from=.gitignore
+# we also don't need to exclude .git and .gitignore file itself
+# because we use --exclude-vcs and --exclude-vcs-ignores argument
+
+# packaging script and exclude list itself (this file)
+create_package
+tar_exclude_list.txt
+
+# script to generate package index
+create_package_index
+
+# package index file (input and output)
+package_*_index.json.in
+package_*_index.json
+
+# package file
+# already included in .gitignore
+
+# don't include tools into package release
+tools
+tools/*
+
+
+# chips that don't need to be included
+
+include/archi/chips/astral-cluster
+include/archi/chips/astral-cluster/*
+include/archi/chips/carfield-cluster
+include/archi/chips/carfield-cluster/*
+include/archi/chips/control-pulp
+include/archi/chips/control-pulp/*
+include/archi/chips/kairos
+include/archi/chips/kairos/*
+include/archi/chips/marsellus
+include/archi/chips/marsellus/*
+include/archi/chips/pulp
+include/archi/chips/pulp/*
+include/archi/chips/pulp_cluster
+include/archi/chips/pulp_cluster/*
+
+include/chips/astral-cluster
+include/chips/astral-cluster/*
+include/chips/carfield-cluster
+include/chips/carfield-cluster/*
+include/chips/control-pulp
+include/chips/control-pulp/*
+include/chips/kairos
+include/chips/kairos/*
+include/chips/marsellus
+include/chips/marsellus/*
+include/chips/pulp
+include/chips/pulp/*
+include/chips/pulp_cluster
+include/chips/pulp_cluster/*
+
+include/hal/chips/astral-cluster
+include/hal/chips/astral-cluster/*
+include/hal/chips/carfield-cluster
+include/hal/chips/carfield-cluster/*
+include/hal/chips/control-pulp
+include/hal/chips/control-pulp/*
+include/hal/chips/kairos
+include/hal/chips/kairos/*
+include/hal/chips/marsellus
+include/hal/chips/marsellus/*
+include/hal/chips/pulp
+include/hal/chips/pulp/*
+include/hal/chips/pulp_cluster
+include/hal/chips/pulp_cluster/*
+
+kernel/chips/astral-cluster
+kernel/chips/astral-cluster/*
+kernel/chips/carfield-cluster
+kernel/chips/carfield-cluster/*
+kernel/chips/control-pulp
+kernel/chips/control-pulp/*
+kernel/chips/kairos
+kernel/chips/kairos/*
+kernel/chips/marsellus
+kernel/chips/marsellus/*
+kernel/chips/pulp
+kernel/chips/pulp/*
+kernel/chips/pulp_cluster
+kernel/chips/pulp_cluster/*

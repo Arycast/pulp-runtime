@@ -1,0 +1,285 @@
+#!/usr/bin/env python
+
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+import os
+import pathlib # for getting script directory
+
+import hashlib
+import json
+
+# for parsing path from url
+import urllib.parse
+
+import collections
+
+import re
+
+
+# ##################################################
+# settings
+
+# relative path replacement for various file from url
+# e.g.
+# when URL_PATH_IS_RELATIVE_TO = "root" then for url entry
+#        "http://localhost/package.tar.gz"
+# this script will try to search "package.tar.gz" in "root" directory
+# (complete path: "root/package.tar.gz")
+#
+# when URL_PATH_IS_RELATIVE_TO = "" then for url entry
+#        "http://localhost/package.tar.gz"
+# this script will try to search "package.tar.gz" in current directory
+# (complete path: "package.tar.gz")
+URL_PATH_IS_RELATIVE_TO = ""
+
+
+# create new type which is named tuple with size and sha256
+# "size" is in type of integer
+# "sha256" is in type of string
+FileInfo = collections.namedtuple("FileInfo", ["size", "sha256"])
+
+def get_file_size_and_sha256_info(file_path: str | pathlib.Path) -> FileInfo:
+	"""
+	Generate namedtuple (FileInfo) which contain
+	SHA256 hash (string) and size (integer) for a given file.
+
+	Args:
+		file_path (str | pathlib.Path): The path to the file.
+
+	Returns:
+		FileInfo: named tuple containing tuple "size" (int) which contain
+		byte size of the file and "sha256" (str) which contain
+		SHA256 hexadecimal hash of the file.
+	"""
+	# Create a sha256 hash object
+	h = hashlib.sha256()
+
+	# Open file in binary read mode ('rb')
+	with open(file_path, "rb") as file:
+		# Read the file in chunks to handle large files efficiently
+		# Use 8192 bytes (or 65536) as a good block size
+		while chunk := file.read(8192):
+			h.update(chunk)
+
+	# Return the hexadecimal digest
+	if (type(file_path) is str):
+		stat_result = os.stat(file_path)
+	else:
+		# file_path is pathlib.Path object
+		stat_result = file_path.stat()
+
+	return FileInfo(size=stat_result.st_size, sha256=h.hexdigest())
+
+# get this script dir
+# wherever this script is called (value of cwd), we will treat all file
+# relative to this script directory
+this_script_dir = pathlib.Path(__file__).resolve().parent
+
+
+# create match object with pattern:
+# package_*_index.json.in
+# this file pattern is mandatory by arduino
+# https://arduino.github.io/arduino-cli/latest/package_index_json-specification/
+match_obj = re.compile("(package_.*_index\\.json)\\.in")
+
+
+# list file (also folder, link, etc.) in this script directory,
+# get all file with pattern that match with regex
+number_of_file_matched = 0
+for entry in this_script_dir.iterdir():
+
+	# flag to skip current entry
+	# in default, we skip current entry, but if the entry match regex
+	# current flag will be set to false
+	skip_this_entry = True
+
+	# prepare clean input and output file entry
+	input_template_file = None
+	output_file = None
+
+	# preliminary check:
+	# check if current entry is file
+	if (entry.is_file()):
+
+		# main check:
+		# check if current entry filename match with regex
+		matchres = match_obj.fullmatch(str(entry.name))
+
+		# if matchres true, then we found matching package index
+		if (not matchres):
+			# filename don't match (bool(matchres) == False)
+			pass
+
+		else:
+			# entry is a file and entry's filename match with regex
+
+			# set flag to false so we don't skip current entry
+			skip_this_entry = False
+
+			# set current entry as input template file
+			input_template_file = entry
+
+			# get output filename
+			# remove .in suffix from entry by taking regex segment 1
+			#
+			# if output file is already exist,
+			# output file will be silently overwritten
+			#
+			# NOTES: with_name() method needs python 3.9 or newer
+			output_file = entry.with_name(matchres.group(1))
+
+
+	# check if we need to skip current entry
+	if (skip_this_entry):
+		# continue loop and don't process current entry
+		continue
+
+	# increment match file counter
+	number_of_file_matched = number_of_file_matched + 1
+
+
+	# ##################################################
+	# we don't skip current entry, process file!
+	# ##################################################
+
+	# make sure input_template_file and output_file are not empty string
+	assert(str(input_template_file.name))
+	assert(str(output_file.name))
+
+
+	# read input template file and decode it into json
+	with open(input_template_file, "r") as fd:
+		package_index = json.load(fd)
+
+	# ##################################################
+	# process all package
+	package_entry_index = 0
+	for package_entry in package_index["packages"]:
+
+		# tools to be parsed
+		tools_to_check = []
+
+		# ##################################################
+		# process each platform entry in each package
+		platform_entry_index = 0
+		for platform_entry in package_entry["platforms"]:
+
+			# parse url from platform_entry
+			file_url = urllib.parse.urlparse(platform_entry["url"])
+
+			# get filename from url,
+			# because path from url always include leading '/'
+			# select only string after leading '/'
+			filename = (pathlib.PurePath(file_url.path[1:])).name
+
+			# check if filename in url is same with name from archive filename
+			if (filename != platform_entry["archiveFileName"]):
+				raise ValueError(("archiveFileName for " \
+					"packages[%d].platforms[%d] different from basename from url")
+					% (package_entry_index, platform_entry_index))
+
+			# create file path
+			if (not URL_PATH_IS_RELATIVE_TO):
+				# URL_PATH_IS_RELATIVE_TO is empty string or None
+				# don't use URL_PATH_IS_RELATIVE_TO, just use this_script_dir
+				file_path = this_script_dir.joinpath(file_url.path[1:])
+			else:
+				# check if URL_PATH_IS_RELATIVE_TO is actually absolute path
+				if (URL_PATH_IS_RELATIVE_TO[0]) == "/":
+					file_path = (pathlib.Path(URL_PATH_IS_RELATIVE_TO)).joinpath(file_url.path[1:])
+				else:
+					# file path is relative to this script path
+					file_path = this_script_dir.joinpath(URL_PATH_IS_RELATIVE_TO, file_url.path[1:])
+
+			# get file size and sha256 from package
+			info = get_file_size_and_sha256_info(file_path)
+
+			# update package_index
+			platform_entry.update({
+				"size" : info.size,
+				"checksum" : "SHA-256:" + info.sha256})
+
+			# add tools name in toolsDependencies to tools_to_check list
+			for tools_entry in platform_entry["toolsDependencies"]:
+				tools_to_check.append(tools_entry["name"])
+
+			# increment platform_entry_index
+			platform_entry_index = platform_entry_index + 1
+
+
+		# ##################################################
+		# process each tool for platform
+		tool_entry_index = 0
+		for tool_entry in package_entry["tools"]:
+			# for every tools entry, check tools and calculate hash
+
+			if (tool_entry["name"] not in tools_to_check):
+				# don't process if this tools not in toolsDependencies
+				continue
+
+			# process tool for specific system
+			tool_for_specific_system_index = 0
+			for tool_for_specific_system in tool_entry["systems"]:
+
+				# do something similar to platform_entry
+
+				# parse url from tool_for_specific_system
+				file_url = urllib.parse.urlparse(tool_for_specific_system["url"])
+
+				# get filename from url
+				filename = (pathlib.PurePath(file_url.path[1:])).name
+
+				# check if filename in url is same with name from archive filename
+				if (filename != tool_for_specific_system["archiveFileName"]):
+					raise ValueError(("archiveFileName for " \
+						"packages[%d].tools[%d].systems[%d] different from " \
+						"basename from url")
+						% (package_entry_index, tool_entry_index,
+							tool_for_specific_system_index))
+
+				# create file path
+				if (not URL_PATH_IS_RELATIVE_TO):
+					# URL_PATH_IS_RELATIVE_TO is empty string or None
+					# don't use URL_PATH_IS_RELATIVE_TO, just use this_script_dir
+					file_path = this_script_dir.joinpath(file_url.path[1:])
+				else:
+					# check if URL_PATH_IS_RELATIVE_TO is actually absolute path
+					if (URL_PATH_IS_RELATIVE_TO[0]) == "/":
+						file_path = (pathlib.Path(URL_PATH_IS_RELATIVE_TO)).joinpath(file_url.path[1:])
+					else:
+						# file path is relative to this script path
+						file_path = this_script_dir.joinpath(URL_PATH_IS_RELATIVE_TO, file_url.path[1:])
+
+				# get file size and sha256 from package
+				info = get_file_size_and_sha256_info(file_path)
+
+				# update package_index
+				tool_for_specific_system.update({
+					"size" : info.size,
+					"checksum" : "SHA-256:" + info.sha256})
+
+				# increment system in tool index
+				tool_for_specific_system_index = tool_for_specific_system_index + 1
+
+			# increment tool index
+			tool_entry_index = tool_entry_index + 1
+
+		# increment package_entry_index
+		package_entry_index = package_entry_index + 1
+
+	# generate result
+	with open(output_file, "w") as fd:
+		package_index = json.dump(package_index, fd)
+
+
+	# if number_of_file_matched 0, then raise error
+	if (number_of_file_matched >= 1):
+		pass # ok
+	else:
+		raise FileNotFoundError("not found any file matched with pattern " \
+			"package_*_index\\.json\\.in")

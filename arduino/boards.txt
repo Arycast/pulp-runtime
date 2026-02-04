@@ -1,0 +1,12 @@
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+virtualboard1.name=Soft-Pulpissimo PYNQ-Z1
+virtualboard1.build.mcu=riscv
+virtualboard1.build.board=SOFT_PULPISSIMO_PYNQ_Z1
+#virtualboard1.build.core=
+virtualboard1.build.variant=soft-pulpissimo_pynq-z1

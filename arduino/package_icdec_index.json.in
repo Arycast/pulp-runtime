@@ -1,0 +1,52 @@
+{
+    "packages": [
+        {
+            "name": "icdec",
+            "maintainer": "Indonesia Chip Design Collaborative Center (ICDEC)",
+            "websiteURL": "http://localhost:8081/",
+            "email": "contact@localhost",
+            "platforms": [
+                {
+                    "name": "Soft-Pulpissimo",
+                    "architecture": "riscv",
+                    "version": "1.0.0",
+                    "category": "Contributed",
+                    "help": {
+                        "online": "http://localhost:8081/"
+                    },
+                    "url": "http://localhost:8081/package.tar.gz",
+                    "archiveFileName": "package.tar.gz",
+                    "checksum": "",
+                    "size": 0,
+                    "boards": [
+                        {
+                            "name": "Soft-Pulpissimo PYNQ-Z1"
+                        }
+                    ],
+                    "toolsDependencies": [
+                        {
+                            "packager": "icdec",
+                            "name": "pulp-riscv-gnu-toolchain_riscv-openocd",
+                            "version": "1.0.0"
+                        }
+                    ]
+                }
+            ],
+            "tools": [
+                {
+                    "name": "pulp-riscv-gnu-toolchain_riscv-openocd",
+                    "version": "1.0.0",
+                    "systems": [
+                        {
+                            "size": 0,
+                            "checksum": "",
+                            "host": "x86_64-linux-gnu",
+                            "archiveFileName": "chroot.tar.xz",
+                            "url": "http://localhost:8081/tools/chroot.tar.xz"
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

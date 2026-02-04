@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+# for now, we only support bash
+
+# get this directory
+export THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# enter script directory, so all operation are relative to this directory
+cd "$THIS_SCRIPT_DIR"
+
+# filename for package, you also need to make sure
+# tar archive command also match this filename extension
+# e.g.
+#    use -cvf for .tar.gz extension
+#    use -cvjf for .tar.bz or .tar.bz2 extension
+#    use -cvJf for .tar.xz extension
+# also you need to check what extension that arduino support
+PACKAGE_FILENAME="package.tar.gz"
+
+# exclude list
+TAR_EXCLUDE_LIST="tar_exclude_list.txt"
+
+# arduino require all files are collected under this 1 folder
+ROOT_ARCHITECTURE="rv32imfcxpulpv2"
+
+# delete existing archive
+if [[ -f "$PACKAGE_FILENAME" ]] ; then
+	rm --verbose "$PACKAGE_FILENAME"
+fi
+
+# name of archive should follow package_*_index.json
+# exclusion given by .gitignore and tar_exclusion.txt
+# archive all file in current directory
+tar \
+	--exclude-vcs \
+	--exclude-vcs-ignores \
+	--transform="s/\\(.*\\)/$ROOT_ARCHITECTURE\\/\\1/g" \
+	--exclude-from="$TAR_EXCLUDE_LIST" \
+	--exclude-from=".gitignore" \
+	--keep-directory-symlink \
+	-cvf "$PACKAGE_FILENAME" \
+	*
+
+# go back 1 directory to project directory
+cd ".."
+
+# root repository maybe don't have gitignore
+if [[ -f ".gitignore" ]] ; then
+	EXCLUDE_GITIGNORE="--exclude-from=.gitignore"
+else
+	EXCLUDE_GITIGNORE=
+fi
+
+# archive to libraries/pulp-runtime (appending previous archive)
+tar \
+	--exclude-vcs \
+	--exclude-vcs-ignores \
+	--transform="s/\\(.*\\)/$ROOT_ARCHITECTURE\\/libraries\\/pulp-runtime\\/\\1/g" \
+	--exclude-from="$(basename "$THIS_SCRIPT_DIR")/$TAR_EXCLUDE_LIST" \
+	$EXCLUDE_GITIGNORE \
+	--keep-directory-symlink \
+	-rvf "$(basename "$THIS_SCRIPT_DIR")/$PACKAGE_FILENAME" \
+	"drivers"       \
+	"include"       \
+	"kernel"        \
+	"lib"
