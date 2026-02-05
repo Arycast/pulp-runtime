@@ -6,7 +6,9 @@
 
 class WiFiServer {
 public :
+    WiFiServer(void);
     WiFiServer(int port);
+    ~WiFiServer(void);
 
     void begin(void);
     byte write(byte data);

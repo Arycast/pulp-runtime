@@ -1,9 +1,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "serial.h"
 #include "pulp.h"
-#include "uart.h"
+
+#include "serial.h"
 
 Serials Serial(0);
 
@@ -22,7 +22,7 @@ void Serials::begin(unsigned long baud) {
 }
 
 void Serials::begin(unsigned long baud, int config) {
-    return -1;
+
 }
 
 void Serials::end(void) {
@@ -50,5 +50,5 @@ int Serials::peek(void) {
 }
 
 void Serials::flush(void) {
-    return -1;
+
 }

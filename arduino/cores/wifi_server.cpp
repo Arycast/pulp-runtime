@@ -5,7 +5,15 @@
 
 WiFiServer server;
 
+WiFiServer::WiFiServer(void) {
+
+}
+
 WiFiServer::WiFiServer(int port) {
+
+}
+
+WiFiServer::~WiFiServer(void) {
 
 }
 

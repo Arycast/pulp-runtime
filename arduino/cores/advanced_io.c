@@ -1,29 +1,33 @@
-#include "advanced_io.h"
+#include <stdint.h>
+
 #include "pulp.h"
+
+#include "variables.h"
+
+#include "advanced_io.h"
 #include "digital_io.h"
-#include "implem/tick.h"
 
 static inline int digitalReadPulse (int pin) {
     return (hal_gpio_get_value() >> pin) & 0x01;
 }
 
 void noTone(uint8_t pin) {
-    return -1;
+
 }
 
-unsigned long pulseIn(int pin, int value) {
-    return -1;
+unsigned long __pulseIn_c(int pin, int value) {
+    return (unsigned long) (-1);
 }
 
-unsigned long pulseIn(int pin, int value, unsigned long timeout) {
-    return -1;
+unsigned long __pulseIn_c_with_timeout(int pin, int value, unsigned long timeout) {
+    return (unsigned long) (-1);
 }
 
-unsigned long pulseInLong(int pin, int value) {
-    return pulseInLong(pin, value, 180000000UL);
+unsigned long __pulseInLong_c(int pin, int value) {
+    return __pulseInLong_c_with_timeout(pin, value, 180000000UL);
 }
 
-unsigned long pulseInLong(int pin, int value, unsigned long timeout) {
+unsigned long __pulseInLong_c_with_timeout(int pin, int value, unsigned long timeout) {
 
     timeout = (timeout > 180000000UL) ? 180000000UL : timeout;
 
@@ -66,9 +70,9 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t value
     int i;
     for (i=0; i<8; i++) {
         if(bitOrder == LSBFIRST) {
-            digitalWrite(dataPin, !!(val & (1 << i)));
+            digitalWrite(dataPin, !!(value & (1 << i)));
         } else {
-            digitalWrite(dataPin, !!(val & (1 << (7 - i))));
+            digitalWrite(dataPin, !!(value & (1 << (7 - i))));
         }
         digitalWrite(clockPin, HIGH);
         digitalWrite(clockPin, LOW);
@@ -76,7 +80,7 @@ void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t value
 }
 
 void tone(uint8_t pin, unsigned int frequency, unsigned long duration) {
-    return -1;
+
 }
 
 

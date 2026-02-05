@@ -83,8 +83,8 @@ size_t Print::println(void)
   return write("\r\n");
 }
 
-size_t Print::print(double val, uint8_t format){
-    return printFloat(val, format);
+size_t Print::print(double val, int format){
+    return printFloat(val, (uint8_t) format);
 }
 
 size_t Print::println(unsigned char val){

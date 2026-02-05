@@ -275,6 +275,8 @@
 #define  INPUT_PULLDOWN     3
 #define  OUTPUT_OPENDRAIN   4
 
+#define  NOT_A_PIN         99
+
 /**
 	* interrupt mode definition
 	*/

@@ -1,3 +1,5 @@
+#include "variables.h"
+
 #include "external_interrupts.h"
 
 void attachInterrupt(int interrupt, void(*userFunc)(void), int mode){
@@ -22,7 +24,7 @@ void detachInterrupt(int interrupt){
 }
 
 int digitalPinToInterrupt(int pin){
-    if (){
+    if (1){ /* dummy */
         return pin;
     }
     else{

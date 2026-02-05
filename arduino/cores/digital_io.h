@@ -1,13 +1,15 @@
- #include <stdint.h>
+#include <stdint.h>
 
- #define PADMUX_0 (ARCHI_APB_SOC_CTRL_ADDR + 0x10)
- #define PADMUX_1 (ARCHI_APB_SOC_CTRL_ADDR + 0x14)
- 
- int digitalRead(int pin);
- void digitalWrite(int pin, int value);
- void pinMode(int pin, uint8_t mode);
+#include "pulp.h"
 
- static const uint32_t digital_pin_to_pad[] = {
+#define PADMUX_0 (ARCHI_APB_SOC_CTRL_ADDR + 0x10)
+#define PADMUX_1 (ARCHI_APB_SOC_CTRL_ADDR + 0x14)
+
+int digitalRead(int pin);
+void digitalWrite(int pin, int value);
+void pinMode(int pin, uint8_t mode);
+
+static const uint32_t digital_pin_to_pad[] = {
     0, //GPIO_0 -> spim_sdio0 -> pad_mux [0]
     1, //GPIO_1 -> spim_sdio1 -> pad_mux [1]
     2, //GPIO_2 -> spim_sdio2 -> pad_mux [2]

@@ -1,23 +1,26 @@
-#include "stdlib.h"
-#include <math.h>
+#include "randomNumbers.h"
 
-long random(long max) {
+/* stop define random to __random_c, so we can use stdlib's random */
+#undef random
+
+/* use stdlib random function */
+#include <stdlib.h>
+
+long __random_c(long max) {
     if (max == 0) {
         return 0;
     }
-    return random() % max
+    return random() % max;
 }
 
-long random(long min, long max) {
+long __random_c_with_range(long min, long max) {
     if (min >= max) {
         return min;
     }
     long diff = max - min;
-    return random(diff) + min;
+    return __random_c(diff) + min;
 }
 
 void randomSeed(unsigned long seed) {
-    if (seed != 0) {
-        random(seed);
-    }
+    srandom(seed);
 }

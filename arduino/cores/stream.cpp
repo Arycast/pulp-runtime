@@ -122,7 +122,7 @@ size_t Stream::readBytesUntil(char character, byte *buffer, int length) {
     return readBytesUntil(character, (char *) buffer, length);
 }
 
-string Stream::readString(void) {
+String Stream::readString(void) {
     String retval;
     while(true) {
         int c = timedRead();
@@ -132,7 +132,7 @@ string Stream::readString(void) {
     return retval;
 }
 
-string Stream::readStringUntil(char terminator) {
+String Stream::readStringUntil(char terminator) {
     String retval;
     while(true) {
         int c = timedRead();
