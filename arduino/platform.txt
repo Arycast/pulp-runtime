@@ -9,18 +9,41 @@ name=Indonesia Chip Design Collaborative Center (ICDEC)
 version=1.0.0
 
 
-## Compiler global definitions
+## Pulp Runtime
+
+pulp_runtime.path={runtime.platform.path}/libraries/pulp-runtime/src
+pulp_runtime.soc=pulpissimo
+
+## Toolchain global definitions
 
 compiler.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
 
+compiler.warning_flags=-Wunused -Wuninitialized
+compiler.warning_flags.none=
+compiler.warning_flags.default=-Wall
+compiler.warning_flags.more=-Wall -Wextra
+compiler.warning_flags.all=-Wall -Wextra -Wconversion -pedantic
+
+
+## Preprocessing
+
+compiler.define_flags=-D__riscv__ -D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12400000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0
+compiler.arch_flags=-march=rv32imfcxpulpv2
+compiler.include_flags=-I{pulp_runtime.path}/include -I{pulp_runtime.path}/include/chips/{pulp_runtime.soc} -I{pulp_runtime.path}/include/archi -I{pulp_runtime.path}/include/archi/chips/{pulp_runtime.soc} -I{pulp_runtime.path}/include/hal -I{pulp_runtime.path}/include/hal/chips/{pulp_runtime.soc} -include {pulp_runtime.path}/include/chips/pulpissimo/config.h
+
+## Compiler
+
 compiler.S.cmd=riscv32-unknown-elf-gcc
-compiler.S.flags=-c -ggdb
+compiler.S.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
+compiler.S.flags={compiler.arch_flags} {compiler.S.cmd.option_flags} {compiler.define_flags} -DLANGUAGE_ASSEMBLY {compiler.S.cmd.option_flags} {compiler.include_flags} -c -ggdb
 
 compiler.c.cmd=riscv32-unknown-elf-gcc
-compiler.c.flags=-c -ggdb
+compiler.c.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
+compiler.c.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.c.cmd.option_flags} {compiler.define_flags} {compiler.c.cmd.option_flags} {compiler.include_flags} -c -ggdb
 
 compiler.cpp.cmd=riscv32-unknown-elf-g++
-compiler.cpp.flags=-c -ggdb
+compiler.cpp.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -fnothrow-opt -fno-rtti -fno-exceptions -flto
+compiler.cpp.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.cpp.cmd.option_flags} {compiler.define_flags} {compiler.cpp.cmd.option_flags} {compiler.include_flags} -c -ggdb
 
 compiler.ar.cmd=riscv32-unknown-elf-ar
 compiler.ar.flags=rcs
@@ -28,10 +51,22 @@ compiler.ar.flags=rcs
 
 ## Linking
 
-compiler.c.elf.flags=
+compiler.c.elf.cmd.option_flags=-flto -fuse-linker-plugin
 compiler.c.elf.cmd=riscv32-unknown-elf-g++
+compiler.c.elf.flags=-lto -fuse-linker-plugin
 
 compiler.libraries.ldflags=
+
+## ELF processing
+
+compiler.objcopy.cmd=riscv32-unknown-elf-objcopy
+
+compiler.objdump.cmd=riscv32-unknown-elf-objdump
+
+compiler.elf2hex.cmd=riscv32-unknown-elf-objcopy
+
+compiler.size.cmd=riscv32-unknown-elf-size
+
 
 ## Compile S files
 recipe.S.o.pattern="{compiler.path}/{compiler.S.cmd}" {compiler.S.flags} {includes} "{source_file}" -o "{object_file}"

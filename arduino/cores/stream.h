@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "print.h"
+#include "Print.h"
 
 enum LookaheadMode {
     SKIP_ALL, //all characters other than digits or a minus sign are ignored when scanning the stream for an integer. This is the default mode.

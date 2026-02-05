@@ -33,6 +33,11 @@
 /* for PROGMEM and various pgm definition */
 #include "pgmspace.h"
 
+/* string class */
+#ifdef __cplusplus
+#include "String.hpp"
+#endif
+
 /**
 	* **************************************************
 	* Constants
