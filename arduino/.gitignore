@@ -3,7 +3,12 @@
 *.bak
 
 # archive of tools
-tools/
+tools/**/*.tar.gz
+tools/**/*.tar.bz
+tools/**/*.tar.bz2
+tools/**/*.tar.bz3
+tools/**/*.tar.xz
+tools/**/*.zip
 
 # generated package archive that is created with
 # create_package script

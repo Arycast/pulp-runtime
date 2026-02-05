@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+# for now, we only support bash
+
+# get this directory
+export THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# enter script directory, so all operation are relative to this directory
+cd "$THIS_SCRIPT_DIR"
+
+# filename for package, you also need to make sure
+# tar archive command also match this filename extension
+# e.g.
+#    use -cvf for .tar.gz extension
+#    use -cvjf for .tar.bz or .tar.bz2 extension
+#    use -cvJf for .tar.xz extension
+# also you need to check what extension that arduino support
+PACKAGE_FILENAME="scripts.tar.gz"
+
+# exclude list
+#TAR_EXCLUDE_LIST=
+
+# delete existing archive
+if [[ -f "$PACKAGE_FILENAME" ]] ; then
+	rm --verbose "$PACKAGE_FILENAME"
+fi
+
+# name of archive should follow package_*_index.json
+# exclusion given by .gitignore and tar_exclusion.txt
+# archive all file in current directory
+tar \
+	--exclude-vcs \
+	--exclude-vcs-ignores \
+	--keep-directory-symlink \
+	-cvf "$PACKAGE_FILENAME" \
+	*

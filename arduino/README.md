@@ -5,13 +5,15 @@ When use pulp-runtime library without Arduino, this directory can be ignored.
 
 ## Packaging the library (for generate release by maintainer)
 
-Create `tools` directory (`tools` directory is ignored by version control).
+Create `tools/riscv-toolchain-openocd` directory.
 
-Put your tools archive (compiler, debugger, jtag server/openocd) inside `tools` directory
+Put your tools archive (`chroot.tar.xz` which is contain compiler, debugger, jtag server/openocd) inside `tools/riscv-toolchain-openocd` directory (all files with various tar extension inside `tools` directory is ignored by version control)
 
 Check (and edit if necessary) `package_*_index.json.in` in the same directory with this README file, check if tools url and archiveFileName already correct
 
-Run `create_package` script. `package.tar.gz` file (or file defined by `PACKAGE_FILENAME` in `create_package`) will be generated
+Run `create_package` script in `tools/openocd` directory to generate tools package for openocd script.
+
+Run `create_package` script in project's `arduino` directory. `package.tar.gz` file (or file defined by `PACKAGE_FILENAME` in `create_package`) will be generated
 after release package generated, create package index with: `create_package_index` script
 
 ## notes for maintainer
