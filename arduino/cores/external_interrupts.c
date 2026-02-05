@@ -1,6 +1,6 @@
 #include "external_interrupts.h"
 
-void attachInterrupt(digitalPinToInterrupt(pin), void(*userFunc)(void), int mode){
+void attachInterrupt(int interrupt, void(*userFunc)(void), int mode){
     
     switch (mode) {
         case LOW:   
@@ -17,7 +17,7 @@ void attachInterrupt(digitalPinToInterrupt(pin), void(*userFunc)(void), int mode
 
 }
 
-void detachInterrupt(digitalPinToInterrupt(pin)){
+void detachInterrupt(int interrupt){
 
 }
 

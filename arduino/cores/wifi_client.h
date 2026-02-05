@@ -2,17 +2,29 @@
 #define wifi_client_h
 
 #include <stdbool.h>
+#include <stddef.h>
+
+#include "variables.h"
+#include "String.hpp"
 #include "IPAddress.h"
 #include "stream.h"
 
 class WiFiClient : public IPAddress, public Stream
 {
 public :
+    // override virtual method (from Stream class)
+    int available(void) override;
+    int read(void) override;
+    void flush(void) override;
+    int peek(void) override;
+
     bool connected(void);
     bool connect(IPAddress ip, int port);
     bool connect(String URL, int port);
-    byte write(byte data);
-    byte write(char data);
+    size_t write(byte data);
+    /*byte write(byte data);*/ /* cannot overload function solely based on return type */
+    size_t write(char data);
+    /*byte write(char data);*/
     byte print(char data);
     byte print(byte data);
     byte print(int data);

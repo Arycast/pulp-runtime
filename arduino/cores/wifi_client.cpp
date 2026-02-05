@@ -1,3 +1,10 @@
+#include <stdbool.h>
+#include <stddef.h>
+
+#include "variables.h"
+#include "String.hpp"
+
+#include "IPAddress.h"
 #include "wifi_client.h"
 
 WiFiClient client;
@@ -14,13 +21,21 @@ bool WiFiClient::connect(String URL, int port) {
 
 }
 
-byte WiFiClient::write(byte data) {
+size_t WiFiClient::write(byte data) {
 
 }
 
-byte WiFiClient::write(char data) {
+size_t WiFiClient::write(char data) {
 
 }
+
+/*byte WiFiClient::write(byte data) {
+	return (byte) this->write(data);
+}*/
+
+/*byte WiFiClient::write(char data) {
+	return (byte) this->write(data);
+}*/
 
 byte WiFiClient::print(char data) {
 

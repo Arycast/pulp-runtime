@@ -1,6 +1,9 @@
 #ifndef wifi_network_h
 #define wifi_network_h
 
+#include "variables.h"
+#include "String.hpp"
+
 #include "IPAddress.h"
 
 // WL_CONNECTED: assigned when connected to a WiFi network; 
@@ -24,8 +27,8 @@ public :
     void config(IPAddress ip, IPAddress dns, IPAddress gateaway, IPAddress subnet);
     void setDNS(IPAddress dns_server1);
     void setDNS(IPAddress dns_server1, IPAddress dns_server2);
-    string SSID(void);
-    string SSID(int wifiAccessPoint);
+    String SSID(void);
+    String SSID(int wifiAccessPoint);
     byte BSSID(uint8_t* bssid);
     long RSSI(void);
     long RSSI(const char* wifiAccessPoint);

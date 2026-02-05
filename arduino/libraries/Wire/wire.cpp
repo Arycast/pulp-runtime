@@ -1,5 +1,6 @@
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
 #include <string.h>
 #include "pulp.h"
 #include "wire.h"
@@ -110,7 +111,11 @@ size_t TwoWire::write(uint8_t value) {
     return 1;    
 }
 
-size_t TwoWire::write(string) {
+size_t TwoWire::write(const char *str) {
+
+}
+
+size_t TwoWire::write(const String &myString) {
 
 }
 

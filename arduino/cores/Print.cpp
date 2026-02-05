@@ -1,4 +1,7 @@
-#include <Print.h>
+#include "variables.h"
+#include "pgmspace.h"
+
+#include "Print.h"
 
 size_t Print::write(const uint8_t *data, size_t length){
     size_t n = 0;
@@ -31,6 +34,7 @@ size_t Print::print(unsigned int val){
     return print((unsigned long) val, DEC);
 }
 
+#ifndef __FLASHSTRINGHELPER_IS_CHAR
 size_t Print::print(const __FlashStringHelper *val){
     const char *p = (const char *)val;
     size_t n = 0;
@@ -40,6 +44,7 @@ size_t Print::print(const __FlashStringHelper *val){
     }
     return n;
 }
+#endif /* ! defined(__FLASHSTRINGHELPER_IS_CHAR) */
 
 size_t Print::print(unsigned char val, int format){
     return print((unsigned long) val, format);

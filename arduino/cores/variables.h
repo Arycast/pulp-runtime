@@ -33,11 +33,6 @@
 /* for PROGMEM and various pgm definition */
 #include "pgmspace.h"
 
-/* string class */
-#ifdef __cplusplus
-#include "String.hpp"
-#endif
-
 /**
 	* **************************************************
 	* Constants
@@ -355,9 +350,7 @@ typedef  uint8_t        byte;
 	* class String()
 	* this type cannot be used in C, thus not available in C code
 	*/
-/* NOT YET IMPLEMENTED!!! */
-#ifdef __cplusplus
-#endif /* defined(__cplusplus) */
+/* included in Arduino.h */
 
 /* unsigned char    : native type of standard C and C++ */
 

@@ -8,6 +8,9 @@ class WiFiUDP : public Stream {
 private:
 
 public:
+    WiFiUDP(void);
+    ~WiFiUDP(void);
+
     uint8_t begin(int port);
     int beginPacket(const char *hostName, int port);
     int beginPacket(uint32_t hostIp, int port);

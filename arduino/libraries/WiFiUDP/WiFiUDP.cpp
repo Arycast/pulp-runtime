@@ -1,21 +1,28 @@
+#include <stdint.h>
+#include <stddef.h>
+
 #include "WiFiUDP.h"
 
-WiFiUDP::WiFiUDP(){
-    
+WiFiUDP::WiFiUDP(void){
+
+}
+
+WiFiUDP::~WiFiUDP(void){
+
 }
 
 uint8_t WiFiUDP::begin(int port){
-    if (){
+    if (1){
         return 0;
     }
-    else if (){
+    else /*if (0)*/{
         return 1;
     }
 }
 
 // inherits from the Stream
 int WiFiUDP::available(void){
-    if (){
+    if (1){
         // If parsePacket hasn't been called yet
         return 0;
     }
@@ -31,10 +38,10 @@ int WiFiUDP::beginPacket(uint32_t hostIp, int port){
 }
 
 int WiFiUDP::endPacket(void){
-    if (){
+    if (1){
         return 0;
     }
-    else if (){
+    else /*if (0)*/{
         return 1;
     }
 }
@@ -49,13 +56,14 @@ size_t WiFiUDP::write(const uint8_t *buffer, size_t size){
 
 int WiFiUDP::parsePacket(void){
 
-    if (){
+    if (1){
         return 0;
     }
 }
 
 int WiFiUDP::peek(void){
-    if (){
+    int b = 0;
+    if (1){
         
         return -1;
     }
@@ -65,7 +73,8 @@ int WiFiUDP::peek(void){
 }
 
 int WiFiUDP::read(void){
-    if (){
+    int b = 0;
+    if (1){
         // if no (more) internal buffer is available (to be read)
         return -1;
     }
@@ -75,12 +84,12 @@ int WiFiUDP::read(void){
 }
 
 int WiFiUDP::read(char *buffer, int len){
-
+    int size = 0; // dummy
     // size is the size of the buffer
     return size;
 }
 
-void WiFiUDP:flush(void){
+void WiFiUDP::flush(void){
 
 }
 

@@ -1,3 +1,6 @@
+#include "variables.h"
+#include "String.hpp"
+
 #include "wifi_network.h"
 
 WiFiClass WiFi;
@@ -42,11 +45,11 @@ void WiFiClass::setDNS(IPAddress dns_server1, IPAddress dns_server2) {
 
 }
 
-string WiFiClass::SSID(void) {
+String WiFiClass::SSID(void) {
 
 }
 
-string WiFiClass::SSID(int wifiAccessPoint) {
+String WiFiClass::SSID(int wifiAccessPoint) {
 
 }
 

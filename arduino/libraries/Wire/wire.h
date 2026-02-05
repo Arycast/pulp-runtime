@@ -5,8 +5,12 @@
 so, send() and receive() been replaced with read() and write()
 This library implementation use a 32 byte buffer*/
 
-#include <inttypes.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
+
+#include "String.hpp"
+
 #include "stream.h" //-> parent library for wire
 
 #define BUFFER_LENGTH 32
@@ -34,9 +38,12 @@ public:
     void beginTransmission(int address);
     int endTransmission(void);
     size_t write(uint8_t value);
-    size_t write(string);
-    size_t write(uint8_t data, uint8_t length);
+    size_t write(const char *str);
+    size_t write(const String &myString);
+    size_t write(const uint8_t *data, size_t length);
     int available(void) override;
+    void flush(void) override;
+    int peek(void) override;
     int read(void) override; // inherit from stream utility class
     void setClock(uint32_t frequency);
     void onReceive(void (*function)(int));

@@ -1,3 +1,6 @@
+#include "variables.h"
+#include "String.hpp"
+
 #include "wifi_server.h"
 
 WiFiServer server;

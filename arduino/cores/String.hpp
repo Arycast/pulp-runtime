@@ -39,9 +39,9 @@ public:
 	String(const String   &myString2);
 #if (__cplusplus >= 201103L)
 	/* move constructor */
-	String(const String  &&myString2)
+	String(const String  &&myString2);
 #endif
-	~String();
+	~String(void);
 
 
 	/**
@@ -62,13 +62,13 @@ public:
 		*/
 	inline char charAt(unsigned int n) const
 	{
-		if (n > this.length())
+		if (n > this->length())
 		{
 			return '\0';
 		}
 		else
 		{
-			const char *str = this.c_str();
+			const char *str = this->c_str();
 			return (str == NULL) ? '\0' : str[n];
 		}
 	}
@@ -92,7 +92,7 @@ public:
 		const char *str = myString2.c_str();
 
 		/* if str NULL, then check if self/this NULL too */
-		return (str == NULL) ? (this.c_str() == NULL) : this.compareTo(str);
+		return (str == NULL) ? (this->c_str() == NULL) : this->compareTo(str);
 	}
 	int compareToIgnoreCase(const char     *str) const; /* not part of standard */
 	inline int compareToIgnoreCase(const String   &myString2) const /* not part of standard */
@@ -102,8 +102,8 @@ public:
 
 		/* if str NULL, then check if self/this NULL too */
 		return (str == NULL) ?
-			(this.c_str() == NULL) :
-			this.compareToIgnoreCase(str);
+			(this->c_str() == NULL) :
+			this->compareToIgnoreCase(str);
 	}
 
 	/**
@@ -127,7 +127,7 @@ public:
 			* parameter may return NULL, concat(const char *s) should handle
 			* argument is NULL case gracefully
 			*/
-		return this.concat(parameter.c_str());
+		return this->concat(parameter.c_str());
 	}
 
 
@@ -164,7 +164,7 @@ public:
 			* if so, return false,
 			* if str is not NULL, evaluate with endsWith string version
 			*/
-		return (str == NULL) ? (this.c_str() == NULL) : this.endsWith(str);
+		return (str == NULL) ? (this->c_str() == NULL) : this->endsWith(str);
 	}
 
 	/**
@@ -182,11 +182,11 @@ public:
 			* method compareTo should handle case of str (and c_str()) is NULL
 			* gracefully
 			*/
-		return (this.compareTo(str) == 0);
+		return (this->compareTo(str) == 0);
 	}
 	inline bool equals(const String  &myString2) const
 	{
-		return this.equals(myString2.c_str());
+		return this->equals(myString2.c_str());
 	}
 
 	/**
@@ -199,11 +199,11 @@ public:
 		*/
 	inline bool equalsIgnoreCase(const char    *str) const
 	{
-		return (this.compareToIgnoreCase(str) == 0);
+		return (this->compareToIgnoreCase(str) == 0);
 	}
 	inline bool equalsIgnoreCase(const String  &myString2) const
 	{
-		return this.equalsIgnoreCase(myString2.c_str());
+		return this->equalsIgnoreCase(myString2.c_str());
 	}
 
 	/**
@@ -215,7 +215,7 @@ public:
 	inline void getBytes(byte *buf, unsigned int len) const
 	{
 		char *buf_char_p = (char *) buf;
-		this.toCharArray(buf_char_p, len);
+		this->toCharArray(buf_char_p, len);
 	}
 
 	/**
@@ -229,21 +229,21 @@ public:
 		*/
 	inline unsigned int indexOf(char           val) const
 	{
-		return this.indexOf(val, (unsigned int) 0);
+		return this->indexOf(val, (unsigned int) 0);
 	}
 	inline unsigned int indexOf(const char    *val) const /* not part of standard */
 	{
-		return this.indexOf(val, (unsigned int) 0);
+		return this->indexOf(val, (unsigned int) 0);
 	}
 	inline unsigned int indexOf(const String  &val) const
 	{
-		return this.indexOf(val, (unsigned int) 0);
+		return this->indexOf(val, (unsigned int) 0);
 	}
 	unsigned int indexOf(char           val, unsigned int from) const;
 	unsigned int indexOf(const char    *val, unsigned int from) const; /* not part of standard */
 	inline unsigned int indexOf(const String  &val, unsigned int from) const
 	{
-		return this.indexOf(val.c_str(), from);
+		return this->indexOf(val.c_str(), from);
 	}
 
 	/**
@@ -257,21 +257,21 @@ public:
 		*/
 	inline unsigned int lastIndexOf(char           val) const
 	{
-		return this.lastIndexOf(val, (unsigned int) 0);
+		return this->lastIndexOf(val, (unsigned int) 0);
 	}
 	inline unsigned int lastIndexOf(const char    *val) const
 	{
-		return this.lastIndexOf(val, (unsigned int) 0);
+		return this->lastIndexOf(val, (unsigned int) 0);
 	}
 	inline unsigned int lastIndexOf(const String  &val) const
 	{
-		return this.lastIndexOf(val, (unsigned int) 0);
+		return this->lastIndexOf(val, (unsigned int) 0);
 	}
 	unsigned int lastIndexOf(char           val, unsigned int from) const;
 	unsigned int lastIndexOf(const char    *val, unsigned int from) const;
 	inline unsigned int lastIndexOf(const String  &val, unsigned int from) const
 	{
-		return this.lastIndexOf(val.c_str(), from);
+		return this->lastIndexOf(val.c_str(), from);
 	}
 
 	/**
@@ -306,7 +306,7 @@ public:
 	void replace(const char   *substring1, const char   *substring2); /* not part of arduino standard */
 	inline void replace(const String &substring1, const String &substring2)
 	{
-		this.replace(substring1.c_str(), substring2.c_str());
+		this->replace(substring1.c_str(), substring2.c_str());
 	}
 
 	/**
@@ -337,7 +337,7 @@ public:
 	bool startsWith(const char    *str) const; /* not part of arduino standard */
 	inline bool startsWith(const String  &myString2) const
 	{
-		return this.startsWith(myString2.c_str());
+		return this->startsWith(myString2.c_str());
 	}
 
 	/**
@@ -406,7 +406,7 @@ public:
 		*/
 	inline float toFloat(void) const
 	{
-		return (float) this.toDouble();
+		return (float) this->toDouble();
 	}
 
 	/**

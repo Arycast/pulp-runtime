@@ -13,7 +13,7 @@ public :
     Serials(int uart_id = 0);
     int availableForWrite(void);
     void begin(unsigned long baud = 115200);
-    void begin(unsigned long baud = 115200, int config);
+    void begin(unsigned long baud, int config);
     void end(void);
     int read(void) override;
     size_t write(uint8_t data) override;

@@ -123,6 +123,14 @@
 #define F(s)          (s)
 #endif
 
+/* for various string type */
+#ifndef __FlashStringHelper
+#define __FlashStringHelper           char
+
+/* also define this symbol to help prevent overloading */
+#define __FLASHSTRINGHELPER_IS_CHAR   1
+#endif
+
 
 /* read based on integer size */
 #define pgm_read_byte_near                     pgm_read_byte

@@ -3,13 +3,16 @@
 
 #include <stdint.h>
 
-#define DEC 10
+#include "variables.h"
+#include "pgmspace.h"
+
+/*#define DEC 10
 #define HEX 16
 #define OCT 8
-#ifdef BIN // Prevent warnings if BIN is previously defined
-#undef BIN
+#ifdef BIN*/ // Prevent warnings if BIN is previously defined
+/*#undef BIN
 #endif
-#define BIN 2
+#define BIN 2*/
 
 class Print {
     private:
@@ -38,7 +41,9 @@ class Print {
         size_t print(unsigned char val);
         size_t print(int val);
         size_t print(unsigned int val);
+#ifndef __FLASHSTRINGHELPER_IS_CHAR
         size_t print(const __FlashStringHelper *val);
+#endif
         size_t print(unsigned char val, int format);
         size_t print(int val, int format);
         size_t print(unsigned int val, int format);

@@ -3,6 +3,10 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+
+#include "variables.h"
+#include "String.hpp"
+
 #include "Print.h"
 
 enum LookaheadMode {
@@ -30,8 +34,8 @@ public :
     size_t readBytes(byte buffer, int length);
     size_t readBytesUntil(char character, char buffer, int length);
     size_t readBytesUntil(char character, byte buffer, int length);
-    string readString(void);
-    string readStringUntil(char terminator);
+    String readString(void);
+    String readStringUntil(char terminator);
     long parseInt();
     long parseInt(LookaheadMode lookahead);
     long parseInt(LookaheadMode lookahead, char ignore);

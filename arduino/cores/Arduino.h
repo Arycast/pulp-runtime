@@ -15,6 +15,12 @@
 	*/
 #include "variables.h"
 
+/* string class */
+#ifdef __clpusplus
+#include "String.hpp"
+#endif
+
+
 /**
 	* structure (declaration of loop and setup)
 	*/
@@ -71,8 +77,8 @@
 #include "wire.h"        /* Wire (libraries/Wire) */
 
 /* USB */
-#include "Keyboard.h"    /* Keyboard (libraries/Keyboard) */
-#include "Mouse.h"       /* Mouse (libraries/Mouse) */
+/*#include "Keyboard.h"*/    /* Keyboard (libraries/Keyboard) */
+/*#include "Mouse.h"*/       /* Mouse (libraries/Mouse) */
 
 /* Wi-Fi */
 #include "IPAddress.h"     /* IPAddress */

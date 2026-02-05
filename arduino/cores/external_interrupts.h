@@ -1,3 +1,3 @@
-void attachInterrupt(digitalPinToInterrupt(pin), void(*userFunc)(void), int mode);
-void detachInterrupt(digitalPinToInterrupt(pin));
+void attachInterrupt(int interrupt, void(*userFunc)(void), int mode);
+void detachInterrupt(int interrupt);
 int digitalPinToInterrupt(int pin);

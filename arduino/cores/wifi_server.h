@@ -1,6 +1,9 @@
 #ifndef wifi_server_h
 #define wifi_server_h
 
+#include "variables.h"
+#include "String.hpp"
+
 class WiFiServer {
 public :
     WiFiServer(int port);
