@@ -16,7 +16,7 @@
 #include "variables.h"
 
 /* string class */
-#ifdef __clpusplus
+#ifdef __cplusplus
 #include "String.hpp"
 #endif
 
@@ -64,7 +64,7 @@
 #include "arduino_interrupts.h"
 
 /* Time */
-#include "time.h"
+#include "arduino_time.h"
 
 /* Random Numbers */
 #include "randomNumbers.h"
@@ -85,6 +85,6 @@
 #include "wifi_network.h"  /* WiFi Network */
 #include "wifi_client.h"   /* WiFiClient */
 #include "wifi_server.h"   /* WiFiServer */
-#include "WiFiUDP.h"       /* WiFiUDP (libraries/WiFiUDP) */
+#include "WiFiUDP.h"       /* WiFiUDP */
 
 #endif /* ! defined(__AARDUINO_H__) */
