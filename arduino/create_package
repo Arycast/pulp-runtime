@@ -62,7 +62,7 @@ fi
 tar \
 	--exclude-vcs \
 	--exclude-vcs-ignores \
-	--transform="s/\\(.*\\)/$ROOT_ARCHITECTURE\\/libraries\\/pulp-runtime\\/src\\/\\1/g" \
+	--transform="s/\\(.*\\)/$ROOT_ARCHITECTURE\\/cores\\/pulp-runtime\\/\\1/g" \
 	--exclude-from="$(basename "$THIS_SCRIPT_DIR")/$TAR_EXCLUDE_LIST" \
 	$EXCLUDE_GITIGNORE \
 	--keep-directory-symlink \

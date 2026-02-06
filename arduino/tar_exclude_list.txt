@@ -92,3 +92,46 @@ kernel/chips/pulp
 kernel/chips/pulp/*
 kernel/chips/pulp_cluster
 kernel/chips/pulp_cluster/*
+
+# exclude cluster and hmr for pulpissimo
+kernel/cluster.c
+kernel/hmr_synch.c
+
+
+# exclude some archi and hal
+include/archi/cluster_ctrl
+include/archi/cluster_ctrl/*
+include/archi/dma
+include/archi/dma/*
+include/archi/hmr
+include/archi/hmr/*
+include/archi/hwme
+include/archi/hwme/*
+include/archi/hwpe_hci_ecc
+include/archi/hwpe_hci_ecc/*
+include/archi/tcdm_scrubber
+include/archi/tcdm_scrubber/*
+
+include/archi/gvsoc
+include/archi/gvsoc/*
+
+include/hal/cluster_ctrl
+include/hal/cluster_ctrl/*
+include/hal/dma
+include/hal/dma/*
+include/hal/hmr
+include/hal/hmr/*
+include/hal/hwme
+include/hal/hwme/*
+include/hal/hwpe_hci_ecc
+include/hal/hwpe_hci_ecc/*
+include/hal/tb
+include/hal/tb/*
+include/hal/tcdm_scrubber
+include/hal/tcdm_scrubber/*
+
+include/hal/gvsoc
+include/hal/gvsoc/*
+
+# exclude libc ctype.h
+lib/libc/minimal/include/ctype.h
