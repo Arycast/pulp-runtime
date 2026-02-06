@@ -12,6 +12,8 @@ version=1.0.0
 ## Pulp Runtime
 
 pulp_runtime.path={runtime.platform.path}/libraries/pulp-runtime/src
+pulp_runtime.include.path={pulp_runtime.path}/include
+
 pulp_runtime.soc=pulpissimo
 
 ## Toolchain global definitions
@@ -27,25 +29,25 @@ compiler.warning_flags.all=-Wall -Wextra -Wconversion -pedantic
 
 ## Preprocessing
 
-compiler.define_flags=-D__riscv__ -D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12400000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0
 compiler.arch_flags=-march=rv32imfcxpulpv2
-compiler.include_flags=-I{pulp_runtime.path}/include -I{pulp_runtime.path}/include/chips/{pulp_runtime.soc} -I{pulp_runtime.path}/include/archi -I{pulp_runtime.path}/include/archi/chips/{pulp_runtime.soc} -I{pulp_runtime.path}/include/hal -I{pulp_runtime.path}/include/hal/chips/{pulp_runtime.soc} -include {pulp_runtime.path}/include/chips/pulpissimo/config.h
+compiler.define_flags=-D__riscv__ -D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12400000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0
+compiler.include_flags=-I{pulp_runtime.include.path} -I{pulp_runtime.include.path}/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/archi -I{pulp_runtime.include.path}/archi/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/hal -I{pulp_runtime.include.path}/hal/chips/{pulp_runtime.soc} -include {pulp_runtime.include.path}/chips/pulpissimo/config.h
 
 ## Compiler
 
 compiler.S.cmd=riscv32-unknown-elf-gcc
 compiler.S.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
-compiler.S.flags={compiler.arch_flags} {compiler.S.cmd.option_flags} {compiler.define_flags} -DLANGUAGE_ASSEMBLY {compiler.S.cmd.option_flags} {compiler.include_flags} -c -ggdb
+compiler.S.flags={compiler.arch_flags} {compiler.S.cmd.option_flags} {compiler.define_flags} -DLANGUAGE_ASSEMBLY {compiler.include_flags} -c -ggdb
 
 compiler.c.cmd=riscv32-unknown-elf-gcc
 compiler.c.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
-compiler.c.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.c.cmd.option_flags} {compiler.define_flags} {compiler.c.cmd.option_flags} {compiler.include_flags} -c -ggdb
+compiler.c.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.c.cmd.option_flags} {compiler.define_flags} {compiler.include_flags} -c -ggdb
 
 compiler.cpp.cmd=riscv32-unknown-elf-g++
 compiler.cpp.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -fnothrow-opt -fno-rtti -fno-exceptions -flto
-compiler.cpp.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.cpp.cmd.option_flags} {compiler.define_flags} {compiler.cpp.cmd.option_flags} {compiler.include_flags} -c -ggdb
+compiler.cpp.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.cpp.cmd.option_flags} {compiler.define_flags} {compiler.include_flags} -c -ggdb
 
-compiler.ar.cmd=riscv32-unknown-elf-ar
+compiler.ar.cmd=riscv32-unknown-elf-gcc-ar
 compiler.ar.flags=rcs
 
 
@@ -53,9 +55,9 @@ compiler.ar.flags=rcs
 
 compiler.c.elf.cmd.option_flags=-flto -fuse-linker-plugin
 compiler.c.elf.cmd=riscv32-unknown-elf-g++
-compiler.c.elf.flags=-lto -fuse-linker-plugin
+compiler.c.elf.flags={compiler.arch_flags} {compiler.c.elf.cmd.option_flags} -ggdb -T{pulp_runtime.path}/kernel/chips/pulpissimo/link.ld
 
-compiler.libraries.ldflags=
+compiler.libraries.ldflags=-nostartfiles -nostdlib -Wl,-s,-flto,--gc-sections,-z,norelro -lgcc -lstdc++
 
 ## ELF processing
 
