@@ -30,7 +30,7 @@ int WiFiUDP::available(void){
 }
 
 int WiFiUDP::beginPacket(const char *hostName, int port){
-
+    return -1;
 }
 
 int WiFiUDP::beginPacket(uint32_t hostIp, int port){

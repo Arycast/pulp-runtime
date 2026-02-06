@@ -123,31 +123,31 @@ size_t Stream::readBytesUntil(char character, byte *buffer, int length) {
 }
 
 String Stream::readString(void) {
-    String retval;
+    // String retval;
     while(true) {
         int c = timedRead();
         if(c < 0) break;
-        retval += (char) c;
+        // retval += (char) c;
     }
     return retval;
 }
 
 String Stream::readStringUntil(char terminator) {
-    String retval;
+    // String retval;
     while(true) {
         int c = timedRead();
         if (c < 0 || c == (int) terminator)break;
-        retval += (char) c;
+        // retval += (char) c;
     }
     return retval;
 }
 
 long Stream::parseInt() {
-    return parseInt(SKIP_ALL, NULL);
+    return parseInt(SKIP_ALL, '\0');
 }
 
 long Stream::parseInt(LookaheadMode lookahead) {
-    return parseInt(lookahead, NULL);
+    return parseInt(lookahead, '\0');
 }
 
 long Stream::parseInt(LookaheadMode lookahead, char ignore) {
@@ -175,11 +175,11 @@ long Stream::parseInt(LookaheadMode lookahead, char ignore) {
 }
 
 float Stream::parseFloat() {
-    return parseFloat(SKIP_ALL, NULL);
+    return parseFloat(SKIP_ALL, '\0');
 }
 
 float Stream::parseFloat(LookaheadMode lookahead) {
-    return parseFloat(lookahead, NULL);
+    return parseFloat(lookahead, '\0');
 }
 
 float Stream::parseFloat(LookaheadMode lookahead, char ignore) {

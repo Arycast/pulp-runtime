@@ -8,6 +8,7 @@
 #include "String.hpp"
 
 #include "Print.h"
+#include "time.h"
 
 enum LookaheadMode {
     SKIP_ALL, //all characters other than digits or a minus sign are ignored when scanning the stream for an integer. This is the default mode.
@@ -30,10 +31,10 @@ public :
     bool find(char *target, size_t length);
     bool findUntil(char *target, char *terminator);
     virtual int peek(void) = 0;
-    size_t readBytes(char buffer, int length);
-    size_t readBytes(byte buffer, int length);
-    size_t readBytesUntil(char character, char buffer, int length);
-    size_t readBytesUntil(char character, byte buffer, int length);
+    size_t readBytes(char *buffer, int length);
+    size_t readBytes(byte *buffer, int length);
+    size_t readBytesUntil(char character, char *buffer, int length);
+    size_t readBytesUntil(char character, byte *buffer, int length);
     String readString(void);
     String readStringUntil(char terminator);
     long parseInt();
