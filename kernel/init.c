@@ -49,7 +49,8 @@ static void pos_init_do_dtors(void)
 }
 
 
-extern int main(int argc, const char * const argv[]);
+/*extern int main(int argc, const char * const argv[]);*/
+extern int main(void);
 
 
 void pos_init_start()

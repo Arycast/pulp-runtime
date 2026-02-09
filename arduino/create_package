@@ -28,7 +28,8 @@ PACKAGE_FILENAME="package.tar.gz"
 TAR_EXCLUDE_LIST="tar_exclude_list.txt"
 
 # arduino require all files are collected under this 1 folder
-ROOT_ARCHITECTURE="rv32imfcxpulpv2"
+#ROOT_ARCHITECTURE="rv32imfcxpulpv2"
+ROOT_ARCHITECTURE="riscv"
 
 # delete existing archive
 if [[ -f "$PACKAGE_FILENAME" ]] ; then
@@ -58,7 +59,11 @@ else
 	EXCLUDE_GITIGNORE=
 fi
 
-# archive to libraries/pulp-runtime (appending previous archive)
+# add pulp-runtime APIs to package
+
+# add includes, kernels, drivers, lib (minimal low level call to libc)
+# (including ld script)
+# archive to cores/pulp-runtime (appending previous archive)
 tar \
 	--exclude-vcs \
 	--exclude-vcs-ignores \

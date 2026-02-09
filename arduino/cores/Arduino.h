@@ -7,8 +7,8 @@
 	* NONINFRINGEMENT.
 	*/
 
-#ifndef __AARDUINO_H__
-#define __AARDUINO_H__
+#ifndef __ARDUINO_CORES_AARDUINO_H__
+#define __ARDUINO_CORES_AARDUINO_H__
 
 /**
 	* basic type and constants
@@ -87,4 +87,4 @@
 #include "wifi_server.h"   /* WiFiServer */
 #include "WiFiUDP.h"       /* WiFiUDP */
 
-#endif /* ! defined(__AARDUINO_H__) */
+#endif /* ! defined(__ARDUINO_CORES_AARDUINO_H__) */

@@ -12,11 +12,10 @@ version=1.0.0
 ## Pulp Runtime
 
 pulp_runtime.path={build.core.path}/pulp-runtime
-
-pulp_runtime.libc.path={pulp_runtime.path}/lib/libc/minimal
-
 pulp_runtime.include.path={pulp_runtime.path}/include
-pulp_runtime.libc.include.path={pulp_runtime.libc.path}/include
+
+pulp_runtime_libc.path={pulp_runtime.path}/lib/libc/minimal
+pulp_runtime_libc.include.path={pulp_runtime_libc.path}/include
 
 pulp_runtime.soc=pulpissimo
 
@@ -36,7 +35,7 @@ compiler.warning_flags.all=-Wall -Wextra -Wconversion -pedantic
 
 compiler.arch_flags=-march=rv32imfcxpulpv2
 compiler.define_flags=-D__riscv__ -D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12400000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0
-compiler.include_flags=-I{pulp_runtime.include.path} -I{pulp_runtime.include.path}/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/archi/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/hal/chips/{pulp_runtime.soc} -I{pulp_runtime.libc.include.path} -include {pulp_runtime.include.path}/chips/pulpissimo/config.h
+compiler.include_flags=-I{pulp_runtime.include.path} -I{pulp_runtime.include.path}/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/archi/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/hal/chips/{pulp_runtime.soc} -I{pulp_runtime_libc.include.path} -include {pulp_runtime.include.path}/chips/pulpissimo/config.h
 
 
 ## Compiler
@@ -61,9 +60,10 @@ compiler.ar.flags=rcs
 
 compiler.c.elf.cmd.option_flags=-flto
 compiler.c.elf.cmd=riscv32-unknown-elf-g++
-compiler.c.elf.flags={compiler.arch_flags} {compiler.c.elf.cmd.option_flags} -ggdb -T{pulp_runtime.path}/kernel/chips/pulpissimo/link.ld
+compiler.c.elf.flags={compiler.arch_flags} {compiler.c.elf.cmd.option_flags} -nostartfiles -nostdlib -nodefaultlibs -Wl,-s,-flto,--gc-sections,-z,norelro -ggdb -T{pulp_runtime.path}/kernel/chips/pulpissimo/link.ld
 
-compiler.libraries.ldflags=-nostartfiles -nostdlib -nodefaultlibs -Wl,-s,-flto,--gc-sections,-z,norelro -lc -lstdc++
+compiler.libraries.ldflags=-L{build.path}
+compiler.libraries.libs=-lc -lstdc++ -lgcc
 
 ## ELF processing
 
@@ -90,7 +90,7 @@ recipe.ar.pattern="{compiler.path}/{compiler.ar.cmd}" {compiler.ar.flags} "{arch
 
 
 ## Combine gc-sections, archives, and objects
-recipe.c.combine.pattern="{compiler.path}/{compiler.c.elf.cmd}" {compiler.c.elf.flags} -o "{build.path}/{build.project_name}.elf" {object_files} {compiler.libraries.ldflags} "{archive_file_path}" "-L{build.path}"
+recipe.c.combine.pattern="{compiler.path}/{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.libraries.ldflags} -o "{build.path}/{build.project_name}.elf" {object_files} "{archive_file_path}" {compiler.libraries.libs}
 
 
 # support for debugging

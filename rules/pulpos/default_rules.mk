@@ -57,18 +57,18 @@ PULP_ASFLAGS += $(PULPRT_CONFIG_ASFLAGS)
 PULP_CFLAGS += $(PULPRT_CONFIG_CFLAGS)
 PULP_CXXFLAGS += $(PULPRT_CONFIG_CXXFLAGS)
 
-PULP_ASFLAGS += -fno-jump-tables -fno-tree-loop-distribute-patterns
-PULP_CFLAGS += -fno-jump-tables -fno-tree-loop-distribute-patterns
-PULP_CXXFLAGS += -fno-jump-tables -fno-tree-loop-distribute-patterns
+PULP_ASFLAGS += -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
+PULP_CFLAGS += -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
+PULP_CXXFLAGS += -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
 
 ifeq '$(CONFIG_LIBC_MINIMAL)' '1'
 PULP_APP_ASFLAGS += -I$(PULPRT_HOME)/lib/libc/minimal/include
 PULP_APP_CFLAGS += -I$(PULPRT_HOME)/lib/libc/minimal/include
 PULP_APP_CXXFLAGS += -I$(PULPRT_HOME)/lib/libc/minimal/include
 endif
-PULP_APP_ASFLAGS += -I$(PULPRT_HOME)/include -I$(PULPRT_HOME)/kernel
-PULP_APP_CFLAGS += -I$(PULPRT_HOME)/include -I$(PULPRT_HOME)/kernel
-PULP_APP_CXXFLAGS += -I$(PULPRT_HOME)/include -I$(PULPRT_HOME)/kernel
+PULP_APP_ASFLAGS += -I$(PULPRT_HOME)/include
+PULP_APP_CFLAGS += -I$(PULPRT_HOME)/include
+PULP_APP_CXXFLAGS += -I$(PULPRT_HOME)/include
 
 PULP_APP_ASFLAGS += $(foreach inc,$(PULPOS_MODULES),-I$(inc)/include)
 PULP_APP_CFLAGS += $(foreach inc,$(PULPOS_MODULES),-I$(inc)/include)

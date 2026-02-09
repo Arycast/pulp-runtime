@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "include/dynamic_memory.h"
+#include "dynamic_memory.h"
 
 #include "pulp.h"
 

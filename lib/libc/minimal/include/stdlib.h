@@ -23,9 +23,9 @@
 extern "C" {
 #endif
 
-void exit(int status);
+__attribute__ ((noreturn)) void _exit(int status);
 
-void abort(void);
+__attribute__ ((noreturn)) void abort(void);
 
 void *malloc(size_t size);
 

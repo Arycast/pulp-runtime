@@ -272,7 +272,8 @@ int bench_cluster_exec(int cid, int (*entry)())
   return 0;
 }
 
-extern int main(int argc, const char * const argv[]);
+/*extern int main(int argc, const char * const argv[]);*/
+extern int main(void);
 
 int bench_cluster_forward(int cid)
 {

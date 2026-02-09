@@ -135,3 +135,5 @@ include/hal/gvsoc/*
 
 # exclude libc ctype.h
 lib/libc/minimal/include/ctype.h
+
+# keep newlib_reentrant.c
