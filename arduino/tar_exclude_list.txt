@@ -33,6 +33,9 @@ tools/*
 
 # chips that don't need to be included
 
+
+# includes
+
 include/archi/chips/astral-cluster
 include/archi/chips/astral-cluster/*
 include/archi/chips/carfield-cluster
@@ -78,6 +81,15 @@ include/hal/chips/pulp/*
 include/hal/chips/pulp_cluster
 include/hal/chips/pulp_cluster/*
 
+
+## bench
+#
+#include/bench
+#include/bench/*
+
+
+# kernel
+
 kernel/chips/astral-cluster
 kernel/chips/astral-cluster/*
 kernel/chips/carfield-cluster
@@ -93,12 +105,16 @@ kernel/chips/pulp/*
 kernel/chips/pulp_cluster
 kernel/chips/pulp_cluster/*
 
-# exclude cluster and hmr for pulpissimo
+
+# exclude some kernel code for pulpissimo
+
+kernel/bench.c
 kernel/cluster.c
 kernel/hmr_synch.c
 
 
 # exclude some archi and hal
+
 include/archi/cluster_ctrl
 include/archi/cluster_ctrl/*
 include/archi/dma
@@ -114,6 +130,7 @@ include/archi/tcdm_scrubber/*
 
 include/archi/gvsoc
 include/archi/gvsoc/*
+
 
 include/hal/cluster_ctrl
 include/hal/cluster_ctrl/*
@@ -132,6 +149,7 @@ include/hal/tcdm_scrubber/*
 
 include/hal/gvsoc
 include/hal/gvsoc/*
+
 
 # exclude libc ctype.h
 lib/libc/minimal/include/ctype.h

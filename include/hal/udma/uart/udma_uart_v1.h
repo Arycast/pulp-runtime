@@ -71,6 +71,8 @@ typedef union {
     uint32_t raw;
 } __attribute__ ((packed)) plpUdmaUartCustom_u;
 
+/* static inline functions don't need extern "C" */
+
 // UART HAL Handle
 #define UART_HANDLE(id) ((plpUdmaUartHandle_t *)(ARCHI_UDMA_ADDR + UDMA_UART_OFFSET(id)))
 

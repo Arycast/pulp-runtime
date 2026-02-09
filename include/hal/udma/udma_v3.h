@@ -21,6 +21,11 @@
 #include <stdint.h>
 #include "archi/udma/udma_v3.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /** @name UDMA HAL
  * The following API can be used to manage the generic part of the UDMA, i.e. for global configuration and channel enqueueing. Other HALs are available for peripheral specific parts.
  * The UDMA is in charge of moving data between peripherals and L2 memory. In order to better pipeline transfers and not loose any data between 2 transfers, 2 transfers at the same time
@@ -262,5 +267,9 @@ static inline unsigned int hal_udma_channel_base(int id) {
 ///////////////////////////////////////////////////
 
 /// @endcond
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

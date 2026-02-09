@@ -69,17 +69,17 @@ typedef struct
 
 } tb_checker_t;
 
-static void tb_checker_connect(tb_checker_t *checker)
+static inline void tb_checker_connect(tb_checker_t *checker)
 {
 }
 
-static void tb_checker_set_domain_state(tb_checker_t *checker, tb_checker_power_domain_id_e domain, tb_checker_power_domain_state_e state)
+static inline void tb_checker_set_domain_state(tb_checker_t *checker, tb_checker_power_domain_id_e domain, tb_checker_power_domain_state_e state)
 {
   // Store the request in the shared structure seen by the testbench
   checker->power_domains[domain] = state;
 }
 
-static void tb_checker_send_assert(tb_checker_t *checker, uint32_t delay)
+static inline void tb_checker_send_assert(tb_checker_t *checker, uint32_t delay)
 {
   checker->delay = delay;
   hal_compiler_barrier();
@@ -89,7 +89,7 @@ static void tb_checker_send_assert(tb_checker_t *checker, uint32_t delay)
   apb_soc_jtag_reg_write(3<<1);
 }
 
-static int tb_checker_wait_reply(tb_checker_t *checker)
+static inline int tb_checker_wait_reply(tb_checker_t *checker)
 {
   // Wait until we get the reply
   while(*(volatile uint32_t *)&checker->request != TB_CHECKER_REQ_NONE);

@@ -23,6 +23,11 @@
 #include "hal/pulp.h"
 #include "archi/timer/timer_v2.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /**
   * hardware provide 2 (apb_)timer
   * timer lo and timer hi
@@ -334,6 +339,8 @@ static inline    void       timer_continue(unsigned int addr, timer_id_t id, uin
   }
 }
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

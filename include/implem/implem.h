@@ -26,7 +26,9 @@
 #define PI_PLATFORM_GVSOC 3
 #define PI_PLATFORM_BOARD 4
 
-static int pi_platform()
+/* static inline functions don't need extern "C" */
+
+static inline int pi_platform()
 {
     return __PLATFORM__;
 }
@@ -45,7 +47,16 @@ static inline int pos_nb_cluster()
 
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern int pos_kernel_pmsis_exit_value;
+
+#ifdef __cplusplus
+}
+#endif
 
 
 static inline int pmsis_kickoff(void *arg)

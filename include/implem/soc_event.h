@@ -19,6 +19,15 @@
 
 #include "hal/pulp.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 void pos_soc_event_init();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -60,9 +60,9 @@ PULP_CXXFLAGS    += -fdata-sections -ffunction-sections -fnothrow-opt -fno-rtti 
 
 PULP_OMP_CFLAGS    += -fopenmp -mnativeomp
 
-PULP_ASM_LDFLAGS += -flto -nostartfiles -nostdlib -nodefaultlibs -Wl,-s,-flto,--gc-sections,-z,norelro -T$(PULPRT_HOME)/kernel/chips/pulpissimo/link.ld -lc -lgcc
-PULP_C_LDFLAGS += -flto -nostartfiles -nostdlib -nodefaultlibs -Wl,-s,-flto,--gc-sections,-z,norelro -T$(PULPRT_HOME)/kernel/chips/pulpissimo/link.ld -lc -lgcc
-PULP_CXX_LDFLAGS += -flto -nostartfiles -nostdlib -nodefaultlibs -Wl,-s,-flto,--gc-sections,-z,norelro -T$(PULPRT_HOME)/kernel/chips/pulpissimo/link.ld -lc -lstdc++ -lgcc
+PULP_ASM_LDFLAGS += -flto -nostartfiles -nostdlib -Wl,-s,-flto,--gc-sections,-z,norelro -T$(PULPRT_HOME)/kernel/chips/pulpissimo/link.ld -lgcc
+PULP_C_LDFLAGS += -flto -nostartfiles -nostdlib -Wl,-s,-flto,--gc-sections,-z,norelro -T$(PULPRT_HOME)/kernel/chips/pulpissimo/link.ld -lgcc
+PULP_CXX_LDFLAGS += -flto -nostartfiles -nostdlib -Wl,-s,-flto,--gc-sections,-z,norelro -T$(PULPRT_HOME)/kernel/chips/pulpissimo/link.ld -lstdc++ -lgcc
 
 PULP_AS = riscv32-unknown-elf-gcc
 PULP_CC = riscv32-unknown-elf-gcc

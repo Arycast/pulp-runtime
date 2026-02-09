@@ -22,6 +22,11 @@
 #define POS_FLL_PERIPH 1
 #define POS_FLL_FC 0
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern int pos_freq_domains[PI_FREQ_NB_DOMAINS];
 
 
@@ -40,5 +45,8 @@ static inline int pos_freq_get_fll(int domain)
     }
 }
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif

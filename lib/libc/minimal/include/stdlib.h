@@ -23,7 +23,7 @@
 extern "C" {
 #endif
 
-__attribute__ ((noreturn)) void _exit(int status);
+__attribute__ ((noreturn)) void exit(int status);
 
 __attribute__ ((noreturn)) void abort(void);
 

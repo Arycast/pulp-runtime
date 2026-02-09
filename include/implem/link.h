@@ -19,6 +19,11 @@
 
 #include <string.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern unsigned char __irq_vector_base;
 
 static inline uint32_t pos_irq_vector_base()
@@ -111,6 +116,8 @@ static inline int pos_l1_size(int cid) { return (int)&__l1_heap_size; }
 
 #endif
 
-
+#ifdef __cplusplus
+}
+#endif
 
 #endif

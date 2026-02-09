@@ -19,10 +19,19 @@
 
 #include <stdarg.h>
 
-extern int pos_libc_prf(int (*func)(), void *dest, const char *format, va_list vargs);
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
-extern int pos_io_start();
+int pos_libc_prf(int (*func)(), void *dest, const char *format, va_list vargs);
 
-extern int pos_io_stop();
+int pos_io_start();
+
+int pos_io_stop();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

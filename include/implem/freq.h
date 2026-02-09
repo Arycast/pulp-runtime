@@ -17,6 +17,11 @@
 #ifndef __POS_IMPLEM_FREQ_H__
 #define __POS_IMPLEM_FREQ_H__
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 unsigned int pos_fll_set_freq(int fll, unsigned int frequency);
 
 unsigned int pos_fll_init(int fll);
@@ -27,5 +32,9 @@ static inline uint32_t pi_freq_get(pi_freq_domain_e domain)
 {
     return pos_freq_domains[pos_freq_get_fll(domain)];
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

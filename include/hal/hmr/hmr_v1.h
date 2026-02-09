@@ -55,7 +55,7 @@ void pos_hmr_tmr_irq();
 void pos_hmr_synch();
 
 /* Allows for setting up proper barriers depending on available cores */
-static void hmr_setup_barrier(unsigned int num_avail_cores){
+static inline void hmr_setup_barrier(unsigned int num_avail_cores){
   eu_bar_setup(eu_bar_addr(0), num_avail_cores);
 }
 
@@ -201,7 +201,7 @@ static inline void hmr_force_tmr_resynch(unsigned int cid, unsigned int tmr_id) 
   pulp_write32(ARCHI_HMR_GLOBAL_ADDR(cid) + HMR_TMR_OFFSET + HMR_TMR_INCREMENT*tmr_id + HMR_TMR_REGS_TMR_CONFIG_REG_OFFSET, config | (1<<HMR_TMR_REGS_TMR_CONFIG_FORCE_RESYNCH_BIT));
 }
 
-static void hmr_tmr_barrier_setup_all() {
+static inline void hmr_tmr_barrier_setup_all() {
   for (int i = 0; i < NUM_TMR_GROUPS; i++) {
     eu_bar_setup(eu_bar_addr(TMR_BARRIER_ID(i)), TMR_BARRIER_SETUP(i));
   }

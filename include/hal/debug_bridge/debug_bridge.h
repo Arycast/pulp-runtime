@@ -25,7 +25,16 @@
 
 typedef hal_debug_struct_t hal_bridge_t;
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern hal_debug_struct_t HAL_DEBUG_STRUCT_NAME;
+
+#ifdef __cplusplus
+}
+#endif
 
 static inline hal_debug_struct_t *hal_debug_struct_get()
 {

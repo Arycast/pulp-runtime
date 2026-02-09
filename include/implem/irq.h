@@ -19,12 +19,18 @@
 
 #include "hal/pulp.h"
 
-
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 
 void pos_irq_init();
 
 void rt_irq_set_handler(int irq, void (*handler)());
 
+#ifdef __cplusplus
+}
+#endif
 
 
 static inline void rt_irq_mask_set(unsigned int mask)

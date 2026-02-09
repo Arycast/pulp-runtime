@@ -31,6 +31,11 @@
 #define PLP_SEMIHOSTING_PROF_STOP               41
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern int __rt_semihosting_call(int, ... );
 
 typedef struct {
@@ -100,5 +105,8 @@ static inline void gv_prof_stop() {
 #endif
 
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
