@@ -28,7 +28,7 @@
 #include <stdint.h>
 
 /* platform custom definition, this is depend on setting in board variants */
-#include <board/platform_board.h>
+#include "board/platform_board.h"
 
 /* for PROGMEM and various pgm definition */
 #include "pgmspace.h"

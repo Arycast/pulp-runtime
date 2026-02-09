@@ -21,6 +21,8 @@
 #include <stdint.h>
 #include <string.h>
 
+/* use compatibility helper from pulp libc */
+#include "compatibility.h"
 
 /**
 	* PROGMEM is intended to be used for read-only data (const data),
