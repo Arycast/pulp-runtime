@@ -16,10 +16,11 @@
 
 #include <stdbool.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "hal/pulp.h"
-#include <stdint.h>
 #include "compatibility.h"
 #include "io.h"
 #include <pulp.h>
@@ -430,6 +431,12 @@ size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE * restrict stream
     }
 
     return i;
+}
+
+/* needed by g++ */
+ssize_t write(int fd, const void *ptr, size_t size)
+{
+    return (ssize_t) fwrite(ptr, 1, size, (FILE *) fd);
 }
 
 /* needed by g++ */

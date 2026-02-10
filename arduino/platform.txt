@@ -41,29 +41,29 @@ compiler.include_flags=-I{pulp_runtime.include.path} -I{pulp_runtime.include.pat
 ## Compiler
 
 compiler.S.cmd=riscv32-unknown-elf-gcc
-compiler.S.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
+compiler.S.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns
 compiler.S.flags={compiler.arch_flags} {compiler.S.cmd.option_flags} {compiler.define_flags} -DLANGUAGE_ASSEMBLY {compiler.include_flags} -c -ggdb
 
 compiler.c.cmd=riscv32-unknown-elf-gcc
-compiler.c.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -flto
+compiler.c.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns
 compiler.c.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.c.cmd.option_flags} {compiler.define_flags} {compiler.include_flags} -c -ggdb
 
 compiler.cpp.cmd=riscv32-unknown-elf-g++
-compiler.cpp.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -fnothrow-opt -fno-rtti -fno-exceptions -flto
+compiler.cpp.cmd.option_flags=-fdata-sections -ffunction-sections -fno-jump-tables -fno-tree-loop-distribute-patterns -fnothrow-opt -fno-rtti -fno-exceptions
 compiler.cpp.flags={compiler.warning_flags} {compiler.arch_flags} {compiler.cpp.cmd.option_flags} {compiler.define_flags} {compiler.include_flags} -c -ggdb
 
 compiler.ar.cmd=riscv32-unknown-elf-gcc-ar
-compiler.ar.flags=rcs
+compiler.ar.flags=rcsPv
 
 
 ## Linking
 
-compiler.c.elf.cmd.option_flags=-flto
+compiler.c.elf.cmd.option_flags=
 compiler.c.elf.cmd=riscv32-unknown-elf-g++
-compiler.c.elf.flags={compiler.arch_flags} {compiler.c.elf.cmd.option_flags} -nostartfiles -nostdlib -nodefaultlibs -Wl,-s,-flto,--gc-sections,-z,norelro -ggdb -T{pulp_runtime.path}/kernel/chips/pulpissimo/link.ld
+compiler.c.elf.flags={compiler.arch_flags} {compiler.c.elf.cmd.option_flags} -nostartfiles -nostdlib -Wl,--gc-sections,--print-gc-sections,--print-memory-usage,--verbose=4 -ggdb -T{pulp_runtime.path}/kernel/chips/pulpissimo/link.ld
 
 compiler.libraries.ldflags=-L{build.path}
-compiler.libraries.libs=-lc -lstdc++ -lgcc
+compiler.libraries.libs=-lstdc++ -lgcc
 
 ## ELF processing
 

@@ -15,6 +15,13 @@
  */
 
 
+#include <sys/reent.h>
+#include <string.h>
+#include <stdlib.h>
+
+#include <stdio.h>
+#include <unistd.h>
+
 #include "pulp.h"
 
 #include "io.h"
@@ -26,6 +33,7 @@ typedef void (*fptr)(void);
 static fptr ctor_list[1] __attribute__((section(".ctors.start"))) = { (fptr) -1 };
 static fptr dtor_list[1] __attribute__((section(".dtors.start"))) = { (fptr) -1 };
 
+static void hal_cpp_linking_workaround(void);
 
 static void pos_init_do_ctors(void)
 {
@@ -84,6 +92,16 @@ void pos_init_start()
   // Now now the minimal init are done, we can activate interruptions
   hal_irq_enable();
 
+  /**
+    * somehow we will get linking error if instead of linking all object
+    * we go with arduino flow which is create static library (.a) first
+    * then linking, because in linking process, when main program don't use
+    * alloc-related functions, those alloc function will be thrown away
+    * from static library. but then c++ implementation (libstd++) will try
+    * use it, end up with undefined reference
+    */
+  hal_cpp_linking_workaround();
+
   if (!hal_is_fc())
   {
       cluster_start(hal_cluster_id(), main);
@@ -105,3 +123,84 @@ void pos_init_stop()
     // stop tick
     pos_tick_stop();
 }
+
+
+/**
+    * we need to call and use some symbol that is needed
+    * by c++ standard library (libstdc++) to force linker to
+    * not throw away those symbol, where are should be more
+    * smart way to do this effectively (like by lw'ing with assembly)
+    * but for now, just do following meaningless thing
+    */
+#if 0
+static void hal_cpp_linking_workaround(void)
+{
+    /* allocate a pointer with realloc (which internally call malloc) */
+    struct _reent **p1 = realloc(NULL, sizeof(struct _reent *));
+    char           *p2;
+
+    /**
+        * check if alloc success, nothing to worry even if
+        * allocation fail, just return and continue
+        */
+    if (p1 == NULL)
+    {
+        /* return if allocation fail */
+        return;
+    }
+
+    /* set with _impure_ptr */
+    *p1 = _impure_ptr;
+
+    /* free it again */
+    free(p1);
+
+
+    p2 = realloc(NULL, 4 * sizeof(char));
+    if (p2 == NULL)
+    {
+        return;
+    }
+
+    /* use sprintf */
+    sprintf(p2, "%c", 'A');
+
+    /**
+        * use write (POSIX.1-2008), because we write dummy thing
+        * set length/size to 0
+        */
+    write((int) stdout, p2, 0);
+
+    /* free it again */
+    free(p2);
+}
+#else
+int a, b = 42;
+static void hal_cpp_linking_workaround(void)
+{
+    void *p = NULL;
+
+    const void * const p___impure_ptr = (const void *) _impure_ptr;
+    const void * const p__malloc      = (const void *) malloc;
+    const void * const p__realloc     = (const void *) realloc;
+    const void * const p__free        = (const void *) free;
+    const void * const p__sprintf     = (const void *) sprintf;
+    const void * const p__write       = (const void *) write;
+
+    __asm__ volatile (
+        "mv %0, %1\n" \
+        "mv %0, %2\n" \
+        "mv %0, %3\n" \
+        "mv %0, %4\n" \
+        "mv %0, %5\n" \
+        "mv %0, %6\n"
+        : "=r" (p)           /* Output: %0 */
+        : "r" (p___impure_ptr), /* Input:  %1, %2, %3, and so on */
+            "r" (p__malloc),
+            "r" (p__realloc),
+            "r" (p__free),
+            "r" (p__sprintf),
+            "r" (p__write)
+    );
+}
+#endif

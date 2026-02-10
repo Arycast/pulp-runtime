@@ -10,18 +10,13 @@
 /**
 	* wrapper for malloc-related function
 	*/
-#include <stdint.h>
-#include <stddef.h>
+/*#include <stdint.h>
+#include <stddef.h>*/
+#include <string.h>
 
 #include "dynamic_memory.h"
 
 #include "pulp.h"
-
-void * malloc(size_t size);
-void   free(void *ptr);
-void * calloc(size_t nmemb, size_t size);
-void * realloc(void *ptr, size_t size);
-/*void * reallocarray(void *ptr, size_t nmemb, size_t size);*/
 
 
 static void * aligned_malloc(size_t size);

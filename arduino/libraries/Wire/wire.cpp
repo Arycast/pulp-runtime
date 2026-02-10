@@ -137,6 +137,15 @@ int TwoWire::available(void) {
     return rxLength - rxIndex;
 }
 
+void TwoWire::flush(void)
+{
+}
+
+int TwoWire::peek(void)
+{
+    return (-1);
+}
+
 int TwoWire::read(void) {
     int value = -1;
   
