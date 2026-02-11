@@ -2,13 +2,43 @@
 
 #include "pulp.h"
 
+/**
+ * Pad Multiplexing Control Registers
+ * PADMUX_0: Handles configuration for the first 16 pads
+ * PADMUX_1: Handles configuration for the next 16 pads
+ * Base address is derived from the SOC Control unit
+ */
 #define PADMUX_0 (ARCHI_APB_SOC_CTRL_ADDR + 0x10)
 #define PADMUX_1 (ARCHI_APB_SOC_CTRL_ADDR + 0x14)
 
+/**
+ * function digitalRead
+ * Reads the value from a specified digital pin, either HIGH or LOW.
+ * 
+ * https://docs.arduino.cc/language-reference/en/functions/digital-io/digitalread/
+ */
 int digitalRead(int pin);
+
+/**
+ * function digitalWrite
+ * Write a HIGH or a LOW value to a digital pin.
+ * 
+ * https://docs.arduino.cc/language-reference/en/functions/digital-io/digitalwrite/
+ */
 void digitalWrite(int pin, int value);
+
+/**
+ * function pinMode
+ * Configures the specified pin to behave either as an INPUT or an OUTPUT.
+ * 
+ * https://docs.arduino.cc/language-reference/en/functions/digital-io/pinMode/
+ */
 void pinMode(int pin, uint8_t mode);
 
+/**
+ * Mapping table to translate logical Digital Pin (GPIO)
+ * to its corresponding physical Hardware Pad Index
+ */
 static const uint32_t digital_pin_to_pad[] = {
     0, //GPIO_0 -> spim_sdio0 -> pad_mux [0]
     1, //GPIO_1 -> spim_sdio1 -> pad_mux [1]
