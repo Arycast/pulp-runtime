@@ -17,6 +17,9 @@
 #                     (this sh script assume only one openocd script is used and
 #                     openocd script is in this sh script directory)
 # <program elf>       elf to upload to board
+#
+# example:
+#     ./program    /opt/riscv/bin    soft_pynq-z1.cfg    test.elf
 
 # on error, exit
 set -e
@@ -28,12 +31,14 @@ set -e
 
 if [ "$#" -ne 3 ] ; then
 	echo "Error: Illegal number of parameters."
-	echo "Usage: $0 <path to toolchain bin> <openocd script> <program elf>" # $0 is the name of the script itself
-	echo "example: $0 /opt/riscv/bin pulpissimo_jlink text.elf"
+	echo "Usage: $0 <path to toolchain bin> <openocd script> <program elf>"
+	echo "example: $0 /opt/riscv/bin pulpissimo_jlink test.elf"
 	exit 1
 fi
 
-# get directory of this script (sh version m)
+# get directory of this script (sh version maybe not working
+# if this sh script directory included in PATH and this sh script
+# called like calling system command or without path to this sh script)
 export THIS_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # export path to toolchain
