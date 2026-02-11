@@ -218,11 +218,3 @@ void TwoWire::clearWireTimeoutFlag(void) {
 bool TwoWire::getWireTimeoutFlag(void) {
     return false;
 }
-
-void TwoWire::flush(void){
-
-}
-
-int TwoWire::peek(void){
-
-}
