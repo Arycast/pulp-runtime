@@ -103,8 +103,8 @@ tools.openocd.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
 openocd_program_script.path={runtime.tools.openocd_scripts.path}
 openocd_program_script.cmd.path={openocd_program_script.path}/program
 
-## upload a sketch to the target board (using a bootloader preinstalled on the board)
-#tools.openocd.upload.pattern=
+# upload a sketch to the target board (using a bootloader preinstalled on the board)
+tools.openocd.upload.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{openocd_cfg}" "{build.path}/{build.project_name}.elf"
 
 # program a sketch to the target board using an external programmer
 tools.openocd.program.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{openocd_cfg}" "{build.path}/{build.project_name}.elf"

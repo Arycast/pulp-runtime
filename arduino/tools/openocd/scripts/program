@@ -24,6 +24,11 @@
 # on error, exit
 set -e
 
+# inform this script PID to caller
+THIS_SCRIPT_PID="$$"
+echo "$0: program/upload elf executable binary to pulpissimo using gdb and openocd"
+echo "$0: running with PID: $THIS_SCRIPT_PID"
+
 # argument:
 # $1 path to toolchain
 # $2 openocd script to be used
