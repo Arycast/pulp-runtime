@@ -8,31 +8,39 @@
 static i2c_t *i2c;
 static i2c_dev_t dev;
 
+/* Receive buffer state */
 uint8_t TwoWire::rxBuffer[BUFFER_LENGTH];
 uint8_t TwoWire::rxIndex = 0;
 uint8_t TwoWire::rxLength = 0;
 
+/* Transmit buffer state */
 uint8_t TwoWire::txAddress = 0;
 uint8_t TwoWire::txBuffer[BUFFER_LENGTH];
 uint8_t TwoWire::txIndex = 0;
 uint8_t TwoWire::txLength = 0;
 
+/* Operational state */
 uint8_t TwoWire::transmitting = 0;
 
 TwoWire Wire;
 
 void TwoWire::begin(void) {
+    /* Sanitize the device structure with safe default values. */
     i2c_dev_init(&dev);
 
+    /* Configure hardware parameters: ID, Chip Select/Address, and Speed (50kHz) */
     dev.id = 0;
     dev.cs = 0xD0;
     dev.max_baudrate = 50000;
 
+    /* Connect to the physical I2C bus and wake it up. */
     i2c = i2c_open(&dev);
 
+    /* Reset Receive (RX) buffer indices to ensure it starts empty*/
     rxIndex = 0;
     rxLength = 0;
 
+    /* Reset Transmit (TX) buffer indices to prepare for new data transmission*/
     txIndex = 0;
     txLength = 0;
 }
@@ -42,70 +50,93 @@ void TwoWire::begin(uint8_t address) {
 }
 
 void TwoWire::end(void) {
+    /* Check if the I2V handles is active before attempting to close. */
     if(i2c){
+
+        /* Deactivate the hardware and realease system resources. */
         i2c_close(i2c);
+
+        /* Clear handle to prevent accidental reuse or memory issues. */
         i2c = nullptr;
     }
 }
 
-int TwoWire::requestFrom(int address, int quantity) {
-    return requestFrom((int)address, (int)quantity, (bool)true);
+int TwoWire::requestFrom(uint8_t address, uint8_t quantity) {
+    return requestFrom((uint8_t)address, (uint8_t)quantity, (bool)true);
 }
 
-int TwoWire::requestFrom(int address, int quantity, bool stop) {
+int TwoWire::requestFrom(uint8_t address, uint8_t quantity, bool stop) {
+    /* Ensure the hardware handle is intialized before proceeding. */
     if (i2c == nullptr) return 0;
 
+    /* Enforce buffer safety by limiting the request size. */
     if (quantity > BUFFER_LENGTH) quantity = BUFFER_LENGTH;
     
+    /* Set target peripheral address and execute the hardware-level read. */
     i2c->cs = address;
     i2c_read(i2c, rxBuffer, quantity, !stop);
     
+    /* Set read pointer to the beginning and update the count of available bytes. */
     rxIndex = 0;
     rxLength = quantity;
 
     return quantity;
 }
 
-void TwoWire::beginTransmission(int address) {
-    // indicate that we are transmitting
+void TwoWire::beginTransmission(uint8_t address) {
+    /* Indicate that we are transmitting. */
     transmitting = 1;
-    // set address of targeted slave
+
+    /* Set address of the targeted slave. */
     txAddress = address;
-    // reset tx buffer iterator vars
+
+    /* Reset tx buffer iterator vars. */ 
     txIndex = 0;
     txLength = 0;
 }
 
-int TwoWire::endTransmission(void) {
+uint8_t TwoWire::endTransmission(void) {
     if (i2c){
+        /* Set the target peripheral address for the current transaction. */
         i2c->cs = txAddress;
+
+        /* Build and enqueue I2C command sequence to uDMA for transmission. */
         i2c_write(i2c, txBuffer, txLength);
+
+        /* Reset TX buffer indices to clear the buffer for the next transmission. */
         txIndex = 0;
         txLength = 0;
     }
-    // reset tx buffer iterator vars
     
-    // indicate that we are done transmitting
+    /* Reset transmission flag to indicate the bus is no longer busy. */
     transmitting = 0;
+
+    /* Return 0 to indicate success. */
     return 0;
+}
+
+uint8_t TwoWire::endTransmission(bool stop) {
+    /* True will send a stop message, releasing the bus after transmission. False will send a restart, keeping the connection active. */
 }
 
 size_t TwoWire::write(uint8_t value) {
     if(transmitting){
-    // in master transmitter mode
-        // don't bother if buffer is full
+        /* MASTER MODE: Buffer a single byte for later transmission */
+
+        /* Prevent buffer overflow by checking against capacity. */
         if(txLength >= BUFFER_LENGTH){
         return 0;
         }
-        // put byte in tx buffer
+        
+        /* Store the byte and advance the buffer pointers */
         txBuffer[txIndex] = value;
         ++txIndex;
-        // update amount in buffer   
         txLength = txIndex;
-    }else{
-    // in slave send mode
-        // reply to master
 
+    }else{
+        /* PERIPHERAL MODE: Transmit the single byte immediately */
+
+        /* Directly push a single byte through the uDMA command pipeline */
         if (i2c) i2c_write(i2c, &value, 1);
     }
     return 1;    
@@ -121,19 +152,21 @@ size_t TwoWire::write(const String &myString) {
 
 size_t TwoWire::write(const uint8_t *data, size_t length) {
     if(transmitting){
-    // in master transmitter mode
+        /* MASTER MODE: Iteratively buffer each byte in the transmit queue */        
         for(size_t i = 0; i < length; ++i){
-        write(data[i]);
+
+            /* Sequentially add each byte from the array to the transmit queue */
+            write(data[i]);
         }
     }else{
-    // in slave send mode
-        // reply to master
+        /* PERIPHERAL MODE: Transmit the entire block immediately */
         if (i2c) i2c_write(i2c, (unsigned char*)data, length);
     }
     return length;
 }
 
 int TwoWire::available(void) {
+    /* Returns the number of bytes remaing to be read */
     return rxLength - rxIndex;
 }
 
@@ -158,15 +191,15 @@ int TwoWire::read(void) {
     return value;
 }
 
-void TwoWire::setClock(uint32_t frequency) {
+void TwoWire::setClock(uint32_t clockfrequency) {
 
 }
 
-void TwoWire::onReceive(void (*function)(int)) {
+void TwoWire::onReceive(void (*handler)(int)) {
 
 }
 
-void TwoWire::onRequest(void (*function)(int)) {
+void TwoWire::onRequest(void (*handler)(void)) {
 
 }
 
@@ -184,4 +217,12 @@ void TwoWire::clearWireTimeoutFlag(void) {
 
 bool TwoWire::getWireTimeoutFlag(void) {
     return false;
+}
+
+void TwoWire::flush(void){
+
+}
+
+int TwoWire::peek(void){
+
 }
