@@ -1,11 +1,30 @@
 #!/bin/sh
 
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+# script to upload/program riscv elf in single command line
+# usage:
+#     ./program    <path to toolchain bin> <openocd script> <program elf>
+#
+# <path to toolchain> is bin directory contain executable
+#                     "riscv32-unknown-elf-gdb" and "openocd"
+# <openocd script>    is cfg file used as openocd script
+#                     (this sh script assume only one openocd script is used and
+#                     openocd script is in this sh script directory)
+# <program elf>       elf to upload to board
+
 # on error, exit
 set -e
 
 # argument:
 # $1 path to toolchain
-# $2 script to be used
+# $2 openocd script to be used
+# $3 program/elf to upload
 
 if [ "$#" -ne 3 ] ; then
 	echo "Error: Illegal number of parameters."
