@@ -55,7 +55,7 @@ public:
      * until endPacket() is called.
      */
     size_t write(uint8_t byte) override;
-    size_t write(const uint8_t *buffer, size_t size);
+    size_t write(const uint8_t *buffer, size_t size) override;
 
     /**
      * method parsePacket
