@@ -1,5 +1,6 @@
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <stddef.h>
 
 #include "pulp.h"
 
@@ -39,6 +40,11 @@ int Serials::read() {
 size_t Serials::write(uint8_t data) {
     uart_write(_uart_id, &data, 1);
     return 1;
+}
+
+size_t Serials::write(const uint8_t *data, size_t length) {
+    uart_write(_uart_id, data, length);
+    return length;
 }
 
 int Serials::available() {

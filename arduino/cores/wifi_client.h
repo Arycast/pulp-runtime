@@ -12,6 +12,9 @@
 class WiFiClient : public IPAddress, public Stream
 {
 public :
+    WiFiClient(void);
+    ~WiFiClient(void);
+
     // override virtual method (from Stream class)
     int available(void) override;
     int read(void) override;
@@ -21,9 +24,11 @@ public :
     bool connected(void);
     bool connect(IPAddress ip, int port);
     bool connect(String URL, int port);
-    size_t write(byte data);
+    size_t write(byte data) override;
     /*byte write(byte data);*/ /* cannot overload function solely based on return type */
     size_t write(char data);
+    size_t write(const byte *data, size_t length) override;
+    size_t write(const char *data, size_t length);
     /*byte write(char data);*/
     byte print(char data);
     byte print(byte data);

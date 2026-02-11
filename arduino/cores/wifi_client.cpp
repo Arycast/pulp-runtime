@@ -9,6 +9,14 @@
 
 WiFiClient client;
 
+WiFiClient::WiFiClient(void)
+{
+}
+
+WiFiClient::~WiFiClient(void)
+{
+}
+
 bool WiFiClient::connected(void) {
 	return -1;
 }
@@ -29,13 +37,35 @@ size_t WiFiClient::write(char data) {
 	return -1;
 }
 
-/*byte WiFiClient::write(byte data) {
-	return (byte) this->write(data);
+size_t WiFiClient::write(const byte *data, size_t length)
+{
+	return -1;
+}
+
+/*size_t WiFiClient::write(const char *data, size_t length)
+{
+	return -1;
 }*/
 
-/*byte WiFiClient::write(char data) {
-	return (byte) this->write(data);
-}*/
+
+int WiFiClient::available(void)
+{
+	return -1;
+}
+
+int WiFiClient::read(void)
+{
+	return -1;
+}
+
+void WiFiClient::flush(void)
+{
+}
+
+int WiFiClient::peek(void)
+{
+	return -1;
+}
 
 byte WiFiClient::print(char data) {
 	return -1;

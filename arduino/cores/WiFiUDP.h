@@ -2,6 +2,7 @@
 #define WIFIUDP_H
 
 #include <stdint.h>
+#include <stddef.h>
 #include "stream.h"
 
 class WiFiUDP : public Stream {
@@ -15,8 +16,8 @@ public:
     int beginPacket(const char *hostName, int port);
     int beginPacket(uint32_t hostIp, int port);
     int endPacket(void);
-    size_t write(uint8_t byte);
-    size_t write(const uint8_t *buffer, size_t size);
+    size_t write(uint8_t byte) override;
+    size_t write(const uint8_t *buffer, size_t size) override;
     int parsePacket(void);
     int read(void);
     int read(char *buffer, int len);

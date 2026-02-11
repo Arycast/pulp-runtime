@@ -37,10 +37,10 @@ public:
     int requestFrom(int address, int quantity, bool stop);
     void beginTransmission(int address);
     int endTransmission(void);
-    size_t write(uint8_t value);
+    size_t write(uint8_t value) override;
     size_t write(const char *str);
     size_t write(const String &myString);
-    size_t write(const uint8_t *data, size_t length);
+    size_t write(const uint8_t *data, size_t length) override;
     int available(void) override;
     void flush(void) override;
     int peek(void) override;

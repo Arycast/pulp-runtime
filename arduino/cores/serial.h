@@ -17,6 +17,7 @@ public :
     void end(void);
     int read(void) override;
     size_t write(uint8_t data) override;
+    size_t write(const uint8_t *data, size_t length) override;
     int available(void) override;
     int peek(void) override;
     void flush(void) override;
