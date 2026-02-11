@@ -124,27 +124,26 @@ debug.executable={build.path}/{build.project_name}.elf
 # a unique identifier of the required toolchain, currently we support gcc (and compatible) only
 debug.toolchain=gdb
 
-# absolute path to the toolchain directory
-debug.toolchain.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
-
 # prefix of the toolchain (for example arm-none-eabi-)
 debug.toolchain.prefix=riscv32-unknown-elf-
 
+# absolute path to the toolchain directory
+debug.toolchain.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
 
 # a unique identifier of the required debug server, currently we support only openocd
 debug.server=openocd
-# absolute path to the SVD descriptor.
+## absolute path to the SVD descriptor.
 #debug.svd_file=
 
 # OpenOCD server specific configurations:
 
 # absolute path to the OpenOCD directory
-debug.server.openocd.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
+debug.server.openocd.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin/openocd
 
-# absolute path to the OpenOCD scripts directory
-debug.server.openocd.scripts_dir={runtime.tools.pulpissimo_toolchain_openocd.path}/share/openocd/scripts
+## absolute path to the OpenOCD scripts directory
+#debug.server.openocd.scripts_dir={openocd_program_script.path}
 
 # if there is only one OpenOCD script to run, this directive con be used instead of the debug.server.openocd.scripts.N (this directive is ignored if debug.server.openocd.scripts.N is present)
-debug.server.openocd.script={runtime.tools.openocd_scripts.path}/soft_pynq-z1.cfg
-# is a list of OpenOCD script files to run, where N is a number (a sequence of non-consecutive numbers is allowed)
-#debug.server.openocd.scripts.N=
+debug.server.openocd.script={openocd_program_script.path}/{openocd_cfg}
+## is a list of OpenOCD script files to run, where N is a number (a sequence of non-consecutive numbers is allowed)
+##debug.server.openocd.scripts.N=
