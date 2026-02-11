@@ -85,7 +85,7 @@ void uart_close(int uart_id)
 
 
 
-int uart_write(int uart_id, void *buffer, uint32_t size)
+int uart_write(int uart_id, const void *buffer, uint32_t size)
 {
   int periph_id = ARCHI_UDMA_UART_ID(uart_id);
   int channel = UDMA_EVENT_ID(periph_id) + 1;

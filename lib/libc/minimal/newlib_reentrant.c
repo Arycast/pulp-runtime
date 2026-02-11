@@ -14,5 +14,5 @@
 
 #include <sys/reent.h>
 
-struct _reent   global_impure_ptr[1] = {0};
-struct _reent  *      _impure_ptr = &(global_impure_ptr[0]);
+__attribute__ ((weak)) struct _reent   global_impure_ptr[1] = {0};
+__attribute__ ((weak)) struct _reent  *      _impure_ptr = &(global_impure_ptr[0]);

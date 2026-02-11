@@ -101,7 +101,7 @@ static inline int get_core_num() { return ARCHI_CLUSTER_NB_PE; }
 
 int uart_open(int uart_id, int baudrate);
 void uart_close(int uart_id);
-int uart_write(int uart_id, void *buffer, uint32_t size);
+int uart_write(int uart_id, const void *buffer, uint32_t size);
 int uart_read(int uart_id, void *buffer, uint32_t size);
 
 //i2c section
