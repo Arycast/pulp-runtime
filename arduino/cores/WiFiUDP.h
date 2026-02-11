@@ -7,7 +7,8 @@
 #define WIFIUDP_H
 
 #include <stdint.h>
-#include <stream.h>
+#include <stddef.h>
+#include "stream.h"
 
 class WiFiUDP : public Stream {
 private:

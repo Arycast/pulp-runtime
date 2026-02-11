@@ -45,7 +45,7 @@ void TwoWire::begin(void) {
     txLength = 0;
 }
 
-void TwoWire::begin(uint8_t address) {
+void TwoWire::begin(int address) {
     begin();
 }
 
@@ -61,11 +61,11 @@ void TwoWire::end(void) {
     }
 }
 
-int TwoWire::requestFrom(uint8_t address, uint8_t quantity) {
-    return requestFrom((uint8_t)address, (uint8_t)quantity, (bool)true);
+int TwoWire::requestFrom(int address, int quantity) {
+    return requestFrom((int)address, (int)quantity, (bool)true);
 }
 
-int TwoWire::requestFrom(uint8_t address, uint8_t quantity, bool stop) {
+int TwoWire::requestFrom(int address, int quantity, bool stop) {
     /* Ensure the hardware handle is intialized before proceeding. */
     if (i2c == nullptr) return 0;
 
@@ -83,7 +83,7 @@ int TwoWire::requestFrom(uint8_t address, uint8_t quantity, bool stop) {
     return quantity;
 }
 
-void TwoWire::beginTransmission(uint8_t address) {
+void TwoWire::beginTransmission(int address) {
     /* Indicate that we are transmitting. */
     transmitting = 1;
 

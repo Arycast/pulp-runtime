@@ -43,7 +43,7 @@ public:
      * https://docs.arduino.cc/language-reference/en/functions/communication/wire/begin/
      */
     void begin(void);
-    void begin(uint8_t address);
+    void begin(int address);
 
     /**
      * method end
@@ -62,8 +62,8 @@ public:
      * 
      * https://docs.arduino.cc/language-reference/en/functions/communication/wire/requestFrom/
      */
-    int requestFrom(uint8_t address, uint8_t quantity);
-    int requestFrom(uint8_t address, uint8_t quantity, bool stop);
+    int requestFrom(int address, int quantity);
+    int requestFrom(int address, int quantity, bool stop);
     
     /**
      * method beginTransmission
@@ -73,7 +73,7 @@ public:
      * 
      * https://docs.arduino.cc/language-reference/en/functions/communication/wire/beginTransmission/
      */
-    void beginTransmission(uint8_t address);
+    void beginTransmission(int address);
 
     /**
      * method endTransmission
@@ -94,10 +94,10 @@ public:
      * 
      * https://docs.arduino.cc/language-reference/en/functions/communication/wire/write/
      */
-    size_t write(uint8_t value);
+    size_t write(uint8_t value) override;
     size_t write(const char *str);
     size_t write(const String &myString);
-    size_t write(const uint8_t *data, size_t length);
+    size_t write(const uint8_t *data, size_t length) override;
 
     /**
      * method available
