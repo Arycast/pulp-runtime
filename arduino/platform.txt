@@ -65,6 +65,7 @@ compiler.c.elf.flags={compiler.arch_flags} {compiler.c.elf.cmd.option_flags} -no
 compiler.libraries.ldflags=-L{build.path}
 compiler.libraries.libs=-lstdc++ -lgcc
 
+
 ## ELF processing
 
 compiler.objcopy.cmd=riscv32-unknown-elf-objcopy
@@ -92,6 +93,27 @@ recipe.ar.pattern="{compiler.path}/{compiler.ar.cmd}" {compiler.ar.flags} "{arch
 ## Combine gc-sections, archives, and objects
 recipe.c.combine.pattern="{compiler.path}/{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.libraries.ldflags} -o "{build.path}/{build.project_name}.elf" {object_files} "{archive_file_path}" {compiler.libraries.libs}
 
+
+
+# upload, program, erase, and bootloader
+
+tools.openocd.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
+#tools.openocd.cmd.path={tools.openocd.path}/openocd
+
+openocd_program_script.path={runtime.tools.openocd_scripts.path}
+openocd_program_script.cmd.path={openocd_program_script.path}/program
+
+## upload a sketch to the target board (using a bootloader preinstalled on the board)
+#tools.openocd.upload.pattern=
+
+# program a sketch to the target board using an external programmer
+tools.openocd.program.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{openocd_cfg}" "{build.path}/{build.project_name}.elf"
+
+## erase the target board's flash memory using an external programmer
+#tools.openocd.erase.pattern=
+
+## burn a bootloader into the target board using an external programmer
+#tools.openocd.bootloader.pattern=
 
 # support for debugging
 

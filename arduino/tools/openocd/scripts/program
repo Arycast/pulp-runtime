@@ -1,0 +1,53 @@
+#!/bin/sh
+
+# on error, exit
+set -e
+
+# argument:
+# $1 path to toolchain
+# $2 script to be used
+
+if [ "$#" -ne 3 ] ; then
+	echo "Error: Illegal number of parameters."
+	echo "Usage: $0 <path to toolchain bin> <openocd script> <program elf>" # $0 is the name of the script itself
+	echo "example: $0 /opt/riscv/bin pulpissimo_jlink text.elf"
+	exit 1
+fi
+
+# get directory of this script (sh version m)
+export THIS_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# export path to toolchain
+export PATH="$PATH:$1"
+
+# call openocd and send to background
+openocd -s "$THIS_SCRIPT_DIR" -f "$2" &
+
+# get openocd PID
+OPENOCD_PID="$!"
+
+# wait openocd up
+sleep 2
+
+# create gdb script (need mktemp command)
+GDB_SCRIPT="$(mktemp)"
+
+cat > "$GDB_SCRIPT" <<EOF
+target extended-remote :3333
+monitor reset halt
+load
+monitor resume
+monitor shutdown
+disconnect
+#detach
+quit
+EOF
+
+# upload with gdb
+riscv32-unknown-elf-gdb --command="$GDB_SCRIPT" "$3"
+
+# remove temporary file
+rm --verbose "$GDB_SCRIPT"
+
+# wait openocd exit
+wait "$OPENOCD_PID"

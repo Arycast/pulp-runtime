@@ -1,0 +1,2 @@
+openocd.name="OpenOCD"
+openocd.protocol=default
