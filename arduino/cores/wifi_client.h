@@ -56,7 +56,12 @@ public :
         */
     void flush(void) override;
 
-    /*void peek(void) override;*/ /*standard dont have peek method*/
+    /**
+        * method peek
+        * standard don't have peek method, but declare (and define) it here
+        * so that this class not became virtual class
+        */
+    int peek(void) override;
 
     /**
         * method connected
