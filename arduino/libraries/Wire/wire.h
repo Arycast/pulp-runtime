@@ -9,7 +9,7 @@
 
 #ifndef wire_h
 #define wire_h
-
+ 
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -34,6 +34,9 @@ private:
     static uint8_t txLength;
 
     static uint8_t transmitting;
+    static void (*user_onReceive)(int);
+    static void (*user_onRequest)(void);
+
 public:
     /**
      * method begin

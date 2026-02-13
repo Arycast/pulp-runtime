@@ -16,14 +16,6 @@
 #include "variables.h"
 #include "pgmspace.h"
 
-/*#define DEC 10
-#define HEX 16
-#define OCT 8
-#ifdef BIN*/ // Prevent warnings if BIN is previously defined
-/*#undef BIN
-#endif
-#define BIN 2*/
-
 class Print {
     private:
         size_t printNumber(unsigned long n, uint8_t base);
