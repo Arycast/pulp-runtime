@@ -1,3 +1,7 @@
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * function attachInterrupts
  * Interrupts help make things happen automatically in microcontroller programs 
@@ -32,3 +36,7 @@ void detachInterrupt(int interrupt);
  * https://docs.arduino.cc/language-reference/en/functions/external-interrupts/digitalPinToInterrupt/
  */
 int digitalPinToInterrupt(int pin);
+
+#ifdef __cplusplus
+}
+#endif

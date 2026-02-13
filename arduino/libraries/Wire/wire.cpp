@@ -19,8 +19,9 @@ uint8_t TwoWire::txBuffer[BUFFER_LENGTH];
 uint8_t TwoWire::txIndex = 0;
 uint8_t TwoWire::txLength = 0;
 
-/* Operational state */
 uint8_t TwoWire::transmitting = 0;
+void (*TwoWire::user_onReceive)(int);
+void (*TwoWire::user_onRequest)(void);
 
 TwoWire Wire;
 

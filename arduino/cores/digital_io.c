@@ -1,7 +1,5 @@
 #include "pulp.h"
-
 #include "variables.h"
-
 #include "digital_io.h"
 
 /* Validates pin range and returns the mapped physical pad index*/

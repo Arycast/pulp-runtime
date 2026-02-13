@@ -1,5 +1,4 @@
 #include "variables.h"
-
 #include "external_interrupts.h"
 
 void attachInterrupt(int interrupt, void(*userFunc)(void), int mode){
