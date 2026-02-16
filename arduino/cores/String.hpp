@@ -23,8 +23,12 @@
 #ifndef __ARDUINO_CORES_SSTRING_HPP__
 #define __ARDUINO_CORES_SSTRING_HPP__
 
+#ifndef SIMULATION_TEST
+#include "simulation_test.h"
+#else
 #include "variables.h" /* for various data type, including native data type */
 #include "pgmspace.h" /* for various string macro */
+#endif
 
 /**
 	* configuration

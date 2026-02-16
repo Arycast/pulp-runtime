@@ -18,7 +18,7 @@ CXX_SRCS = main.cpp $(ARDUINO_CORES)/String.cpp
 
 # object
 ASM_OBJS = $(filter %.o,$(patsubst %.S,%.S.o,$(ASM_SRCS))) $(filter %.o,$(patsubst %.s,%.s.o,$(ASM_SRCS)))
-C_OBJS = $(patsubst %.c,%.c.o,$(CXX_SRCS))
+C_OBJS = $(patsubst %.c,%.c.o,$(C_SRCS))
 #CXX_OBJS = $(filter %.o,$(patsubst %.C,%.C.o,$(CXX_SRCS))) $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(patsubst %.cpp,%.cpp.o,$(CXX_SRCS))) $(filter %.o,$(patsubst %.cxx,%.cxx.o,$(CXX_SRCS)))
 CXX_OBJS = $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(patsubst %.cpp,%.cpp.o,$(CXX_SRCS))) $(filter %.o,$(patsubst %.cxx,%.cxx.o,$(CXX_SRCS)))
 
@@ -26,9 +26,9 @@ CXX_OBJS = $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(pats
 APP = main
 
 # compilation flags
-ASMFLAGS = -ggdb -Wall -Wextra -pedantic -flto -I$(ARDUINO_CORES)
-CFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -std=c11 -flto -I$(ARDUINO_CORES)
-CXXFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto -I$(ARDUINO_CORES)
+ASMFLAGS = -ggdb -Wall -Wextra -pedantic -flto -I$(ARDUINO_CORES) -I.
+CFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -std=c11 -flto -I$(ARDUINO_CORES) -I.
+CXXFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto -I$(ARDUINO_CORES) -I.
 
 HAS_C = $(C_SRCS)
 HAS_CXX = $(CXX_SRCS)
@@ -53,42 +53,42 @@ all: $(APP)
 
 # linking
 $(APP): $(ASM_OBJS) $(C_OBJS) $(CXX_OBJS)
-	ifeq ($(HAS_CXX),)
-		ifeq ($(HAS_C),)
-			$(LD_AS) $(ASM_LDFLAGS) -o $@ $^ $(ASM_LIBS)
-		else
-			$(LD_C) $(C_LDFLAGS) -o $@ $^ $(C_LIBS)
-		endif
-	else
+ifeq ($(HAS_CXX),)
+ifeq ($(HAS_C),)
+		$(LD_AS) $(ASM_LDFLAGS) -o $@ $^ $(ASM_LIBS)
+else
+		$(LD_C) $(C_LDFLAGS) -o $@ $^ $(C_LIBS)
+endif
+else
 		$(LD_CXX) $(CXX_LDFLAGS) -o $@ $^ $(CXX_LIBS)
-	endif
+endif
 
 # compile
 
 # ASM
 %.S.o : %.S
-	$(CC) $(ASMFLAGS) -o $@ $<
+	$(CC) $(ASMFLAGS) -c -o $@ $<
 
 %.s.o : %.s
-	$(CC) $(ASMFLAGS) -o $@ $<
+	$(CC) $(ASMFLAGS) -c -o $@ $<
 
 # C
 %.c.o : %.c
-	$(CC) $(CFLAGS) -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 # C++
 %.cc.o : %.cc
-	$(CXX) $(CXXFLAGS) -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.cpp.o : %.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.cxx.o : %.cxx
-	$(CXX) $(CXXFLAGS) -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # clean and distclean
 clean:
-	$(RM) --verbose --force $(ASM_OBJS) $(ASM_OBJS) $(ASM_OBJS)
+	$(RM) --verbose $(ASM_OBJS) $(C_OBJS) $(CXX_OBJS)
 
 distclean: clean
-	$(RM) --verbose --force $(APP)
+	$(RM) --verbose $(APP)
