@@ -27,28 +27,98 @@
 #include "pgmspace.h" /* for various string macro */
 
 /**
-	* string class
+	* configuration
+	*/
+#include "config_String.h"
+
+/**
+	* assert
+	*/
+#include "assert_helper.h"
+
+/* standard header c */
+#include <string.h> /* strlen, memcpy, memmove etc. */
+#include <stdlib.h> /* alloc related functions */
+
+/* standard header c++ */
+#include <exception> /* for std::terminate */
+
+/* local header */
+
+
+/**
+	* class declaration
+	*/
+/* forward declare class */
+class String;
+
+
+/* implement binary operator as non-member function */
+
+/**
+	* operator +
+	* ALWAYS RETURN BY VALUE EVEN IF WE DEALING WITH MOVE-SEMANTIC!
+	*
+	* operator + IS NON-COMMUTATIVE OPERATOR for this class, e.g. (a + b) != (b + a)
+	*/
+
+#if 0
+String operator+(String    lhs, const String   &rhs);
+
+#if ((__cplusplus) >= 201103L) /* C++11 */
+String operator+(String    lhs, String        &&rhs);
+
+String operator+(String  &&lhs, String          rhs);
+
+String operator+(String  &&lhs, String        &&rhs);
+#endif /* ((__cplusplus) >= 201103L) */
+
+
+String operator+(const char *lhs, const String     &rhs);
+#endif
+
+String operator+(const char *lhs, String            rhs);
+
+#if ((__cplusplus) >= 201103L) /* C++11 */
+String operator+(const char *lhs, String          &&rhs);
+#endif
+
+
+/**
+	* class definition
 	*/
 class String
 {
+private:
+	static constexpr const char  *empty_string = "";
+	static char                   dummy_char_storage;
+
+	char                         *c_str_buf;
+	size_t                        c_str_buf_len;
+	size_t                        c_str_buf_strlen;
+
 public:
 	/**
 		* part of big three
 		* copy constructor
 		*/
-	String(const String   &myString2);
+	/* constructors */
+	String(void);
+	String(const char *str);
+	/* copy constructor */
+	String(const String   &rvalue);
 #if (__cplusplus >= 201103L)
 	/* move constructor */
-	String(const String  &&myString2);
+	String(String        &&rvalue);
 #endif
+
+	/* destructor */
 	~String(void);
 
 
 	/**
 		* class method:
 		*/
-
-public:
 
 	/**
 		* regular public class method
@@ -144,7 +214,27 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/c_str
 		*/
-	const char * c_str(void) const;
+	inline const char * c_str(void) const
+	{
+		/* just alias of __non_standard__c_str_non_const */
+		return this->__non_standard__c_str_non_const();
+	}
+
+	/**
+		* same as c_str but without const qualifier
+		* this method don't modify instance, therefore
+		* can be called by constant instance
+		*/
+	inline       char * __non_standard__c_str_non_const(void) const
+	{
+		/**
+			* check if current pointer refer to empty_string
+			* if so, return NULL
+			*/
+
+		return (this->c_str_buf);
+	}
+
 
 	/**
 		* method endsWith
@@ -452,10 +542,12 @@ public:
 		*
 		* should return *this
 		*/
-	String &operator=(const String &rhs);
+	String &operator=(const char     *rvalue);
+	/* copy semantic */
+	String &operator=(const String   &rvalue);
 #if (__cplusplus >= 201103L) /* C++11 */
-	/* move assignment operator */
-	String &operator=(const String &&rhs);
+	/* move semantic */
+	String &operator=(String        &&rvalue);
 #endif
 
 
@@ -466,20 +558,122 @@ public:
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/elementAccess"
 		*/
 	/* r-value operator */
-	char   operator[](size_t index) const;
-	/* l-value operator */
-	char  &operator[](size_t index);
+	char   operator[](size_t index) const
+	{
+		/* get current instance string pointer */
+		const char *s = this->c_str();
+
+		/* check if buffer is empty */
+		if ((s == NULL) || (s == (this->empty_string)))
+		{
+			return '\0';
+		}
+		else
+		{
+			/* check if we attempt to access out of bound memory */
+			size_t s_len = strlen(s);
+
+			/* in attempt of accessing out of bound memory, return '\0' */
+			if (index >= s_len)
+			{
+				return '\0';
+			}
+			else
+			{
+				/* in bound memory */
+				return s[index];
+			}
+		}
+	}
+
+	/**
+		* l-value operator, although this method don't modify object
+		* the nature of l-value operator is to be modified by r-value
+		* therefore don't put const here
+		*/
+	char  &operator[](size_t index)
+	{
+		char *s = this->__non_standard__c_str_non_const();
+
+		/* check if we try to write invalid buffer or read-only buffer */
+		if ((s == NULL) || (((const char *) s) == (this->empty_string)))
+		{
+			/* return dummy storage */
+			return (String::dummy_char_storage);
+		}
+		else
+		{
+			/* check if we attempt to access memory outside of buffer
+			* (not outside of string) */
+			if (index >= this->__non_standard__get_buffer_length())
+			{
+				return (String::dummy_char_storage);
+			}
+			else
+			{
+				return s[index];
+			}
+		}
+	}
 
 
 	/**
 		* operator + (concatenation)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/concatenation"
 		*/
+	/* with c string */
+	inline String operator+(const char *rhs) const
+	{
+		/* create new instance, since + operator shouldn't modify lhs operand */
+		String lhs(*this);
+
+		/* reuse += operator (const char *) */
+		return (lhs += rhs);
+	}
+
+	/* with copy semantic */
+	inline String operator+(const String &rhs) const
+	{
+		String lhs(*this);
+
+		/* reuse += operator for string */
+		return (lhs += rhs);
+	}
+
+	/* with move semantic */
+#if (__cplusplus >= 201103L)
+	inline String operator+(String &&rhs) const
+	{
+		/*String String_rhs(rhs);*/
+		String lhs(*this);
+
+		/* reuse + operator for string */
+		return (lhs += rhs);
+	}
+#endif
+
 
 	/**
 		* operator += (append)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/append"
 		*/
+	/**
+		* with c string
+		*/
+	String &operator+=(const char *rvalue);
+
+	/**
+		* copy semantic
+		*/
+	String &operator+=(const String &rvalue);
+
+	/**
+		* move semantic
+		*/
+#if ((__cplusplus) >= 201103L) /* C++11 */
+	String &operator+=(String &&rvalue);
+#endif /* ((__cplusplus) >= 201103L) */
+
 
 	/**
 		* operator == (comparison)
@@ -510,12 +704,106 @@ public:
 		* operator != (different from)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/differentFrom"
 		*/
+
+	/**
+		* set new string to this instance, new argument should be dynamically
+		* allocated buffer (created with malloc, realloc, etc.)
+		*
+		* you can chain this function
+		*/
+	inline String & __non_standard__set_new_buffer(char *new_buffer, size_t buffer_length)
+	{
+		/* if new_buffer is NULL or buffer_length is 0,
+		* then automatically set new_buffer to NULL */
+		if ((new_buffer == NULL) || (new_buffer == ((char *) (this->empty_string))) ||
+			(buffer_length == 0))
+		{
+			return this->__non_standard__set_new_buffer((char *) String::empty_string, 0, 0);
+		}
+		else
+		{
+			/**
+				* if not, then calculate string length
+				* to guarantee that strlen not accesing out-of-bound memory,
+				* set end of buffer to '\0'
+				*/
+			new_buffer[buffer_length - 1] = '\0';
+
+			/* we can safely use strlen here */
+			return this->__non_standard__set_new_buffer(new_buffer, buffer_length, strlen(new_buffer));
+		}
+	}
+
+	inline String & __non_standard__set_new_buffer(char *new_buffer, size_t buffer_length, size_t string_length)
+	{
+		/* string_length should less than buffer_length */
+		if (string_length >= buffer_length)
+		{
+			string_length = (buffer_length <= 1) ? (0) : (buffer_length - 1);
+		}
+
+		this->c_str_buf = new_buffer;
+		this->c_str_buf_len = buffer_length;
+		this->c_str_buf_strlen = string_length;
+
+		return (*this);
+	}
+
+	inline size_t      __non_standard__get_buffer_length(void) const
+	{
+		return (this->c_str_buf_len);
+	}
+
+	inline size_t      __non_standard__get_string_length(void) const
+	{
+		return (this->c_str_buf_strlen);
+	}
+
+	/**
+		* you can chain this function
+		*/
+	inline String & __non_standard__invalidate_string(void)
+	{
+		this->__non_standard__set_new_buffer(NULL, 0);
+
+		return (*this);
+	}
+
+	/**
+		* you can chain this function
+		*/
+	inline String & __non_standard__free_string_non_invalidate(void)
+	{
+		/* remove const qualifier */
+		void *s = this->__non_standard__c_str_non_const();
+
+		/* check if current instance had allocate string */
+		if ((s == NULL) || (s == ((void *) (this->empty_string))))
+		{
+			/* do nothing if this instance have empty string */
+		}
+		else
+		{
+			/* current instance had allocated buffer, free it */
+			free(s);
+
+			/**
+				* this function intentionally don't invalidate!
+				* call to c_str() still return free'd buffer
+				* usage of this buffer after free is a memory leak
+				*
+				* to invalidate, call __non_standard__invalidate_string()
+				*/
+		}
+
+		return (*this);
+	}
+
+
+	static inline constexpr const char *__non_standard__shared_empty_string(void)
+	{
+		return String::empty_string;
+	}
 };
-
-/* implement binary operator as non-member function */
-
-/**
-	* operator +
-	*/
 
 #endif /* defined(__ARDUINO_CORES_SSTRING_HPP__) */
