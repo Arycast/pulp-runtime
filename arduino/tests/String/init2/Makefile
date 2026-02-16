@@ -23,7 +23,7 @@ C_OBJS = $(patsubst %.c,%.c.o,$(C_SRCS))
 CXX_OBJS = $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(patsubst %.cpp,%.cpp.o,$(CXX_SRCS))) $(filter %.o,$(patsubst %.cxx,%.cxx.o,$(CXX_SRCS)))
 
 # application to build
-APP = main
+APP = main.elf
 
 # compilation flags
 ASMFLAGS = -ggdb -Wall -Wextra -pedantic -flto -I$(ARDUINO_CORES) -I.
