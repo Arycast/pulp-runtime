@@ -122,7 +122,7 @@ tools.openocd.program.pattern="{openocd_program_script.cmd.path}" "{tools.openoc
 debug.executable={build.path}/{build.project_name}.elf
 
 # a unique identifier of the required toolchain, currently we support gcc (and compatible) only
-debug.toolchain=gdb
+debug.toolchain=gcc
 
 # prefix of the toolchain (for example arm-none-eabi-)
 debug.toolchain.prefix=riscv32-unknown-elf-
