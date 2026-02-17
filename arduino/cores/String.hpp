@@ -44,6 +44,8 @@
 #include <string.h> /* strlen, memcpy, memmove etc. */
 #include <stdlib.h> /* alloc related functions */
 
+#include <stdio.h>
+
 /* standard header c++ */
 #include <exception> /* for std::terminate */
 
@@ -136,15 +138,7 @@ public:
 		*/
 	inline char charAt(unsigned int n) const
 	{
-		if (n > this->length())
-		{
-			return '\0';
-		}
-		else
-		{
-			const char *str = this->c_str();
-			return (str == NULL) ? '\0' : str[n];
-		}
+		return (*this)[n];
 	}
 
 	/**
@@ -166,7 +160,7 @@ public:
 		const char *str = myString2.c_str();
 
 		/* if str NULL, then check if self/this NULL too */
-		return (str == NULL) ? (this->c_str() == NULL) : this->compareTo(str);
+		return (str == NULL) ? ((this->c_str()) == NULL) : this->compareTo(str);
 	}
 	int compareToIgnoreCase(const char     *str) const; /* not part of standard */
 	inline int compareToIgnoreCase(const String   &myString2) const /* not part of standard */
@@ -176,7 +170,7 @@ public:
 
 		/* if str NULL, then check if self/this NULL too */
 		return (str == NULL) ?
-			(this->c_str() == NULL) :
+			((this->c_str()) == NULL) :
 			this->compareToIgnoreCase(str);
 	}
 
@@ -186,25 +180,199 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/concat
 		*/
-	bool concat(const char     *parameter);
-	bool concat(char            parameter);
-	bool concat(byte            parameter); /* uint8_t */
-	bool concat(int             parameter);
-	bool concat(unsigned int    parameter);
-	bool concat(long            parameter);
-	bool concat(unsigned long   parameter);
-	bool concat(float           parameter);
-	bool concat(double          parameter);
-	inline bool concat(const String   &parameter)
+	inline bool concat(const char     *parameter)
 	{
 		/**
-			* parameter may return NULL, concat(const char *s) should handle
-			* argument is NULL case gracefully
+			* check if we try to concat with empty string or null
+			* int that case, nothing should change in this instance
 			*/
-		return this->concat(parameter.c_str());
+		/*if ((parameter == NULL) || (strlen(parameter) == 0))*/
+		if ((parameter == NULL) || (parameter[0] == 0)) /* avoid strlen because it expensive */
+		{
+			/* return ok because we don't have to change anything */
+			return true;
+		}
+
+		return this->__non_standard__concat_non_check_argument(parameter);
 	}
 
+	inline bool concat(char            parameter)
+	{
+		char s[] = {parameter, '\0'};
+		return this->__non_standard__concat_non_check_argument(s);
+	}
 
+	/* uint8_t */
+	inline bool concat(byte            parameter)
+	{
+		/* reuse unsigned int */
+		return this->concat((unsigned int) parameter);
+	}
+
+	inline bool concat(int             parameter)
+	{
+		char s[12];
+		int retval = snprintf(s, 12, "%d", parameter);
+		if ((retval <= 0) || (retval >= 12))
+		{
+			return false;
+		}
+
+		return this->__non_standard__concat_non_check_argument(s);
+	}
+
+	inline bool concat(unsigned int    parameter)
+	{
+		char s[12];
+		int retval = snprintf(s, 12, "%u", parameter);
+		if ((retval <= 0) || (retval >= 12))
+		{
+			return false;
+		}
+
+		return this->__non_standard__concat_non_check_argument(s);
+	}
+
+	inline bool concat(long            parameter)
+	{
+		char s[22];
+		int retval;
+
+		/* snprintf defined by C99 */
+		retval = snprintf(s, 22, "%ld", parameter);
+		if ((retval <= 0) || (retval >= 22))
+		{
+			/**
+				* based on standard (C99) snprintf failed
+				* when return negative number or
+				* more or equal to buffer length
+				*/
+			return false;
+		}
+
+		return this->__non_standard__concat_non_check_argument(s);
+	}
+
+	inline bool concat(unsigned long   parameter)
+	{
+		char s[22];
+		int retval;
+
+		retval = snprintf(s, 22, "%lu", parameter);
+		if ((retval <= 0) || (retval >= 22))
+		{
+			return false;
+		}
+
+		return this->__non_standard__concat_non_check_argument(s);
+	}
+
+	inline bool concat(float           parameter)
+	{
+		return concat((double) parameter);
+	}
+
+	inline bool concat(double          parameter)
+	{
+		char s[40];
+		int retval;
+
+		retval = snprintf(s, 40, "%f", parameter);
+		if ((retval <= 0) || (retval >= 40))
+		{
+			return false;
+		}
+
+		return this->__non_standard__concat_non_check_argument(s);
+	}
+
+	inline bool concat(const String   &parameter)
+	{
+		if (parameter.__non_standard__get_string_length() == 0)
+		{
+			return true;
+		}
+
+		return this->__non_standard__concat_non_check_argument(parameter);
+	}
+
+#if ((__cplusplus) >= 201103L)
+	inline bool concat(String        &&parameter) /* non-standard */
+	{
+		if (parameter.__non_standard__get_string_length() == 0)
+		{
+			return true;
+		}
+
+		return this->__non_standard__concat_non_check_argument(parameter);
+	}
+#endif
+
+	/* helper (implement as private method) */
+private:
+	inline bool __non_standard__concat_non_check_argument(const char     *parameter)
+	{
+		const char *s     = this->c_str();
+		size_t      s_len = this->__non_standard__get_string_length();
+
+		/* append parameter */
+		(*this) += parameter;
+
+		/* check if successful */
+		if ((s != (this->c_str())) || (s_len != (this->__non_standard__get_string_length())))
+		{
+			return true; /* malloc/realloc happen */
+		}
+		else
+		{
+			/* unsuccesfully add string */
+			return false;
+		}
+	}
+
+	inline bool __non_standard__concat_non_check_argument(const String   &parameter)
+	{
+		const char *s     = this->c_str();
+		size_t      s_len = this->__non_standard__get_string_length();
+
+		/* append parameter */
+		(*this) += parameter;
+
+		/* check if successful */
+		if ((s != (this->c_str())) || (s_len != (this->__non_standard__get_string_length())))
+		{
+			return true; /* malloc/realloc happen */
+		}
+		else
+		{
+			/* unsuccesfully add string */
+			return false;
+		}
+	}
+
+#if ((__cplusplus) >= 201103L)
+	inline bool __non_standard__concat_non_check_argument(String        &&parameter)
+	{
+		const char *s     = this->c_str();
+		size_t      s_len = this->__non_standard__get_string_length();
+
+		/* append parameter */
+		(*this) += parameter;
+
+		/* check if successful */
+		if ((s != (this->c_str())) || (s_len != (this->__non_standard__get_string_length())))
+		{
+			return true; /* malloc/realloc happen */
+		}
+		else
+		{
+			/* unsuccesfully add string */
+			return false;
+		}
+	}
+#endif
+
+public:
 	/**
 		* method c_str
 		* Converts the contents of a String as a C-style,
@@ -236,7 +404,7 @@ public:
 			* if so, return NULL
 			*/
 
-		return (this->c_str_buf);
+		return this->c_str_buf;
 	}
 
 
@@ -258,7 +426,7 @@ public:
 			* if so, return false,
 			* if str is not NULL, evaluate with endsWith string version
 			*/
-		return (str == NULL) ? (this->c_str() == NULL) : this->endsWith(str);
+		return (str == NULL) ? (this->c_str() == NULL) : (this->endsWith(str));
 	}
 
 	/**
@@ -276,7 +444,7 @@ public:
 			* method compareTo should handle case of str (and c_str()) is NULL
 			* gracefully
 			*/
-		return (this->compareTo(str) == 0);
+		return ((this->compareTo(str)) == 0);
 	}
 	inline bool equals(const String  &myString2) const
 	{
@@ -293,7 +461,7 @@ public:
 		*/
 	inline bool equalsIgnoreCase(const char    *str) const
 	{
-		return (this->compareToIgnoreCase(str) == 0);
+		return ((this->compareToIgnoreCase(str)) == 0);
 	}
 	inline bool equalsIgnoreCase(const String  &myString2) const
 	{
@@ -500,7 +668,7 @@ public:
 		*/
 	inline float toFloat(void) const
 	{
-		return (float) this->toDouble();
+		return (float) (this->toDouble());
 	}
 
 	/**
@@ -602,6 +770,9 @@ public:
 		/* check if we try to write invalid buffer or read-only buffer */
 		if ((s == NULL) || (((const char *) s) == (this->empty_string)))
 		{
+			/* set dummy storage to '\0' in case this operator used as rvalue */
+			String::dummy_char_storage = '\0';
+
 			/* return dummy storage */
 			return (String::dummy_char_storage);
 		}
@@ -609,8 +780,12 @@ public:
 		{
 			/* check if we attempt to access memory outside of buffer
 			* (not outside of string) */
-			if (index >= this->__non_standard__get_buffer_length())
+			if (index >= (this->__non_standard__get_buffer_length()))
 			{
+				/* set dummy storage to '\0' in case this operator used as rvalue */
+				String::dummy_char_storage = '\0';
+
+				/* return dummy storage */
 				return (String::dummy_char_storage);
 			}
 			else
@@ -719,7 +894,7 @@ public:
 	{
 		/* if new_buffer is NULL or buffer_length is 0,
 		* then automatically set new_buffer to NULL */
-		if ((new_buffer == NULL) || (new_buffer == ((char *) (this->empty_string))) ||
+		if ((new_buffer == NULL) || (new_buffer == ((char *) (String::empty_string))) ||
 			(buffer_length == 0))
 		{
 			return this->__non_standard__set_new_buffer((char *) String::empty_string, 0, 0);

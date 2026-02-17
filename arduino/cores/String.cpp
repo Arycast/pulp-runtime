@@ -30,8 +30,8 @@
 /**
 	* static member
 	*/
-/*static constexpr const char  *String::empty_string = "";
-static char                   String::dummy_char_storage;*/ /* don't need initialization */
+/*static constexpr const char  *String::empty_string = "";*/
+char                   String::dummy_char_storage = '\0'; /* init 0 so we don't waste .data and valgrind don't scold up */
 
 /* constructor */
 
