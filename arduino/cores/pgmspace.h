@@ -21,6 +21,11 @@
 #include <stdint.h>
 #include <string.h>
 
+/* POSIX.1-2001 header onwards */
+#if (defined(_POSIX_C_SOURCE) && ((_POSIX_C_SOURCE) >= 200112L))
+#include <strings.h>
+#endif
+
 /* use compatibility helper from pulp libc */
 #include "compatibility.h"
 

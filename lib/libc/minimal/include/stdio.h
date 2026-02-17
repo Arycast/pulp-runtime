@@ -40,7 +40,9 @@ int putchar(int c);
 
 int puts(const char *s);
 
-int sprintf(char *str, const char *fmt, ...) ;
+int sprintf(char *str, const char *fmt, ...);
+
+int snprintf(char *s, size_t len, const char *format, ...);
 
 int fputc(int c, FILE *stream);
 
