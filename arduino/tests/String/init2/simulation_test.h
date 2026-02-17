@@ -13,8 +13,16 @@
 
 #ifndef __SIMULATION_TEST_H__
 
+#ifndef SIMULATION_TEST
+#error this headers hould be used only for simulation/test
+#endif
+
 #include <stdint.h>
 
 typedef uint8_t byte;
+
+/* mocking strncasecmp_* as dummy non functional */
+#define strncasecmp_PF                 strncasecmp_P
+#define strncasecmp_P(s1, s2, size)    (0)
 
 #endif /* ! defined(__SIMULATION_TEST_H__) */

@@ -18,6 +18,7 @@
 #include "assert_helper.h"
 
 /* standard header c */
+#include <stddef.h>
 #include <string.h> /* strlen, memcpy, memmove etc. */
 #include <stdlib.h> /* alloc related functions */
 

@@ -23,7 +23,7 @@
 #ifndef __ARDUINO_CORES_SSTRING_HPP__
 #define __ARDUINO_CORES_SSTRING_HPP__
 
-#ifndef SIMULATION_TEST
+#ifdef SIMULATION_TEST
 #include "simulation_test.h"
 #else
 #include "variables.h" /* for various data type, including native data type */
@@ -41,6 +41,7 @@
 #include "assert_helper.h"
 
 /* standard header c */
+#include <stddef.h>
 #include <string.h> /* strlen, memcpy, memmove etc. */
 #include <stdlib.h> /* alloc related functions */
 
@@ -153,25 +154,101 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/compareTo
 		*/
-	int compareTo(const char     *str) const; /* not part of standard */
-	inline int compareTo(const String   &myString2) const
+	inline int compareTo(const char     *str, bool ignore_case = false) const /* not part of standard */
 	{
 		/* get c string representation of myString2 */
-		const char *str = myString2.c_str();
+		const char  *lvalue_c_str         = this->c_str();
+		size_t       lvalue_string_length = this->__non_standard__get_string_length();
 
-		/* if str NULL, then check if self/this NULL too */
-		return (str == NULL) ? ((this->c_str()) == NULL) : this->compareTo(str);
+		const char  *rvalue_c_str = str;
+		/*size_t       rvalue_string_length;*/
+
+		if      ((lvalue_string_length == 0) && (rvalue_c_str == NULL))
+		{
+			return 0;
+		}
+		else if ((lvalue_string_length  > 0) && (rvalue_c_str == NULL))
+		{
+			return 1;
+		}
+		else
+		{
+			/* overide string if it NULL */
+			if (lvalue_c_str == NULL)
+			{
+				lvalue_c_str = String::empty_string;
+			}
+
+			/* use strncasecmp from pgmspace */
+			if (ignore_case)
+			{
+				return strncasecmp_PF(lvalue_c_str, rvalue_c_str,
+					lvalue_string_length + 1);
+			}
+			else
+			{
+				return strncmp(lvalue_c_str, rvalue_c_str,
+					lvalue_string_length + 1);
+			}
+		}
 	}
-	int compareToIgnoreCase(const char     *str) const; /* not part of standard */
+
+	inline int compareTo(const String   &myString2, bool ignore_case = false) const
+	{
+		size_t lvalue_string_length = this->__non_standard__get_string_length();
+		size_t rvalue_string_length = myString2.__non_standard__get_string_length();
+
+		if      ((lvalue_string_length == 0) && (rvalue_string_length == 0))
+		{
+			return 0;
+		}
+		else if ((lvalue_string_length == 0) && (rvalue_string_length  > 0))
+		{
+			return (-1);
+		}
+		else if ((lvalue_string_length  > 0) && (rvalue_string_length == 0))
+		{
+			return 1;
+		}
+		else
+		{
+			/* get c string representation of myString2 */
+			const char *lvalue_c_str = this->c_str();
+			const char *rvalue_c_str = myString2.c_str();
+
+			/* overide string if it NULL */
+			if (lvalue_c_str == NULL)
+			{
+				lvalue_c_str = String::empty_string;
+			}
+
+			if (rvalue_c_str == NULL)
+			{
+				rvalue_c_str = String::empty_string;
+			}
+
+			/* use strncasecmp from pgmspace */
+			if (ignore_case)
+			{
+				return strncasecmp_PF(lvalue_c_str, rvalue_c_str,
+					((lvalue_string_length > rvalue_string_length) ? rvalue_string_length : lvalue_string_length) + 1);
+			}
+			else
+			{
+				return strncmp(lvalue_c_str, rvalue_c_str,
+					((lvalue_string_length > rvalue_string_length) ? rvalue_string_length : lvalue_string_length) + 1);
+			}
+		}
+	}
+
+	inline int compareToIgnoreCase(const char     *str) const /* not part of standard */
+	{
+		return this->compareTo(str, true);
+	}
+
 	inline int compareToIgnoreCase(const String   &myString2) const /* not part of standard */
 	{
-		/* get c string representation of myString2 */
-		const char *str = myString2.c_str();
-
-		/* if str NULL, then check if self/this NULL too */
-		return (str == NULL) ?
-			((this->c_str()) == NULL) :
-			this->compareToIgnoreCase(str);
+		return this->compareTo(myString2, true);
 	}
 
 	/**
@@ -388,8 +465,8 @@ public:
 		*/
 	inline const char * c_str(void) const
 	{
-		/* just alias of __non_standard__c_str_non_const */
-		return this->__non_standard__c_str_non_const();
+		const char *s = this->__non_standard__c_str_non_const();
+		return (s == NULL) ? (String::empty_string) : s;
 	}
 
 	/**
@@ -403,7 +480,6 @@ public:
 			* check if current pointer refer to empty_string
 			* if so, return NULL
 			*/
-
 		return this->c_str_buf;
 	}
 

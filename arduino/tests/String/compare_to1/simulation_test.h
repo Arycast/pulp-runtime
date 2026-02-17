@@ -17,11 +17,8 @@
 #error this headers hould be used only for simulation/test
 #endif
 
-#include <stdint.h>
-
-typedef uint8_t byte;
-
-#define strncasecmp_PF                 strncasecmp_P
-#define strncasecmp_P(s1, s2, size)    (0)
+/* re-include variables and pgmspace */
+#include <variables.h>
+#include <pgmspace.h>
 
 #endif /* ! defined(__SIMULATION_TEST_H__) */
