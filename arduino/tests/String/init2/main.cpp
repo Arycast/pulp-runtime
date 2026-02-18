@@ -7,6 +7,7 @@
 	* NONINFRINGEMENT.
 	*/
 
+#include <string.h>
 #include <stdio.h>
 
 #include "String.hpp"
@@ -15,11 +16,12 @@ int main(void)
 {
 	String init1;
 	/*String init2();*/
-	String init3("");
-	String init4("test init 4");
-	String init5(init4);
-	String init6 = init5;
-	String init7 = "test init 7";
+	String init3(NULL);
+	String init4("");
+	String init5("test init 5");
+	String init6(init4);
+	String init7 = init5;
+	String init8 = "test init 8";
 
 	/* print sentence */
 	printf("init1: %s\r\n", init1.c_str());
@@ -29,6 +31,7 @@ int main(void)
 	printf("init5: %s\r\n", init5.c_str());
 	printf("init6: %s\r\n", init6.c_str());
 	printf("init7: %s\r\n", init7.c_str());
+	printf("init8: %s\r\n", init8.c_str());
 
 	return 0;
 }

@@ -49,9 +49,18 @@ ASM_LIBS = -Wl,-flto
 C_LIBS = -Wl,-flto
 CXX_LIBS = -Wl,-flto
 
+# additional tools (instrumentation)
+GDB = gdb
+GDB_OPT =
+
+VALGRIND = valgrind
+VALGRIND_OPT = --verbose --read-inline-info=yes --read-var-info=yes --leak-check=full --show-leak-kinds=all --leak-check-heuristics=all --track-origins=yes
+
 # rules that don't need output
 .PHONY: all clean distclean
 
+# first parsed rule is the default rule (called by make without argument)
+# put rule 'all' here as default rule
 all: $(APP)
 
 # linking
@@ -95,3 +104,21 @@ clean:
 
 distclean: clean
 	$(RM) --verbose $(APP)
+
+# instrumentation
+.PHONY: run run-valgrind debug debug-valgrind-server debug-valgrind-client
+
+run: $(APP)
+	sh -c 'cd "$$(dirname "$$1")" && "./$$(basename "$$1")"' -- $<
+
+run-valgrind: $(APP)
+	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) $(VALGRIND_OPT) "./$$(basename "$$1")"' -- $<
+
+debug: $(APP)
+	$(GDB) $(GDB_OPT) $<
+
+debug-valgrind-server: $(APP)
+	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) $(VALGRIND_OPT) --vgdb-error=1 --vgdb-stop-at=startup "./$$(basename "$$1")"' -- $<
+
+debug-valgrind-client: $(APP)
+	sh -c 'VGDB="$$(which "vgdb")" && $(GDB) $(GDB_OPT) -ex "target remote | $$VGDB" "$$1"' -- $<
