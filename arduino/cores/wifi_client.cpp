@@ -67,87 +67,87 @@ int WiFiClient::peek(void)
 	return -1;
 }
 
-byte WiFiClient::print(char data) {
+size_t WiFiClient::print(char data) {
 	return -1;
 }
 
-byte WiFiClient::print(byte data) {
+size_t WiFiClient::print(byte data) {
 	return -1;
 }
 
-byte WiFiClient::print(int data) {
+size_t WiFiClient::print(int data) {
 	return -1;
 }
 
-byte WiFiClient::print(long data) {
+size_t WiFiClient::print(long data) {
 	return -1;
 }
 
-byte WiFiClient::print(String data) {
+size_t WiFiClient::print(String data) {
 	return -1;
 }
 
-byte WiFiClient::print(char data, int BASE) {
+size_t WiFiClient::print(char data, int BASE) {
 	return -1;
 } 
 
-byte WiFiClient::print(byte data, int BASE) {
+size_t WiFiClient::print(byte data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::print(int data, int BASE) {
+size_t WiFiClient::print(int data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::print(long data, int BASE) {
+size_t WiFiClient::print(long data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::print(String data, int BASE) {
+size_t WiFiClient::print(String data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::println(void) {
+size_t WiFiClient::println(void) {
 	return -1;
 }
 
-byte WiFiClient::println(char data) {
+size_t WiFiClient::println(char data) {
 	return -1;
 }
 
-byte WiFiClient::println(byte data) {
+size_t WiFiClient::println(byte data) {
 	return -1;
 }
 
-byte WiFiClient::println(int data) {
+size_t WiFiClient::println(int data) {
 	return -1;
 }
 
-byte WiFiClient::println(long data) {
+size_t WiFiClient::println(long data) {
 	return -1;
 }
 
-byte WiFiClient::println(String data) {
+size_t WiFiClient::println(String data) {
 	return -1;
 }
 
-byte WiFiClient::println(char data, int BASE) {
+size_t WiFiClient::println(char data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::println(byte data, int BASE) {
+size_t WiFiClient::println(byte data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::println(int data, int BASE) {
+size_t WiFiClient::println(int data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::println(long data, int BASE) {
+size_t WiFiClient::println(long data, int BASE) {
 	return -1;
 }
 
-byte WiFiClient::println(String data, int BASE) {
+size_t WiFiClient::println(String data, int BASE) {
 	return -1;
 }
 

@@ -1,6 +1,10 @@
 #include <stdint.h>
-
 #include "pulp.h"
+
+/* Provide C linkage for C++ compilers */
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * Pad Multiplexing Control Registers
@@ -73,3 +77,8 @@ static const uint32_t digital_pin_to_pad[] = {
     37, //GPIO_30 -> i2s0_ -> pad_mux [37]
     38 //GPIO_31 -> i2s1_ -> pad_mux [38]
 };
+
+/* Close of extern "C" linkage wrapper */
+#ifdef __cplusplus
+}
+#endif

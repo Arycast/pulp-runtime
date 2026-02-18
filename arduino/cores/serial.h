@@ -18,6 +18,8 @@ class Serials : public Stream {
 protected :
     bool _opened; /* Tracks if the serial is intialized */
     int _uart_id; /* UART id */
+    size_t printFloat(double number, uint8_t digits) override;
+    
 public :
     /**
         * Public class method
@@ -71,8 +73,9 @@ public :
         * @return The number of bytes written
         * https://docs.arduino.cc/language-reference/en/functions/communication/serial/write/
         */
-    size_t write(uint8_t data) override;
-    size_t write(const uint8_t *data, size_t length) override;
+    size_t write(byte data) override;
+    size_t write(const char *string) override { return 0; }
+    size_t write(const byte *data, size_t length) override;
 
     /**
         * method available
@@ -100,7 +103,58 @@ public :
         * https://docs.arduino.cc/language-reference/en/functions/communication/serial/flush/
         */
     void flush(void) override;
-};
+
+    /**
+         * method print
+         * The print method details in Print class are redirected to the 
+         * Serial.print page. Prints data to the serial port as human-readable 
+         * ASCII text. Allowed data types for val: any data type. 
+         * 
+         * https://docs.arduino.cc/language-reference/en/functions/communication/serial/print/
+         */
+    size_t print(char val) override;
+    size_t print(const char *val) override;
+    size_t print(unsigned char val) override;
+    size_t print(int val) override;
+    size_t print(unsigned int val) override;
+#ifndef __FLASHSTRINGHELPER_IS_CHAR
+    size_t print(const __FlashStringHelper *val) override;
+#endif
+    size_t print(char val, int format = DEC) override;
+    size_t print(unsigned char val, int format) override;
+    size_t print(int val, int format) override;
+    size_t print(unsigned int val, int format) override;
+    size_t print(long val, int format = DEC) override;
+    size_t print(unsigned long val, int format = DEC) override;
+    size_t print(double val, int format = 2) override;
+
+    /**
+         * method println
+         * The println method details in Print class are redirected to the 
+         * Serial.println page. Prints data to the serial port as human-readable
+         * ASCII text followed by a carriage return character (ASCII 13, or '\r') 
+         * and a newline character (ASCII 10, or '\n'). This command takes the same
+         * forms as Serial.print().
+         *
+         * https://docs.arduino.cc/language-reference/en/functions/communication/serial/println/
+         */
+    size_t println(void) override;
+    size_t println(char val) override;
+    size_t println(const char *val) override;
+    size_t println(unsigned char val) override;
+    size_t println(int val) override;
+    size_t println(unsigned int val) override;
+#ifndef __FLASHSTRINGHELPER_IS_CHAR
+    size_t println(const __FlashStringHelper *val) override;
+#endif
+    size_t println(char val, int format = DEC) override;
+    size_t println(unsigned char val, int format) override;
+    size_t println(int val, int format) override;
+    size_t println(unsigned int val, int format) override;
+    size_t println(long val, int format = DEC) override;
+    size_t println(unsigned long val, int format = DEC) override;
+    size_t println(double val, int format = 2) override;
+    };
 
 /**
     * Pre-instantiated object for global access to the Serial hardware
