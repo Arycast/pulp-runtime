@@ -120,7 +120,7 @@ uint8_t TwoWire::endTransmission(bool stop) {
     /* True will send a stop message, releasing the bus after transmission. False will send a restart, keeping the connection active. */
 }
 
-size_t TwoWire::write(uint8_t value) {
+size_t TwoWire::write(byte value) {
     if(transmitting){
         /* MASTER MODE: Buffer a single byte for later transmission */
 
@@ -143,15 +143,11 @@ size_t TwoWire::write(uint8_t value) {
     return 1;    
 }
 
-size_t TwoWire::write(const char *str) {
+size_t TwoWire::write(const char *string) {
     return 0;
 }
 
-size_t TwoWire::write(const String &myString) {
-    return 0;
-}
-
-size_t TwoWire::write(const uint8_t *data, size_t length) {
+size_t TwoWire::write(const byte *data, size_t length) {
     if(transmitting){
         /* MASTER MODE: Iteratively buffer each byte in the transmit queue */        
         for(size_t i = 0; i < length; ++i){

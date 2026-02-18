@@ -37,6 +37,8 @@ private:
     static void (*user_onReceive)(int);
     static void (*user_onRequest)(void);
 
+    size_t printFloat(double number, uint8_t digits) override { return 0; }
+
 public:
     /**
      * method begin
@@ -97,10 +99,9 @@ public:
      * 
      * https://docs.arduino.cc/language-reference/en/functions/communication/wire/write/
      */
-    size_t write(uint8_t value) override;
-    size_t write(const char *str);
-    size_t write(const String &myString);
-    size_t write(const uint8_t *data, size_t length) override;
+    size_t write(byte value) override;
+    size_t write(const char *string) override;
+    size_t write(const byte *data, size_t length) override;
 
     /**
      * method available
@@ -177,6 +178,40 @@ public:
 
     void flush(void) override;
     int peek(void) override;
+    
+    /* In Print Class, method print and printlnare pure functions, so declarations in the the subclass are required */
+    size_t print(char val) override { return 0; }
+    size_t print(const char *val) override { return 0; }
+    size_t print(unsigned char val) override { return 0; }
+    size_t print(int val) override { return 0; }
+    size_t print(unsigned int val) override { return 0; }
+#ifndef __FLASHSTRINGHELPER_IS_CHAR
+    size_t print(const __FlashStringHelper *val) override { return 0; }
+#endif
+    size_t print(char val, int format = DEC) override { return 0; }
+    size_t print(unsigned char val, int format) override { return 0; }
+    size_t print(int val, int format) override { return 0; }
+    size_t print(unsigned int val, int format) override { return 0; }
+    size_t print(long val, int format = DEC) override { return 0; }
+    size_t print(unsigned long val, int format = DEC) override { return 0; }
+    size_t print(double val, int format = 2) override { return 0; }
+
+    size_t println(void) override { return 0; }
+    size_t println(char val) override { return 0; }
+    size_t println(const char *val) override { return 0; }
+    size_t println(unsigned char val) override { return 0; }
+    size_t println(int val) override { return 0; }
+    size_t println(unsigned int val) override { return 0; }
+#ifndef __FLASHSTRINGHELPER_IS_CHAR
+    size_t println(const __FlashStringHelper *val) override { return 0; }
+#endif
+    size_t println(char val, int format = DEC) override { return 0; }
+    size_t println(unsigned char val, int format) override { return 0; }
+    size_t println(int val, int format) override { return 0; }
+    size_t println(unsigned int val, int format) override { return 0; }
+    size_t println(long val, int format = DEC) override { return 0; }
+    size_t println(unsigned long val, int format = DEC) override { return 0; }
+    size_t println(double val, int format = 2) override { return 0; }
 };
 
 extern TwoWire Wire;
