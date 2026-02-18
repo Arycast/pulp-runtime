@@ -24,6 +24,12 @@
 # on error, exit
 set -e
 
+# configuration
+OPENOCD_HOST="localhost"
+OPENOCD_PORT_GDB=3333
+OPENOCD_PORT_TELNET=4444
+OPENOCD_PORT_TCL=6666
+
 # inform this script PID to caller
 THIS_SCRIPT_PID="$$"
 echo "$0: program/upload elf executable binary to pulpissimo using gdb and openocd"
@@ -58,15 +64,18 @@ OPENOCD_PID="$!"
 # wait openocd up
 sleep 2
 
+# reset and halt cpu before gdb connected
+(sleep 1 && echo "reset halt" && echo && sleep 1 && echo "exit" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
+
 # create gdb script (need mktemp command)
 GDB_SCRIPT="$(mktemp)"
 
 cat > "$GDB_SCRIPT" <<EOF
-target extended-remote :3333
+target extended-remote $OPENOCD_HOST:$OPENOCD_PORT_GDB
 monitor reset halt
 load
 monitor resume
-monitor shutdown
+#monitor shutdown
 disconnect
 #detach
 quit
@@ -78,5 +87,11 @@ riscv32-unknown-elf-gdb --command="$GDB_SCRIPT" "$3"
 # remove temporary file
 rm --verbose "$GDB_SCRIPT"
 
+# shutdown gdb server
+(sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
+
 # wait openocd exit
 wait "$OPENOCD_PID"
+
+# inform upload process is finished
+echo "openocd (PID: $OPENOCD_PID) exited, upload is finished!"
