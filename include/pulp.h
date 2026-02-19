@@ -151,7 +151,8 @@ typedef struct {
   char byte_align;         
   unsigned int div;
   unsigned int cfg;
-  signed char cs_gpio; 
+  signed char cs_gpio;
+  char bitOrder; 
 } spim_t;
 
 typedef struct {
@@ -163,6 +164,7 @@ typedef struct {
   signed char cs_gpio;    /*!< If it is different from -1, the specified number is used to drive a GPIO which is used as a chip select for the SPI device. The cs field is then ignored. */
   signed char cs;         /*!< If cs_gpio is -1, the normal chip select pins are used and this field specifies which one to use for the device. */
   signed char id;         /*!< If it is different from -1, this specifies on which SPI interface the device is connected. */
+  char bitOrder;
 } spim_conf_t;
 
 typedef enum {
@@ -172,7 +174,6 @@ typedef enum {
 } spim_cs_e;
 
 spim_t *spim_open(spim_conf_t *spim);
-void spim_send(spim_t *spim, void *data, size_t len, int qspi, spim_cs_e mode);
 void spim_conf_init(spim_conf_t *spim);
 void spim_transfer(spim_t *handle, void *tx_data, void *rx_data, size_t len, spim_cs_e cs_mode);
 int spi_get_div(int spi_freq);

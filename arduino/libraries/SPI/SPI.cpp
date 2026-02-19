@@ -1,6 +1,3 @@
-// #include <stdio.h>
-#include <stdint.h>
-
 #include "pulp.h"
 #include "SPI.h"
 
@@ -29,6 +26,8 @@ void SPIClass::beginTransaction(SPISettings s) {
 
     if(!spim) return;
 
+    spim->bitOrder = s.bitOrder;
+
     spim->max_baudrate = s.clock;
     int div = spi_get_div(spim->max_baudrate);
     spim->div = div;
@@ -40,7 +39,7 @@ void SPIClass::beginTransaction(SPISettings s) {
 }
 
 void SPIClass::endTransaction(void) {
-
+    
 }
 
 void SPIClass::end(void) {
@@ -62,20 +61,23 @@ void SPIClass::setDataMode(uint8_t dataMode) {
     current.dataMode = dataMode;
 }
 
-void SPIClass::transfer(void *val) {
-    if (!spim) return;
-    return spim_transfer(spim, val, val, 8, SPIM_CS_KEEP);
+byte SPIClass::transfer(byte *val) {
+    if (!spim) return -1;
+    uint8_t rx_buffer;
+    spim_transfer(spim, val, &rx_buffer, 8, SPIM_CS_KEEP);
+    return rx_buffer;
 }
 
-void SPIClass::transfer16(void *val16) {
-    
+uint16_t SPIClass::transfer16(uint16_t *val16) {
+    return -1;
 }
 
-void SPIClass::transfer(void *buffer, size_t size) {
+void SPIClass::transfer(byte *buffer, size_t size) {
     if (!spim) return;
-    return spim_transfer(spim, buffer, buffer, size*8, SPIM_CS_KEEP);
+    uint8_t rx_buffer[size];
+    spim_transfer(spim, buffer, rx_buffer, size*8, SPIM_CS_KEEP);
 }
 
 void SPIClass::usingInterrupt(int interruptNumber) {
-
+    
 }
