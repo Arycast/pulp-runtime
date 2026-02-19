@@ -7,11 +7,14 @@
 #define SPI_h
 
 #include <stdint.h> /* provides standard fixed-width integer */
+#include <stddef.h>
 #include "variables.h" /* provides MSBFIRST and LSBFIRST definition */
 
 
 /* #define MSBFIRST 1
 #define LSBFIRST 0 */
+
+#define PIN_SPI_CS 4
 
 /**
     * define SPI Mode variant
@@ -94,7 +97,7 @@ public:
         * @param bitOrder LSBFIRST or MSBFIRST
         * https://docs.arduino.cc/language-reference/en/functions/communication/SPI/setBitOrder/
         */
-    static void setBitOrder(uint8_t bitOrder);
+    __attribute__((deprecated)) static void setBitOrder(uint8_t bitOrder);
 
     /**
         * method setClockDivider
@@ -104,7 +107,7 @@ public:
         * @param divider
         * https://docs.arduino.cc/language-reference/en/functions/communication/SPI/setClockDivider/
         */
-    static void setClockDivider(uint8_t divider);
+    __attribute__((deprecated)) static void setClockDivider(uint8_t divider);
 
     /**
         * method setDataMode
@@ -114,7 +117,7 @@ public:
         * @param dataMode SPI_MODE0, SPI_MODE1, SPI_MODE2, or SPI_MODE3
         * https://docs.arduino.cc/language-reference/en/functions/communication/SPI/setDataMode/
         */
-    static void setDataMode(uint8_t dataMode);
+    __attribute__((deprecated)) static void setDataMode(uint8_t dataMode);
 
     /**
         * method transfer and transfer16
@@ -126,9 +129,9 @@ public:
         * @param size The number of data to be transferred
         * https://docs.arduino.cc/language-reference/en/functions/communication/SPI/transfer/ 
         */
-    static void transfer(void *val);
-    static void transfer16(void *val16);
-    static void transfer(void *buffer, size_t size);
+    static byte transfer(byte *val);
+    static uint16_t transfer16(uint16_t *val16);
+    static void transfer(byte *buffer, size_t size);
 
     /**
         * method usingInterrupt
