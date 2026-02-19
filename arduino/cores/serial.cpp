@@ -48,6 +48,17 @@ size_t Serials::write(const byte *data, size_t length) {
     return length;
 }
 
+static inline size_t _strlen(const char *s){
+    size_t n = 0;
+    while (*s++) n++;
+    return n;
+}
+
+size_t Serials::write(const char *string) {
+    if (string == NULL) return 0;
+    return write((const byte *)string, _strlen(string));
+}
+
 int Serials::available(void) {
     int periph = ARCHI_UDMA_UART_ID(_uart_id);
     int ret = plp_uart_rx_busy(periph);
@@ -66,29 +77,29 @@ void Serials::flush(void) {
 
 }
 
-size_t Print::print(char val){
-    return 0; 
+size_t Serials::print(char val){
+    return write(val); 
 }
 
-size_t Print::print(const char *val){
-    return 0;
+size_t Serials::print(const char *val){
+    return write(val);
 }
 
-size_t Print::print(unsigned char val){
-    return print((unsigned long) val, DEC);
-}
+// size_t Serials::print(unsigned char val){
+//     return print((unsigned long) val, DEC);
+// }
 
-size_t Print::print(int val){
+size_t Serials::print(int val){
     return print((long) val, DEC);
 }
 
-size_t Print::print(unsigned int val){
+size_t Serials::print(unsigned int val){
     return print((unsigned long) val, DEC);
 }
 
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
 /* Prints a string stored in Flash memory (F-string) instead of RAM */
-size_t Print::print(const __FlashStringHelper *val){
+size_t Serials::print(const __FlashStringHelper *val){
     const char *p = (const char *)val;
     size_t n = 0;
 
@@ -104,95 +115,123 @@ size_t Print::print(const __FlashStringHelper *val){
 #endif /* ! defined(__FLASHSTRINGHELPER_IS_CHAR) */
 
 /* missing implementation from above are const char */
-size_t Print::print(char val, int format){
+size_t Serials::print(char val, int format){
     return 0; 
 }
 
-size_t Print::print(unsigned char val, int format){
+size_t Serials::print(unsigned char val, int format){
     return print((unsigned long) val, format);
 }
 
-size_t Print::print(int val, int format){
+size_t Serials::print(int val, int format){
     return print((long) val, format);
 }
 
-size_t Print::print(unsigned int val, int format){
+size_t Serials::print(unsigned int val, int format){
     return print((unsigned long) val, format);
 }
 
-size_t Print::print(long val, int format){
-    return 0;    
+size_t Serials::print(long val, int format){
+    if (val < 0) {
+      int t = print('-');
+      val = -val;
+      return printNumber(val, 10) + t;
+    }
+    return printNumber(val, format);
 }
 
-size_t Print::print(unsigned long val, int format){
+size_t Serials::print(unsigned long val, int format){
     return 0;
 }
 
-size_t Print::print(double val, int format){
+size_t Serials::print(double val, int format){
     /* redirects double-precision values to the specialized float formatter*/
     return printFloat(val, (uint8_t) format);
 }
 
-size_t Print::println(void){
-    return 0;
+size_t Serials::println(void){
+    return write("\r\n");
 }
 
-size_t Print::println(char val){
+size_t Serials::println(char val){
     return 0; 
 }
 
-size_t Print::println(const char *val){
-    return 0;
+size_t Serials::println(const char *val){
+    size_t n = print(val);
+    n += println();
+    return n;
 }
 
-size_t Print::println(unsigned char val){
+size_t Serials::println(unsigned char val){
     return println((unsigned long) val, DEC);
 }
 
-size_t Print::println(int val){
+size_t Serials::println(int val){
     return println((long) val, DEC);
 }
 
-size_t Print::println(unsigned int val){
+size_t Serials::println(unsigned int val){
     return println((unsigned long) val, DEC);
 }
 
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
-size_t Print::println(const __FlashStringHelper *val){
+size_t Serials::println(const __FlashStringHelper *val){
     return 0;
 }
 #endif
 
 /* missing implementation from above are const char */
-size_t Print::println(char val, int format){
+size_t Serials::println(char val, int format){
     return 0; 
 }
 
-size_t Print::println(unsigned char val, int format){
+size_t Serials::println(unsigned char val, int format){
     return println((unsigned long) val, format);
 }
 
-size_t Print::println(int val, int format){
+size_t Serials::println(int val, int format){
     return println((long) val, format);
 }
 
-size_t Print::println(unsigned int val, int format){
+size_t Serials::println(unsigned int val, int format){
     return println((unsigned long) val, format);
 }
 
-size_t Print::println(long val, int format){
+size_t Serials::println(long val, int format){
     return 0;
 }
 
-size_t Print::println(unsigned long val, int format){
+size_t Serials::println(unsigned long val, int format){
     return 0;
 }
 
-size_t Print::println(double val, int format){
+size_t Serials::println(double val, int format){
     return 0;
 }
 
 // Private Methods /////////////////////////////////////////////////////////////
+size_t Serials::printNumber(unsigned long val, int format)
+{
+//   write('!'); 
+  char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
+  char *str = &buf[sizeof(buf) - 1];
+
+  *str = '\0';
+
+  // prevent crash if called with base == 1
+  if (format < 2) format = 10;
+
+  do {
+    char c = val % format;
+    val /= format;
+
+    *--str = c < 10 ? c + '0' : c + 'A' - 10;
+  } while(val);
+
+  return write(str);
+//   return write('?');
+}
 
 /* checks if a number is "Not-a-Number" (NaN) */
 static inline bool _isnan(double x)
@@ -208,7 +247,7 @@ static inline bool _isinf(double x)
     return !_isnan(x) && _isnan (x - x);
 }
 
-size_t Print::printFloat(double number, uint8_t digits) 
+size_t Serials::printFloat(double number, uint8_t digits) 
 { 
   size_t n = 0;
   

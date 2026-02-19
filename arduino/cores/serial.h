@@ -19,6 +19,7 @@ protected :
     bool _opened; /* Tracks if the serial is intialized */
     int _uart_id; /* UART id */
     size_t printFloat(double number, uint8_t digits) override;
+    size_t printNumber(unsigned long val, int format) override;
     
 public :
     /**
@@ -74,7 +75,7 @@ public :
         * https://docs.arduino.cc/language-reference/en/functions/communication/serial/write/
         */
     size_t write(byte data) override;
-    size_t write(const char *string) override { return 0; }
+    size_t write(const char *string) override;
     size_t write(const byte *data, size_t length) override;
 
     /**
@@ -114,13 +115,13 @@ public :
          */
     size_t print(char val) override;
     size_t print(const char *val) override;
-    size_t print(unsigned char val) override;
+    // size_t print(unsigned char val) override;
     size_t print(int val) override;
     size_t print(unsigned int val) override;
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
     size_t print(const __FlashStringHelper *val) override;
 #endif
-    size_t print(char val, int format = DEC) override;
+    size_t print(char val, int format) override;
     size_t print(unsigned char val, int format) override;
     size_t print(int val, int format) override;
     size_t print(unsigned int val, int format) override;

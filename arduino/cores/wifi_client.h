@@ -22,6 +22,7 @@ class WiFiClient : public IPAddress, public Stream
 {
 private:
     size_t printFloat(double number, uint8_t digits) override { return 0; }
+    size_t printNumber(unsigned long val, int format) { return 0; }
 
 public :
     /**

@@ -20,6 +20,7 @@ class Print {
     private:
     protected:
         virtual size_t printFloat(double number, uint8_t digits) = 0;
+        virtual size_t printNumber(unsigned long val, int format) = 0;
 
     public:
         /**
@@ -29,10 +30,8 @@ class Print {
          * 
          * https://docs.arduino.cc/language-reference/en/functions/communication/wire/write/
          */
-        // virtual size_t write(uint8_t value) = 0;
         virtual size_t write(byte value) = 0;
         virtual size_t write(const char *string) = 0;
-        // virtual size_t write(const uint8_t *data, size_t length) = 0;
         virtual size_t write(const byte *data, size_t length) = 0;
 
         /**
@@ -45,13 +44,13 @@ class Print {
          */
         virtual size_t print(char val) = 0;
         virtual size_t print(const char *val) = 0;
-        virtual size_t print(unsigned char val) = 0;
+        // virtual size_t print(unsigned char val) = 0;
         virtual size_t print(int val) = 0;
         virtual size_t print(unsigned int val) = 0;
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
         virtual size_t print(const __FlashStringHelper *val) = 0;
 #endif
-        virtual size_t print(char val, int format = DEC) = 0;
+        virtual size_t print(char val, int format) = 0;
         virtual size_t print(unsigned char val, int format) = 0;
         virtual size_t print(int val, int format) = 0;
         virtual size_t print(unsigned int val, int format) = 0;
