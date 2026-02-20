@@ -62,6 +62,7 @@ spim_t *spim_open(spim_conf_t *conf)
   spim->id = conf->id;
 
   spim->wordsize = conf->wordsize;
+  spim->bitOrder = conf->bitOrder;
   spim->big_endian = conf->big_endian;
   spim->polarity = conf->polarity;
   spim->phase = conf->phase;
@@ -83,27 +84,6 @@ spim_t *spim_open(spim_conf_t *conf)
   return spim;
 }
 
-void spim_send(spim_t *spim, void *data, size_t len, int qspi, spim_cs_e cs_mode)
-{
-  static L2_DATA spim_cmd_t cmd_l2;
-  spim_cmd_t *cmd = &cmd_l2; 
-
-  cmd->cmd[0] = spim->cfg;
-  cmd->cmd[1] = SPI_CMD_SOT(spim->cs);
-  cmd->cmd[2] = SPI_CMD_TX_DATA(len/8, SPI_CMD_1_WORD_PER_TRANSF, 8, qspi, SPI_CMD_MSB_FIRST);
-  cmd->cmd[3] = SPI_CMD_EOT(1, cs_mode == SPIM_CS_KEEP);
-
-  int buffer_size = len/8;
-  int cfg = UDMA_CHANNEL_CFG_EN;
-
-    plp_udma_enqueue(UDMA_SPIM_CMD_ADDR(spim->id), (int)cmd, 4*4, cfg);
-    plp_udma_enqueue(UDMA_SPIM_TX_ADDR(spim->id), (int)data, buffer_size, cfg);
-
-    while (plp_udma_busy(UDMA_SPIM_CMD_ADDR(spim->id))); 
-    while (plp_udma_busy(UDMA_SPIM_TX_ADDR(spim->id))); 
-
-}
-
 void spim_conf_init(spim_conf_t *conf)
 {
   conf->wordsize = SPIM_WORDSIZE_8;
@@ -114,6 +94,7 @@ void spim_conf_init(spim_conf_t *conf)
   conf->id = -1;
   conf->polarity = 0;
   conf->phase = 0;
+  conf->bitOrder = SPI_CMD_MSB_FIRST;
 }
 
 void spim_transfer(spim_t *spim, void *tx_data, void *rx_data, size_t len, spim_cs_e mode)
@@ -123,7 +104,7 @@ void spim_transfer(spim_t *spim, void *tx_data, void *rx_data, size_t len, spim_
 
   cmd->cmd[0] = spim->cfg;
   cmd->cmd[1] = SPI_CMD_SOT(spim->cs);
-  cmd->cmd[2] = SPI_CMD_FUL(len/8, SPI_CMD_1_WORD_PER_TRANSF, 8, SPI_CMD_MSB_FIRST);
+  cmd->cmd[2] = SPI_CMD_FUL(len/8, SPI_CMD_1_WORD_PER_TRANSF, 8, spim->bitOrder);
   cmd->cmd[3] = SPI_CMD_EOT(1, mode == SPIM_CS_KEEP);
 
   int buffer_size = len/8;
