@@ -72,22 +72,68 @@ class String;
 #if 0
 String operator+(String    lhs, const String   &rhs);
 
+String operator+(String    lhs, char            rhs);
+String operator+(String    lhs, byte            rhs);
+String operator+(String    lhs, int             rhs);
+String operator+(String    lhs, unsigned int    rhs);
+String operator+(String    lhs, long            rhs);
+String operator+(String    lhs, unsigned long   rhs);
+String operator+(String    lhs, float           rhs);
+String operator+(String    lhs, double          rhs);
+
 #if ((__cplusplus) >= 201103L) /* C++11 */
 String operator+(String    lhs, String        &&rhs);
 
 String operator+(String  &&lhs, String          rhs);
 
+String operator+(String  &&lhs, char            rhs);
+String operator+(String  &&lhs, byte            rhs);
+String operator+(String  &&lhs, int             rhs);
+String operator+(String  &&lhs, unsigned int    rhs);
+String operator+(String  &&lhs, long            rhs);
+String operator+(String  &&lhs, unsigned long   rhs);
+String operator+(String  &&lhs, float           rhs);
+String operator+(String  &&lhs, double          rhs);
+
 String operator+(String  &&lhs, String        &&rhs);
+
 #endif /* ((__cplusplus) >= 201103L) */
 
 
 String operator+(const char *lhs, const String     &rhs);
 #endif
 
+/* copy semantic */
 String operator+(const char *lhs, String            rhs);
 
+String operator+(char           lhs, String  rhs);
+String operator+(byte           lhs, String  rhs);
+String operator+(int            lhs, String  rhs);
+String operator+(unsigned int   lhs, String  rhs);
+String operator+(long           lhs, String  rhs);
+String operator+(unsigned long  lhs, String  rhs);
+String operator+(float          lhs, String  rhs);
+String operator+(double         lhs, String  rhs);
+
+/* move semantic */
 #if ((__cplusplus) >= 201103L) /* C++11 */
 String operator+(const char *lhs, String          &&rhs);
+
+/**
+	* don't need to provide move semantic, because it don't make sense
+	* to use move semantic
+	* if we use move semantic, we need to allocate/create
+	* new object anyway, so just let compiler allocate it
+	* automatically with copy semantic
+	*/
+/*String operator+(char           lhs, String       &&rhs);
+String operator+(byte           lhs, String       &&rhs);
+String operator+(int            lhs, String       &&rhs);
+String operator+(unsigned int   lhs, String       &&rhs);
+String operator+(long           lhs, String       &&rhs);
+String operator+(unsigned long  lhs, String       &&rhs);
+String operator+(float          lhs, String       &&rhs);
+String operator+(double         lhs, String       &&rhs);*/
 #endif
 
 
@@ -112,6 +158,19 @@ public:
 	/* constructors */
 	String(void);
 	String(const char *str);
+	String(char          value);
+	String(byte          value);
+	String(byte          value, unsigned int base);
+	String(int           value);
+	String(int           value, unsigned int base);
+	String(unsigned int  value);
+	String(unsigned int  value, unsigned int base);
+	explicit String(long          value);
+	explicit String(long          value, unsigned int base);
+	explicit String(unsigned long value);
+	explicit String(unsigned long value, unsigned int base);
+	String(float         value);
+	String(double        value);
 	/* copy constructor */
 	String(const String   &rvalue);
 #if (__cplusplus >= 201103L)
@@ -333,9 +392,7 @@ public:
 	inline bool concat(unsigned long   parameter)
 	{
 		char s[22];
-		int retval;
-
-		retval = snprintf(s, 22, "%lu", parameter);
+		int retval = snprintf(s, 22, "%lu", parameter);
 		if ((retval <= 0) || (retval >= 22))
 		{
 			return false;
@@ -352,9 +409,7 @@ public:
 	inline bool concat(double          parameter)
 	{
 		char s[40];
-		int retval;
-
-		retval = snprintf(s, 40, "%f", parameter);
+		int retval = snprintf(s, 40, "%f", parameter);
 		if ((retval <= 0) || (retval >= 40))
 		{
 			return false;
@@ -791,6 +846,14 @@ public:
 		* should return *this
 		*/
 	String &operator=(const char     *rvalue);
+	String &operator=(char            rvalue);
+	String &operator=(byte            rvalue);
+	String &operator=(int             rvalue);
+	String &operator=(unsigned int    rvalue);
+	String &operator=(long            rvalue);
+	String &operator=(unsigned long   rvalue);
+	String &operator=(double          rvalue);
+	String &operator=(float           rvalue);
 	/* copy semantic */
 	String &operator=(const String   &rvalue);
 #if (__cplusplus >= 201103L) /* C++11 */
@@ -907,6 +970,106 @@ public:
 	}
 #endif
 
+	inline String operator+(char          rhs) const
+	{
+		char s[] = {rhs, '\0'};
+		return ((*this) + s);
+	}
+
+	/* uint8_t */
+	inline String operator+(byte          rhs) const
+	{
+		/* reuse unsigned int */
+		return ((*this) + ((unsigned int) rhs));
+	}
+
+	inline String operator+(int           rhs) const
+	{
+		char s[12];
+		int retval = snprintf(s, 12, "%d", rhs);
+		if ((retval <= 0) || (retval >= 12))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) + s);
+	}
+
+	inline String operator+(unsigned int  rhs) const
+	{
+		char s[12];
+		int retval = snprintf(s, 12, "%u", rhs);
+		if ((retval <= 0) || (retval >= 12))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) + s);
+	}
+
+	inline String operator+(long          rhs) const
+	{
+		char s[22];
+		int retval;
+
+		/* snprintf defined by C99 */
+		retval = snprintf(s, 22, "%ld", rhs);
+		if ((retval <= 0) || (retval >= 22))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) + s);
+	}
+
+	inline String operator+(unsigned long rhs) const
+	{
+		char s[22];
+		int retval = snprintf(s, 22, "%lu", rhs);
+		if ((retval <= 0) || (retval >= 22))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) + s);
+	}
+
+	inline String operator+(float         rhs) const
+	{
+		return ((*this) + ((double) rhs));
+	}
+
+	inline String operator+(double        rhs) const
+	{
+		char s[40];
+		int retval = snprintf(s, 40, "%f", rhs);
+		if ((retval <= 0) || (retval >= 22))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) + s);
+	}
 
 	/**
 		* operator += (append)
@@ -916,6 +1079,112 @@ public:
 		* with c string
 		*/
 	String &operator+=(const char *rvalue);
+
+	/**
+		* with integer types
+		*/
+	inline String &operator+=(char           rvalue)
+	{
+		char s[] = {rvalue, '\0'};
+		return ((*this) += s); /* reuse operator += with c string rvalue */
+	}
+
+	inline String &operator+=(byte           rvalue)
+	{
+		return ((*this) += ((unsigned int) rvalue));
+	}
+
+	inline String &operator+=(int            rvalue)
+	{
+		char s[12];
+		int retval = snprintf(s, 12, "%d", rvalue);
+		if ((retval <= 0) || (retval >= 12))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) += s);
+	}
+
+	inline String &operator+=(unsigned int   rvalue)
+	{
+		char s[12];
+		int retval = snprintf(s, 12, "%d", rvalue);
+		if ((retval <= 0) || (retval >= 12))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) += s);
+	}
+
+	inline String &operator+=(long           rvalue)
+	{
+		char s[22];
+		int retval;
+
+		/* snprintf defined by C99 */
+		retval = snprintf(s, 22, "%ld", rvalue);
+		if ((retval <= 0) || (retval >= 22))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) += s);
+	}
+
+	inline String &operator+=(unsigned long  rvalue)
+	{
+		char s[22];
+		int retval = snprintf(s, 22, "%lu", rvalue);
+		if ((retval <= 0) || (retval >= 22))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) += s);
+	}
+
+	/**
+		* with float types
+		*/
+	inline String &operator+=(float          rvalue)
+	{
+		return (*this) += ((double) rvalue);
+	}
+
+	inline String &operator+=(double         rvalue)
+	{
+		char s[40];
+		int retval = snprintf(s, 40, "%f", rvalue);
+		if ((retval <= 0) || (retval >= 22))
+		{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+			std::terminate();
+#else
+			return (*this);
+#endif
+		}
+
+		return ((*this) += s);
+	}
+
 
 	/**
 		* copy semantic
@@ -1060,5 +1329,15 @@ public:
 		return String::empty_string;
 	}
 };
+
+
+/**
+	* for testing
+	*/
+#ifdef SIMULATION_TEST
+size_t unsigned_char_to_string_export(char *str, size_t str_len, unsigned char value, unsigned int base);
+size_t unsigned_int_to_string_export(char *str, size_t str_len, unsigned int value, unsigned int base);
+size_t unsigned_long_to_string_export(char *str, size_t str_len, unsigned long value, unsigned int base);
+#endif
 
 #endif /* defined(__ARDUINO_CORES_SSTRING_HPP__) */

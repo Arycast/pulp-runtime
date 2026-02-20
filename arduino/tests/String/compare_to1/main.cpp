@@ -13,8 +13,6 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <assert.h>
-
 #include "String.hpp"
 
 int main(void)
