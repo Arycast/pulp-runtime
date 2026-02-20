@@ -19,7 +19,7 @@
 class Print {
     private:
     protected:
-        virtual size_t printFloat(double number, uint8_t digits) = 0;
+        virtual size_t printFloat(double number, int digits) = 0;
         virtual size_t printNumber(unsigned long val, int format) = 0;
 
     public:
@@ -42,6 +42,7 @@ class Print {
          * 
          * https://docs.arduino.cc/language-reference/en/functions/communication/serial/print/
          */
+        virtual size_t print(const String &s) = 0;
         virtual size_t print(char val) = 0;
         virtual size_t print(const char *val) = 0;
         // virtual size_t print(unsigned char val) = 0;
@@ -50,8 +51,6 @@ class Print {
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
         virtual size_t print(const __FlashStringHelper *val) = 0;
 #endif
-        virtual size_t print(char val, int format) = 0;
-        virtual size_t print(unsigned char val, int format) = 0;
         virtual size_t print(int val, int format) = 0;
         virtual size_t print(unsigned int val, int format) = 0;
         virtual size_t print(long val, int format = DEC) = 0;
@@ -71,13 +70,11 @@ class Print {
         virtual size_t println(void) = 0;
         virtual size_t println(char val) = 0;
         virtual size_t println(const char *val) = 0;
-        virtual size_t println(unsigned char val) = 0;
         virtual size_t println(int val) = 0;
         virtual size_t println(unsigned int val) = 0;
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
         virtual size_t println(const __FlashStringHelper *val) = 0;
 #endif
-        virtual size_t println(char val, int format = DEC) = 0;
         virtual size_t println(unsigned char val, int format) = 0; 
         virtual size_t println(int val, int format) = 0;
         virtual size_t println(unsigned int val, int format) = 0;

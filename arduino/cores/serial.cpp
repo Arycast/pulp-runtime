@@ -77,6 +77,10 @@ void Serials::flush(void) {
 
 }
 
+size_t Serials::print(const String &s){
+    return 0;
+}
+
 size_t Serials::print(char val){
     return write(val); 
 }
@@ -84,10 +88,6 @@ size_t Serials::print(char val){
 size_t Serials::print(const char *val){
     return write(val);
 }
-
-// size_t Serials::print(unsigned char val){
-//     return print((unsigned long) val, DEC);
-// }
 
 size_t Serials::print(int val){
     return print((long) val, DEC);
@@ -114,15 +114,6 @@ size_t Serials::print(const __FlashStringHelper *val){
 }
 #endif /* ! defined(__FLASHSTRINGHELPER_IS_CHAR) */
 
-/* missing implementation from above are const char */
-size_t Serials::print(char val, int format){
-    return 0; 
-}
-
-size_t Serials::print(unsigned char val, int format){
-    return print((unsigned long) val, format);
-}
-
 size_t Serials::print(int val, int format){
     return print((long) val, format);
 }
@@ -141,12 +132,12 @@ size_t Serials::print(long val, int format){
 }
 
 size_t Serials::print(unsigned long val, int format){
-    return 0;
+    return printNumber(val, format);
 }
 
 size_t Serials::print(double val, int format){
     /* redirects double-precision values to the specialized float formatter*/
-    return printFloat(val, (uint8_t) format);
+    return printFloat(val, format);
 }
 
 size_t Serials::println(void){
@@ -154,17 +145,15 @@ size_t Serials::println(void){
 }
 
 size_t Serials::println(char val){
-    return 0; 
+    size_t n = print(val);
+    n += println();
+    return n; 
 }
 
 size_t Serials::println(const char *val){
     size_t n = print(val);
     n += println();
     return n;
-}
-
-size_t Serials::println(unsigned char val){
-    return println((unsigned long) val, DEC);
 }
 
 size_t Serials::println(int val){
@@ -181,11 +170,7 @@ size_t Serials::println(const __FlashStringHelper *val){
 }
 #endif
 
-/* missing implementation from above are const char */
-size_t Serials::println(char val, int format){
-    return 0; 
-}
-
+/* missing implementation from above are const char*/
 size_t Serials::println(unsigned char val, int format){
     return println((unsigned long) val, format);
 }
@@ -199,21 +184,26 @@ size_t Serials::println(unsigned int val, int format){
 }
 
 size_t Serials::println(long val, int format){
-    return 0;
+    size_t n = print(val, format);
+    n += println();
+    return n; 
 }
 
 size_t Serials::println(unsigned long val, int format){
-    return 0;
+    size_t n = print(val, format);
+    n += println();
+    return n; 
 }
 
 size_t Serials::println(double val, int format){
-    return 0;
+    size_t n = print(val, format);
+    n += println();
+    return n; 
 }
 
 // Private Methods /////////////////////////////////////////////////////////////
 size_t Serials::printNumber(unsigned long val, int format)
 {
-//   write('!'); 
   char buf[8 * sizeof(long) + 1]; // Assumes 8-bit chars plus zero byte.
   char *str = &buf[sizeof(buf) - 1];
 
@@ -230,7 +220,6 @@ size_t Serials::printNumber(unsigned long val, int format)
   } while(val);
 
   return write(str);
-//   return write('?');
 }
 
 /* checks if a number is "Not-a-Number" (NaN) */
@@ -247,7 +236,7 @@ static inline bool _isinf(double x)
     return !_isnan(x) && _isnan (x - x);
 }
 
-size_t Serials::printFloat(double number, uint8_t digits) 
+size_t Serials::printFloat(double number, int digits) 
 { 
   size_t n = 0;
   
@@ -259,7 +248,7 @@ size_t Serials::printFloat(double number, uint8_t digits)
   /* Handle negative numbers */ 
   if (number < 0.0)
   {
-    //  n += print('-');
+     n += print('-');
      number = -number;
   }
 
@@ -277,7 +266,7 @@ size_t Serials::printFloat(double number, uint8_t digits)
 
   /* Print the decimal point, but only if there are digits beyond */
   if (digits > 0) {
-    // n += print('.'); 
+    n += print('.'); 
   }
 
   /* Extract digits from the remainder one at a time */

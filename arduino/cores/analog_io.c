@@ -7,6 +7,14 @@
 
 #include "analog_io.h"
 
+#ifndef GPIO_PWM
+#define GPIO_PWM        17
+#endif
+
+#ifndef GPIO_PWM_MUX
+#define GPIO_PWM_MUX    2
+#endif
+
 static int def_resolution = 255;
 
 int analogRead(int pin){
@@ -36,21 +44,21 @@ void analogWrite(int pin, int val){
 	int min_resolution = 0;
 
 	/* get timer and channel for current gpio */
-	retval = adv_timer_get_timer_and_channel_from_io(0, 0, /*GPIO_PWM, GPIO_PWM_MUX,*/
+	retval = adv_timer_get_timer_and_channel_from_io(GPIO_PWM, GPIO_PWM_MUX,
 		&timer, &channel);
 	if (retval != 0)
 	{
 		/* if we cannot get timer and channel then just return */
-		return /*retval*/;
+		return retval;
 	}
 
 	/* make sure we get correct result */
 	if ((timer < 0) || (timer >= 4) || (channel < 0) || (channel >= 4))
 	{
-		return /*(-1)*/;
+		return (-1);
 	}
 
-	/*hal_apb_soc_pad_set_function(GPIO_PWM, GPIO_PWM_MUX);*/
+	hal_apb_soc_pad_set_function(GPIO_PWM, GPIO_PWM_MUX);
 
 	adv_timer_stop_and_reset(timer);
 

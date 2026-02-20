@@ -37,7 +37,7 @@ private:
     static void (*user_onReceive)(int);
     static void (*user_onRequest)(void);
 
-    size_t printFloat(double number, uint8_t digits) override { return 0; }
+    size_t printFloat(double number, int digits) override { return 0; }
     size_t printNumber(unsigned long val, int format) { return 0; }
 
 public:
@@ -181,6 +181,7 @@ public:
     int peek(void) override;
     
     /* In Print Class, method print and printlnare pure functions, so declarations in the the subclass are required */
+    size_t print(const String &s) override { return 0; }
     size_t print(char val) override { return 0; }
     size_t print(const char *val) override { return 0; }
     // size_t print(unsigned char val) override { return 0; }
@@ -189,8 +190,6 @@ public:
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
     size_t print(const __FlashStringHelper *val) override { return 0; }
 #endif
-    size_t print(char val, int format = DEC) override { return 0; }
-    size_t print(unsigned char val, int format) override { return 0; }
     size_t print(int val, int format) override { return 0; }
     size_t print(unsigned int val, int format) override { return 0; }
     size_t print(long val, int format = DEC) override { return 0; }
@@ -200,13 +199,11 @@ public:
     size_t println(void) override { return 0; }
     size_t println(char val) override { return 0; }
     size_t println(const char *val) override { return 0; }
-    size_t println(unsigned char val) override { return 0; }
     size_t println(int val) override { return 0; }
     size_t println(unsigned int val) override { return 0; }
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
     size_t println(const __FlashStringHelper *val) override { return 0; }
 #endif
-    size_t println(char val, int format = DEC) override { return 0; }
     size_t println(unsigned char val, int format) override { return 0; }
     size_t println(int val, int format) override { return 0; }
     size_t println(unsigned int val, int format) override { return 0; }

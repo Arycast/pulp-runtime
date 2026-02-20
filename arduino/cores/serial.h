@@ -18,7 +18,7 @@ class Serials : public Stream {
 protected :
     bool _opened; /* Tracks if the serial is intialized */
     int _uart_id; /* UART id */
-    size_t printFloat(double number, uint8_t digits) override;
+    size_t printFloat(double number, int digits) override;
     size_t printNumber(unsigned long val, int format) override;
     
 public :
@@ -110,19 +110,17 @@ public :
          * The print method details in Print class are redirected to the 
          * Serial.print page. Prints data to the serial port as human-readable 
          * ASCII text. Allowed data types for val: any data type. 
-         * 
+         *
          * https://docs.arduino.cc/language-reference/en/functions/communication/serial/print/
          */
+    size_t print(const String &s) override; 
     size_t print(char val) override;
     size_t print(const char *val) override;
-    // size_t print(unsigned char val) override;
     size_t print(int val) override;
     size_t print(unsigned int val) override;
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
     size_t print(const __FlashStringHelper *val) override;
 #endif
-    size_t print(char val, int format) override;
-    size_t print(unsigned char val, int format) override;
     size_t print(int val, int format) override;
     size_t print(unsigned int val, int format) override;
     size_t print(long val, int format = DEC) override;
@@ -142,13 +140,11 @@ public :
     size_t println(void) override;
     size_t println(char val) override;
     size_t println(const char *val) override;
-    size_t println(unsigned char val) override;
     size_t println(int val) override;
     size_t println(unsigned int val) override;
 #ifndef __FLASHSTRINGHELPER_IS_CHAR
     size_t println(const __FlashStringHelper *val) override;
 #endif
-    size_t println(char val, int format = DEC) override;
     size_t println(unsigned char val, int format) override;
     size_t println(int val, int format) override;
     size_t println(unsigned int val, int format) override;

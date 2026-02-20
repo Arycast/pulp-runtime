@@ -1,12 +1,8 @@
 #include <stdint.h>
 
-/*#ifndef GPIO_PWM
-#define GPIO_PWM        17
-#endif
-
-#ifndef GPIO_PWM_MUX
-#define GPIO_PWM_MUX    2
-#endif*/
+#ifdef __cplusplus
+extern "C" {
+#endif 
 
 /**
  * function analogRead
@@ -54,3 +50,7 @@ void analogWrite(int pin, int value);
  * https://docs.arduino.cc/language-reference/en/functions/analog-io/analogWriteResolution/
  */
 void analogWriteResolution(int bits);
+
+#ifdef __cplusplus
+}
+#endif
