@@ -14,7 +14,7 @@
 int main(void)
 {
 	String test1;
-	String test2(NULL);
+	String test2(nullptr);
 	String test3("this is test 3");
 
 	char c;

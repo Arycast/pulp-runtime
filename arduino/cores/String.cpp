@@ -21,12 +21,151 @@
 #include <stddef.h>
 #include <string.h> /* strlen, memcpy, memmove etc. */
 #include <stdlib.h> /* alloc related functions */
+#include <stdio.h> /* snprintf */
 
 /* standard header c++ */
 #include <exception> /* for std::terminate */
+#include <algorithm> /* for std::reverse */
 
 /* local header */
 #include "String.hpp"
+
+/* when do simulation test, include simulation header */
+#ifdef SIMULATION_TEST
+#include "simulation_test.h"
+#endif
+
+/**
+	* helper to convert integer to string
+	* return number of character written to string str NOT INCLUDING terminating 0 ('\0')
+	* so if return value is same as argument str_len value, then '\0' is not written
+	* which is indicate error
+	*/
+template <typename T>
+static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, unsigned int base)
+{
+#if ((SSTRING_CONF_BASE_UPPERCASE) != 0)
+	constexpr const char base_char_map[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+#else
+	constexpr const char base_char_map[] = "0123456789abcdefghijklmnopqrstuvwxyz";
+#endif
+
+	constexpr T   zero = 0;
+
+	const     T  _base = static_cast<T>(base);
+
+	size_t len = 0;
+
+	/**
+		* if base is bigger than 36 (10 number digit + 26 alphabet)
+		* then we can't convert it to string
+		*/
+	if ((base <= 1) || (base > 36))
+	{
+		return 0;
+	}
+
+	/* this function should return value less than str_len */
+	if (str_len <= 1)
+	{
+		return str_len;
+	}
+
+	/* convert value to string */
+	if (value == zero)
+	{
+		/* len guaranteed to be 2 or more */
+		str[len++] = '0';
+	}
+	else
+	{
+		do
+		{
+			/* fill string buffer */
+			str[len++] = base_char_map[value % _base];
+
+			/* reduce value */
+			value /= _base;
+		}
+		while ((value > zero) && (len < str_len));
+	}
+
+	/* Reverse the string in place */
+	std::reverse(str, str + len);
+
+	/* add termination string */
+	if (len < str_len)
+	{
+		str[len] = '\0';
+	}
+
+	return len;
+}
+
+/* for testing only, export convertion function */
+#ifdef SIMULATION_TEST
+size_t unsigned_char_to_string_export(char *str, size_t str_len, unsigned char value, unsigned int base)
+{
+	return unsigned_integer_to_string<unsigned char>(str, str_len, value, base);
+}
+
+size_t unsigned_int_to_string_export(char *str, size_t str_len, unsigned int value, unsigned int base)
+{
+	return unsigned_integer_to_string<unsigned int>(str, str_len, value, base);
+}
+
+size_t unsigned_long_to_string_export(char *str, size_t str_len, unsigned long value, unsigned int base)
+{
+	return unsigned_integer_to_string<unsigned long>(str, str_len, value, base);
+}
+#endif
+
+
+/**
+	* assume buf_len > 1
+	* assume base > 1
+	*/
+
+template <typename T>
+static bool unsigned_integer_to_dynamic_string(char **buf, size_t buf_len, size_t *str_len, T value, unsigned int base, bool add_minus_sign)
+{
+	char    *_buf;
+	size_t    retval;
+
+	/**
+		* byte should be able to contain 8 bit at max + 1 string termination character
+		* add more 1 extra sign character
+		*/
+	_buf = (char *) malloc(((add_minus_sign) ? (buf_len + 1) : buf_len) * sizeof(char));
+	if (_buf == NULL)
+	{
+		return false; /* return fail */
+	}
+
+	/* fill string */
+	retval = unsigned_integer_to_string<T>((add_minus_sign) ? (_buf + 1) : _buf, buf_len, value, base);
+	if ((retval <= 0) || (retval >= buf_len))
+	{
+		/* allocated buffer is too small */
+		free(_buf); /* free buffer again */
+		return false; /* return fail */
+	}
+
+	/* success, add minus sign */
+	if (add_minus_sign)
+	{
+		*_buf = '-';
+	}
+
+	/* set output into buffer */
+	*buf = _buf;
+	*str_len = (add_minus_sign) ? (retval + 1) : retval;
+	return true;
+}
+
+
+
+
 
 /**
 	* static member
@@ -149,6 +288,261 @@ String::String(const char    *s)
 		this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
 	}
 }
+
+String::String(char          value)
+{
+	if (value == '\0')
+	{
+		/* empty string */
+		this->__non_standard__set_new_buffer(NULL, 0);
+	}
+	else
+	{
+		/* 2 char for value and terminating string */
+		char *new_string = (char *) malloc(2 * sizeof(char));
+		if (new_string == NULL)
+		{
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
+			/* unhandled exception, terminate */
+			std::terminate(); /* this function is non-return function */
+#else
+			this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+			return;
+		}
+
+		/* fill string */
+		new_string[0] = value;
+		new_string[1] = '\0';
+
+		/* put into buffer */
+		this->__non_standard__set_new_buffer(new_string, 2, 1);
+	}
+}
+
+String::String(byte          value) : String(value, DEC)
+{
+}
+
+String::String(byte          value, unsigned int base)
+{
+	char    *new_string = NULL;
+	bool     retval;
+
+	size_t string_length = 8;
+	size_t buffer_length = string_length + 1;
+
+	retval = unsigned_integer_to_dynamic_string<byte>(
+		&new_string, buffer_length, &string_length,
+		value, base, false);
+	if (! retval)
+	{
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
+		/* unhandled exception, terminate */
+		std::terminate(); /* this function is non-return function */
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* allocation success */
+	_ASSERT(new_string != NULL);
+	_ASSERT(string_length < buffer_length);
+
+	/* put into buffer */
+	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
+}
+
+String::String(int           value) : String(value, DEC)
+{
+}
+
+String::String(int           value, unsigned int base)
+{
+	char    *new_string = NULL;
+	bool     retval;
+
+	size_t string_length = 32;
+	size_t buffer_length = string_length + 1;
+
+	/**
+		* be careful when allocate, if base is DEC,
+		* we have possibility to add sign
+		*/
+	if ((value < 0) && (base == DEC))
+	{
+		unsigned int u_value = (unsigned int) (value * (-1));
+		retval = unsigned_integer_to_dynamic_string<unsigned int>(
+			&new_string, buffer_length, &string_length,
+			u_value, base, true);
+
+		/* buffer is increase by 1 due to adding sign */
+		buffer_length++;
+	}
+	else
+	{
+		unsigned int u_value = (unsigned int) value;
+		retval = unsigned_integer_to_dynamic_string<unsigned int>(
+			&new_string, buffer_length, &string_length,
+			u_value, base, false);
+	}
+
+	if (! retval)
+	{
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
+		/* unhandled exception, terminate */
+		std::terminate(); /* this function is non-return function */
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* allocation success */
+	_ASSERT(new_string != NULL);
+	_ASSERT(string_length < buffer_length);
+
+	/* put into buffer */
+	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
+}
+
+String::String(unsigned int  value) : String(value, DEC)
+{
+}
+
+String::String(unsigned int  value, unsigned int base)
+{
+	char    *new_string = NULL;
+	bool     retval;
+
+	size_t string_length = 32;
+	size_t buffer_length = string_length + 1;
+
+	/* allocate buffer */
+	retval = unsigned_integer_to_dynamic_string<unsigned int>(
+		&new_string, buffer_length, &string_length,
+		value, base, false);
+
+	if (! retval)
+	{
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
+		/* unhandled exception, terminate */
+		std::terminate(); /* this function is non-return function */
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* allocation success */
+	_ASSERT(new_string != NULL);
+	_ASSERT(string_length < buffer_length);
+
+	/* put into buffer */
+	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
+}
+
+String::String(long          value) : String(value, DEC)
+{
+}
+
+String::String(long          value, unsigned int base)
+{
+	char    *new_string = NULL;
+	bool     retval;
+
+	size_t string_length = 64;
+	size_t buffer_length = string_length + 1;
+
+	/**
+		* be careful when allocate, if base is DEC,
+		* we have possibility to add sign
+		*/
+	if ((value < 0) && (base == DEC))
+	{
+		unsigned long u_value = (unsigned long) (value * (-1));
+		retval = unsigned_integer_to_dynamic_string<unsigned long>(
+			&new_string, buffer_length, &string_length,
+			u_value, base, true);
+
+		/* buffer is increase by 1 due to adding sign */
+		buffer_length++;
+	}
+	else
+	{
+		unsigned long u_value = (unsigned long) value;
+		retval = unsigned_integer_to_dynamic_string<unsigned long>(
+			&new_string, buffer_length, &string_length,
+			u_value, base, false);
+	}
+
+	if (! retval)
+	{
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
+		/* unhandled exception, terminate */
+		std::terminate(); /* this function is non-return function */
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* allocation success */
+	_ASSERT(new_string != NULL);
+	_ASSERT(string_length < buffer_length);
+
+	/* put into buffer */
+	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
+}
+
+String::String(unsigned long value) : String(value, DEC)
+{
+}
+
+String::String(unsigned long value, unsigned int base)
+{
+	char    *new_string = NULL;
+	bool     retval;
+
+	size_t string_length = 64;
+	size_t buffer_length = string_length + 1;
+
+	/* allocate buffer */
+	retval = unsigned_integer_to_dynamic_string<unsigned long>(
+		&new_string, buffer_length, &string_length,
+		value, base, false);
+
+	if (! retval)
+	{
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
+		/* unhandled exception, terminate */
+		std::terminate(); /* this function is non-return function */
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* allocation success */
+	_ASSERT(new_string != NULL);
+	_ASSERT(string_length < buffer_length);
+
+	/* put into buffer */
+	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
+}
+
+String::String(float         value)
+{
+	std::terminate();
+}
+
+String::String(double        value)
+{
+	std::terminate();
+}
+
+
 
 
 
@@ -1740,3 +2134,112 @@ String operator+(const char *lhs, String        &&rhs)
 	return (lhs + String_rhs);
 }
 #endif
+
+String operator+(char          lhs, String  rhs)
+{
+	char s[] = {lhs, '\0'};
+
+	/* reuse operator+ for const char and string */
+	return (s + rhs);
+}
+
+/* byte is uint8_t */
+String operator+(byte          lhs, String  rhs)
+{
+	/* reuse operator+ unsigned int */
+	return (((unsigned int) lhs) + rhs);
+}
+
+String operator+(int           lhs, String  rhs)
+{
+	char s[12];
+	int retval = snprintf(s, 12, "%d", lhs);
+	if ((retval <= 0) || (retval >= 12))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		/* abort if snprintf fail */
+		std::terminate(); /* this function is non return */
+#else
+		/**
+			* just return rhs instance
+			* should return lhs
+			*/
+		return rhs;
+#endif
+	}
+
+	return (s + rhs);
+}
+
+String operator+(unsigned int  lhs, String  rhs)
+{
+	char s[12];
+	int retval = snprintf(s, 12, "%u", lhs);
+	if ((retval <= 0) || (retval >= 12))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return rhs;
+#endif
+	}
+
+	return (s + rhs);
+}
+
+String operator+(long          lhs, String  rhs)
+{
+	char s[22];
+	int retval;
+
+	/* snprintf is defined by C99 */
+	retval = snprintf(s, 22, "%ld", lhs);
+	if ((retval <= 0) || (retval >= 12))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return rhs;
+#endif
+	}
+
+	return (s + rhs);
+}
+
+String operator+(unsigned long lhs, String  rhs)
+{
+	char s[22];
+	int retval = snprintf(s, 22, "%lu", lhs);
+	if ((retval <= 0) || (retval >= 12))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return rhs;
+#endif
+	}
+
+	return (s + rhs);
+}
+
+String operator+(float         lhs, String  rhs)
+{
+	/* reuse operator+ for double */
+	return (((double) lhs) + rhs);
+}
+
+String operator+(double        lhs, String  rhs)
+{
+	char s[40];
+	int retval = snprintf(s, 40, "%f", lhs);
+	if ((retval <= 0) || (retval >= 40))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return rhs;
+#endif
+	}
+
+	return (s + rhs);
+}

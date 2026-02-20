@@ -18,6 +18,15 @@
 #define SSTRING_CONF_ABORT_ON_ALLOC_FAIL      1
 #endif
 
+/**
+	* when set to 1, overloading operator will call abort when
+	* snprintf function fail (for conversion from various integer and float
+	* type to c string)
+	*/
+#ifndef SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL
+#define SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL      1
+#endif
+
 
 /**
 	* remove last byte from operand buffer if we detect
@@ -28,5 +37,13 @@
 #define SSTRING_CONF_OPERATOR_PLUS_REMOVE_ZERO_TERMINATION      1
 #endif
 
+
+/**
+	* set whether alphabetic digit for string representation of number
+	* with base bigger than 0 should use upper case
+	*/
+#ifndef SSTRING_CONF_BASE_UPPERCASE
+#define SSTRING_CONF_BASE_UPPERCASE      0
+#endif
 
 #endif /* ! defined(__ARDUINO_CORES_CONFIG_SSTRING_H__) */

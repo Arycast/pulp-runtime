@@ -7,7 +7,6 @@
 	* NONINFRINGEMENT.
 	*/
 
-#include <string.h>
 #include <stdio.h>
 
 #include "String.hpp"
@@ -15,7 +14,7 @@
 int main(void)
 {
 	String *init1 = new String;
-	String *init2 = new String(NULL);
+	String *init2 = new String(nullptr);
 	String *init3 = new String("");
 	String *init4 = new String("test dynamic init 4");
 	String *init5 = new String(*init4);

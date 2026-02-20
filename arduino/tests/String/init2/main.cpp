@@ -7,7 +7,6 @@
 	* NONINFRINGEMENT.
 	*/
 
-#include <string.h>
 #include <stdio.h>
 
 #include "String.hpp"
@@ -16,7 +15,7 @@ int main(void)
 {
 	String init1;
 	/*String init2();*/
-	String init3(NULL);
+	String init3(nullptr);
 	String init4("");
 	String init5("test init 5");
 	String init6(init4);
