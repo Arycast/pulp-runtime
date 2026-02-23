@@ -45,12 +45,8 @@ class Print {
         virtual size_t print(const String &s) = 0;
         virtual size_t print(char val) = 0;
         virtual size_t print(const char *val) = 0;
-        // virtual size_t print(unsigned char val) = 0;
         virtual size_t print(int val) = 0;
         virtual size_t print(unsigned int val) = 0;
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-        virtual size_t print(const __FlashStringHelper *val) = 0;
-#endif
         virtual size_t print(int val, int format) = 0;
         virtual size_t print(unsigned int val, int format) = 0;
         virtual size_t print(long val, int format = DEC) = 0;
@@ -72,9 +68,6 @@ class Print {
         virtual size_t println(const char *val) = 0;
         virtual size_t println(int val) = 0;
         virtual size_t println(unsigned int val) = 0;
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-        virtual size_t println(const __FlashStringHelper *val) = 0;
-#endif
         virtual size_t println(unsigned char val, int format) = 0; 
         virtual size_t println(int val, int format) = 0;
         virtual size_t println(unsigned int val, int format) = 0;

@@ -120,9 +120,6 @@ public :
     size_t print(const char *val) override;
     size_t print(int val) override;
     size_t print(unsigned int val) override;
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-    size_t print(const __FlashStringHelper *val) override;
-#endif
     size_t print(int val, int format) override;
     size_t print(unsigned int val, int format) override;
     size_t print(long val, int format = DEC) override;
@@ -144,9 +141,6 @@ public :
     size_t println(const char *val) override;
     size_t println(int val) override;
     size_t println(unsigned int val) override;
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-    size_t println(const __FlashStringHelper *val) override;
-#endif
     size_t println(unsigned char val, int format) override;
     size_t println(int val, int format) override;
     size_t println(unsigned int val, int format) override;
