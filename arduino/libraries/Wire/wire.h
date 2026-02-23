@@ -184,12 +184,8 @@ public:
     size_t print(const String &s) override { return 0; }
     size_t print(char val) override { return 0; }
     size_t print(const char *val) override { return 0; }
-    // size_t print(unsigned char val) override { return 0; }
     size_t print(int val) override { return 0; }
     size_t print(unsigned int val) override { return 0; }
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-    size_t print(const __FlashStringHelper *val) override { return 0; }
-#endif
     size_t print(int val, int format) override { return 0; }
     size_t print(unsigned int val, int format) override { return 0; }
     size_t print(long val, int format = DEC) override { return 0; }
@@ -201,9 +197,6 @@ public:
     size_t println(const char *val) override { return 0; }
     size_t println(int val) override { return 0; }
     size_t println(unsigned int val) override { return 0; }
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-    size_t println(const __FlashStringHelper *val) override { return 0; }
-#endif
     size_t println(unsigned char val, int format) override { return 0; }
     size_t println(int val, int format) override { return 0; }
     size_t println(unsigned int val, int format) override { return 0; }

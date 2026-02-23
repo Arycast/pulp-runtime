@@ -97,23 +97,6 @@ size_t Serials::print(unsigned int val){
     return print((unsigned long) val, DEC);
 }
 
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-/* Prints a string stored in Flash memory (F-string) instead of RAM */
-size_t Serials::print(const __FlashStringHelper *val){
-    const char *p = (const char *)val;
-    size_t n = 0;
-
-    /* Loop until null terminator ('\0') is reached*/
-    while (*p) {
-        if(write(p++))n++;
-
-        /* Stop if the output device is full or fails*/
-        else break;
-    }
-    return n;
-}
-#endif /* ! defined(__FLASHSTRINGHELPER_IS_CHAR) */
-
 size_t Serials::print(int val, int format){
     return print((long) val, format);
 }
@@ -163,12 +146,6 @@ size_t Serials::println(int val){
 size_t Serials::println(unsigned int val){
     return println((unsigned long) val, DEC);
 }
-
-#ifndef __FLASHSTRINGHELPER_IS_CHAR
-size_t Serials::println(const __FlashStringHelper *val){
-    return 0;
-}
-#endif
 
 /* missing implementation from above are const char*/
 size_t Serials::println(unsigned char val, int format){
