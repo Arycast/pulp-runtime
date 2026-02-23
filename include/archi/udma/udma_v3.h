@@ -99,7 +99,7 @@
 // The configuration register of the RX and TX parts for each channel can be accessed using the following bits
 
 #define UDMA_CHANNEL_CFG_SHADOW_BIT   (5)
-#define UDMA_CHANNEL_CFG_CLEAR_BIT    (5)
+#define UDMA_CHANNEL_CFG_CLEAR_BIT    (6)
 #define UDMA_CHANNEL_CFG_EN_BIT       (4)
 #define UDMA_CHANNEL_CFG_SIZE_BIT     (1)
 #define UDMA_CHANNEL_CFG_CONT_BIT     (0)

@@ -105,6 +105,8 @@ public :
         */
     void flush(void) override;
 
+    operator bool();
+
     /**
          * method print
          * The print method details in Print class are redirected to the 

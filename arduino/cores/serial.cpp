@@ -14,6 +14,10 @@ Serials::Serials(int uart_id) {
     _opened = false;
 }
 
+Serials::operator bool() {
+    if (_opened) return true;
+}
+
 int Serials::availableForWrite() {
     return -1;
 }
@@ -24,7 +28,8 @@ void Serials::begin(unsigned long baud) {
 }
 
 void Serials::begin(unsigned long baud, int config) {
-
+    uart_open(_uart_id, baud);
+    _opened = true;
 }
 
 void Serials::end(void) {
@@ -33,9 +38,7 @@ void Serials::end(void) {
 }
 
 int Serials::read() {
-    uint8_t byte;
-    uart_read(_uart_id, &byte, 1);
-    return byte;
+    return uart_read(_uart_id);
 }
 
 size_t Serials::write(byte data) {
@@ -60,21 +63,16 @@ size_t Serials::write(const char *string) {
 }
 
 int Serials::available(void) {
-    int periph = ARCHI_UDMA_UART_ID(_uart_id);
-    int ret = plp_uart_rx_busy(periph);
-    if (ret > 0 ) {
-        return ret;
-    } else {
-        return -1;
-    }
+    return uart_available(_uart_id);
 }
 
 int Serials::peek(void) {
-    return -1;
+    return uart_peek(_uart_id);
 }
 
 void Serials::flush(void) {
-
+    int periph_id = ARCHI_UDMA_UART_ID(uart_id);
+    while (plp_udma_busy(UDMA_UART_TX_ADDR(periph - ARCHI_UDMA_UART_ID(0))))
 }
 
 size_t Serials::print(const String &s){

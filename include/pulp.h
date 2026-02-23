@@ -98,13 +98,19 @@ void _start();
 static inline int get_core_num() { return ARCHI_CLUSTER_NB_PE; }
 #endif
 
+/* uart section */
 
 int uart_open(int uart_id, int baudrate);
 void uart_close(int uart_id);
 int uart_write(int uart_id, const void *buffer, uint32_t size);
-int uart_read(int uart_id, void *buffer, uint32_t size);
+int uart_available(int uart_id);
+int uart_peek(int uart_id);
+int uart_read(int uart_id);
+// int uart_read(int uart_id, void *buffer, uint32_t size);
 
-//i2c section
+/* end of uart section*/
+
+/* i2c section */
 
 typedef struct {
     int periph_id;
@@ -129,10 +135,9 @@ void i2c_write(i2c_t *dev, unsigned char *data, int length);
 void i2c_read(i2c_t *dev_i2c, unsigned char *rx_buff, int length, int pending);
 void i2c_dev_init(i2c_dev_t *dev);
 
+/* end of i2c section*/
 
-//i2c section
-
-//SPI section
+/* SPI section */
 
 typedef enum {
   SPIM_WORDSIZE_8 = 0,     /*!< Each element is 8 bits. Thus the endianness has no effect. */
@@ -179,7 +184,7 @@ void spim_transfer(spim_t *handle, void *tx_data, void *rx_data, size_t len, spi
 int spi_get_div(int spi_freq);
 void spim_close(spim_t *spim);
 
-//SPI section
+/* end of SPI section */
 
 void synch_barrier();
 
