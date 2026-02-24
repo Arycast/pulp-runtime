@@ -223,3 +223,7 @@ float Stream::parseFloat(LookaheadMode lookahead, char ignore) {
 void Stream::setTimeout(unsigned long time) {
     _timeout = (time > 0) ? time : def_timeout;
 }
+
+unsigned long Stream::getTimeout(void) {
+  return _timeout;
+}
