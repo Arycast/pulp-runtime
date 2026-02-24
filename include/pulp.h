@@ -106,7 +106,6 @@ int uart_write(int uart_id, const void *buffer, uint32_t size);
 int uart_available(int uart_id);
 int uart_peek(int uart_id);
 int uart_read(int uart_id);
-// int uart_read(int uart_id, void *buffer, uint32_t size);
 
 /* end of uart section*/
 

@@ -135,7 +135,7 @@ int uart_available(int uart_id)
       uint32_t udma_idx = uDMA_Start_idx + ((last_hw_count + i) % uDMA_Area_Size);
       if (write_position + i < User_Area_Limit) {
         RX_BUFFER[write_position + i] = RX_BUFFER[udma_idx];
-        // RX_BUFFER[udma_idx] = 0;
+        RX_BUFFER[udma_idx] = 0;
       }
     }
 
@@ -148,8 +148,6 @@ int uart_available(int uart_id)
   if (user_head < 0) return 0;
   return (user_head - user_tail + 1);
 }
-
-
 
 int uart_peek(int uart_id)
 {

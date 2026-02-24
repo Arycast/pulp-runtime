@@ -7,6 +7,8 @@
 #include "variables.h"
 #include "pgmspace.h"
 
+#define RX_BUFFER_SIZE 64
+
 Serials Serial(0);
 
 Serials::Serials(int uart_id) {
@@ -19,7 +21,8 @@ Serials::operator bool() {
 }
 
 int Serials::availableForWrite() {
-    return -1;
+    int buff_count = uart_available(_uart_id);
+    return (RX_BUFFER_SIZE - buff_count);
 }
 
 void Serials::begin(unsigned long baud) {
@@ -71,8 +74,8 @@ int Serials::peek(void) {
 }
 
 void Serials::flush(void) {
-    int periph_id = ARCHI_UDMA_UART_ID(uart_id);
-    while (plp_udma_busy(UDMA_UART_TX_ADDR(periph - ARCHI_UDMA_UART_ID(0))))
+    int periph = ARCHI_UDMA_UART_ID(_uart_id);
+    while(plp_uart_tx_busy(periph - ARCHI_UDMA_UART_ID(0)));
 }
 
 size_t Serials::print(const String &s){
