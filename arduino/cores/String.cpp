@@ -42,7 +42,7 @@
 	* which is indicate error
 	*/
 template <typename T>
-static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, unsigned int base)
+static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, unsigned int base = DEC)
 {
 #if ((SSTRING_CONF_BASE_UPPERCASE) != 0)
 	constexpr const char base_char_map[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -59,16 +59,12 @@ static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, uns
 	/**
 		* if base is bigger than 36 (10 number digit + 26 alphabet)
 		* then we can't convert it to string
+		*
+		* if not enough space to write in buffer, also don't write anything
 		*/
-	if ((base <= 1) || (base > 36))
+	if ((base <= 1) || (base > 36) || (str == NULL) || (str_len <= 1))
 	{
 		return 0;
-	}
-
-	/* this function should return value less than str_len */
-	if (str_len <= 1)
-	{
-		return str_len;
 	}
 
 	/* convert value to string */
@@ -104,17 +100,43 @@ static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, uns
 
 /* for testing only, export convertion function */
 #ifdef SIMULATION_TEST
-size_t unsigned_char_to_string_export(char *str, size_t str_len, unsigned char value, unsigned int base)
+size_t unsigned_char_to_string_export(char *str, size_t str_len, unsigned char value, unsigned int base = DEC)
 {
 	return unsigned_integer_to_string<unsigned char>(str, str_len, value, base);
 }
 
-size_t unsigned_int_to_string_export(char *str, size_t str_len, unsigned int value, unsigned int base)
+size_t int_to_string_export(char *str, size_t str_len, int value, unsigned int base = DEC)
+{
+	bool add_minus_sign = false;
+	if ((value < 0) && (base == DEC))
+	{
+		str_len--;
+		*str++ = '-';
+		value *= (-1);
+		add_minus_sign = true;
+	}
+	return unsigned_integer_to_string<unsigned int>(str, str_len, (unsigned int) value, base) + (add_minus_sign ? 1u : 0u);
+}
+
+size_t unsigned_int_to_string_export(char *str, size_t str_len, unsigned int value, unsigned int base = DEC)
 {
 	return unsigned_integer_to_string<unsigned int>(str, str_len, value, base);
 }
 
-size_t unsigned_long_to_string_export(char *str, size_t str_len, unsigned long value, unsigned int base)
+size_t long_to_string_export(char *str, size_t str_len, long value, unsigned int base = DEC)
+{
+	bool add_minus_sign = false;
+	if ((value < 0) && (base == DEC))
+	{
+		str_len--;
+		*str++ = '-';
+		value *= (-1);
+		add_minus_sign = true;
+	}
+	return unsigned_integer_to_string<unsigned long>(str, str_len, (unsigned long) value, base) + (add_minus_sign ? 1u : 0u);
+}
+
+size_t unsigned_long_to_string_export(char *str, size_t str_len, unsigned long value, unsigned int base = DEC)
 {
 	return unsigned_integer_to_string<unsigned long>(str, str_len, value, base);
 }
@@ -125,9 +147,8 @@ size_t unsigned_long_to_string_export(char *str, size_t str_len, unsigned long v
 	* assume buf_len > 1
 	* assume base > 1
 	*/
-
 template <typename T>
-static bool unsigned_integer_to_dynamic_string(char **buf, size_t buf_len, size_t *str_len, T value, unsigned int base, bool add_minus_sign)
+static bool unsigned_integer_to_dynamic_string(char **buf, size_t buf_len, size_t *str_len, T value, unsigned int base = DEC, bool add_minus_sign = false)
 {
 	char    *_buf;
 	size_t    retval;
@@ -532,14 +553,51 @@ String::String(unsigned long value, unsigned int base)
 	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
 }
 
-String::String(float         value)
+String::String(float         value) : String((double) value)
 {
-	std::terminate();
 }
 
 String::String(double        value)
 {
-	std::terminate();
+	constexpr size_t buffer_length = 40;
+	size_t string_length;
+
+	char *new_string = (char *) malloc(buffer_length * sizeof(char));
+
+	int retval;
+
+	if (new_string == NULL)
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* convert double value to string */
+	retval = snprintf(new_string, buffer_length, "%f", value);
+	if ((retval <= 0) || (retval >= ((int) buffer_length)))
+	{
+		free(new_string); /* free new_string before return error */
+
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	string_length = (size_t) retval;
+
+	/* allocation success */
+	_ASSERT(new_string != NULL);
+	_ASSERT(string_length < buffer_length);
+
+	/* put into buffer */
+	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
 }
 
 
@@ -559,9 +617,12 @@ String::~String(void)
 
 
 
-
-
-
+/**
+	* operator =
+	*/
+/**
+	* with copy semantic
+	*/
 String &String::operator=(const String   &rvalue)
 {
 	/**
@@ -691,8 +752,7 @@ String &String::operator=(const String   &rvalue)
 			/* copy data from rvalue */
 			memcpy(new_string, rvalue_c_buf, (rvalue_string_length + 1) * sizeof(char));
 
-			/* remove current buffer */
-			this->__non_standard__free_string_non_invalidate();
+			/* current/old buffer already freed by reallocation */
 		}
 
 		/* set new buffer */
@@ -702,6 +762,9 @@ String &String::operator=(const String   &rvalue)
 	}
 }
 
+/**
+	* with move semantic
+	*/
 #if (__cplusplus >= 201103L) /* C++11 */
 /* move assignment operator */
 String &String::operator=(String        &&rvalue)
@@ -723,6 +786,9 @@ String &String::operator=(String        &&rvalue)
 }
 #endif
 
+/**
+	* with c string
+	*/
 String &String::operator=(const char     *rvalue)
 {
 	char   *s = this->__non_standard__c_str_non_const();
@@ -778,6 +844,83 @@ String &String::operator=(const char     *rvalue)
 	}
 
 	return (*this);
+}
+
+/* with number */
+String &String::operator=(char            rvalue)
+{
+	const char s[] = {rvalue, '\0'};
+	return ((*this) = s);
+}
+
+String &String::operator=(byte            rvalue)
+{
+	String r(rvalue);
+#if ((__cplusplus) >= 201103L)
+	return ((*this) = std::move(r));
+#else
+	return ((*this) = r);
+#endif
+}
+
+String &String::operator=(int             rvalue)
+{
+	String r(rvalue);
+#if ((__cplusplus) >= 201103L)
+	return ((*this) = std::move(r));
+#else
+	return ((*this) = r);
+#endif
+}
+
+String &String::operator=(unsigned int    rvalue)
+{
+	String r(rvalue);
+#if ((__cplusplus) >= 201103L)
+	return ((*this) = std::move(r));
+#else
+	return ((*this) = r);
+#endif
+}
+
+String &String::operator=(long            rvalue)
+{
+	String r(rvalue);
+#if ((__cplusplus) >= 201103L)
+	return ((*this) = std::move(r));
+#else
+	return ((*this) = r);
+#endif
+}
+
+String &String::operator=(unsigned long   rvalue)
+{
+	String r(rvalue);
+#if ((__cplusplus) >= 201103L)
+	return ((*this) = std::move(r));
+#else
+	return ((*this) = r);
+#endif
+}
+
+String &String::operator=(double          rvalue)
+{
+	String r(rvalue);
+#if ((__cplusplus) >= 201103L)
+	return ((*this) = std::move(r));
+#else
+	return ((*this) = r);
+#endif
+}
+
+String &String::operator=(float           rvalue)
+{
+	String r(rvalue);
+#if ((__cplusplus) >= 201103L)
+	return ((*this) = std::move(r));
+#else
+	return ((*this) = r);
+#endif
 }
 
 
@@ -1088,7 +1231,7 @@ String &String::operator+=(const String &rvalue)
 	this->__non_standard__set_new_buffer(new_string, lvalue_buffer_length, lvalue_string_length);
 
 	return (*this);
-} /* operator+ */
+} /* operator+= */
 
 /**
 	* with move semantic
@@ -1613,6 +1756,213 @@ String &String::operator+=(const char *rvalue)
 
 	return (*this);
 } /* operator+ */
+
+/**
+	* with integer types
+	*/
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+String &String::operator+=(byte           rvalue)
+{
+	char s[5];
+	size_t retval = unsigned_integer_to_string<byte>(s, 5, rvalue);
+	if ((retval <= 0) || (retval >= 5))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+
+	return ((*this) += s);
+}
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+String &String::operator+=(byte           rvalue)
+{
+	/* just reuse operator+= for unsigned int */
+	return ((*this) += (unsigned int) rvalue);
+}
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+
+
+String &String::operator+=(int            rvalue)
+{
+	char   s[13];
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	char *_s;
+
+	size_t buffer_length;
+
+	size_t retval;
+
+	if (rvalue < 0)
+	{
+		s[0] = '-'; /* add minus sign */
+		_s = &(s[1]); /* move 1 element */
+
+		buffer_length = (13 - 1); /* reduce 1 element */
+
+		rvalue *= (-1); /* make positive */
+	}
+	else
+	{
+		_s = &(s[0]); /* write from 0 */
+
+		buffer_length = 13; /* use full buffer */
+	}
+
+	/* convert to string */
+	retval = unsigned_integer_to_string<unsigned int>(_s, buffer_length, (unsigned int) rvalue);
+	if ((retval <= 0) || (retval >= buffer_length))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+	int retval = snprintf(s, 13, "%d", rvalue);
+	if ((retval <= 0) || (retval >= 13))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+
+	return ((*this) += s);
+}
+
+String &String::operator+=(unsigned int   rvalue)
+{
+	char   s[12];
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	size_t retval = unsigned_integer_to_string<unsigned int>(s, 12, rvalue);
+#else
+	int retval = snprintf(s, 12, "%u", rvalue);
+#endif
+	if ((retval <= 0) || (retval >= 12))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+
+	return ((*this) += s);
+}
+
+String &String::operator+=(long           rvalue)
+{
+	char   s[23];
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	char *_s;
+
+	size_t buffer_length;
+
+	size_t retval;
+
+	if (rvalue < 0)
+	{
+		s[0] = '-'; /* add minus sign */
+		_s = &(s[1]); /* move 1 element */
+
+		buffer_length = (23 - 1); /* reduce 1 element */
+
+		rvalue *= (-1); /* make positive */
+	}
+	else
+	{
+		_s = &(s[0]); /* write from 0 */
+
+		buffer_length = 23; /* use full buffer */
+	}
+
+	/* convert to string */
+	retval = unsigned_integer_to_string<unsigned long>(_s, buffer_length, (unsigned long) rvalue);
+	if ((retval <= 0) || (retval >= buffer_length))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+	int retval = snprintf(s, 23, "%ld", rvalue);
+	if ((retval <= 0) || (retval >= 23))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+
+	return ((*this) += s);
+}
+
+String &String::operator+=(unsigned long  rvalue)
+{
+	char   s[22];
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	size_t retval = unsigned_integer_to_string<unsigned long>(s, 22, rvalue);
+#else
+	int retval = snprintf(s, 22, "%lu", rvalue);
+#endif
+	if ((retval <= 0) || (retval >= 22))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+
+	return ((*this) += s);
+}
+
+/**
+	* with float types
+	*/
+String &String::operator+=(float          rvalue)
+{
+	return (*this) += ((double) rvalue);
+}
+
+String &String::operator+=(double         rvalue)
+{
+	char s[40];
+	/* we don't have function to print double value, force reuse snprintf */
+	int retval = snprintf(s, 40, "%f", rvalue);
+	if ((retval <= 0) || (retval >= 40))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+
+	return ((*this) += s);
+}
+
+
+
+
 
 
 #if 0
@@ -2144,17 +2494,72 @@ String operator+(char          lhs, String  rhs)
 }
 
 /* byte is uint8_t */
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
 String operator+(byte          lhs, String  rhs)
 {
-	/* reuse operator+ unsigned int */
+	char s[5];
+	size_t retval = unsigned_integer_to_string<byte>(s, 5, lhs);
+	if ((retval <= 0) || (retval >= 5))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+
+	return (s + rhs);
+}
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+String operator+(byte          lhs, String  rhs)
+{
+	/* just reuse operator+ unsigned int */
 	return (((unsigned int) lhs) + rhs);
 }
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
 
 String operator+(int           lhs, String  rhs)
 {
-	char s[12];
-	int retval = snprintf(s, 12, "%d", lhs);
-	if ((retval <= 0) || (retval >= 12))
+	char s[13];
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	char *_s;
+
+	size_t buffer_length;
+
+	size_t retval;
+
+	if (lhs < 0)
+	{
+		s[0] = '-'; /* add minus sign */
+		_s = &(s[1]); /* move 1 element */
+
+		buffer_length = (13 - 1); /* reduce 1 element */
+
+		lhs *= (-1); /* make positive */
+	}
+	else
+	{
+		_s = &(s[0]); /* write from 0 */
+
+		buffer_length = 13; /* use full buffer */
+	}
+
+	/* convert to string */
+	retval = unsigned_integer_to_string<unsigned int>(_s, buffer_length, (unsigned int) lhs);
+	if ((retval <= 0) || (retval >= buffer_length))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return rhs;
+#endif
+	}
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+	int retval = snprintf(s, 13, "%d", lhs);
+	if ((retval <= 0) || (retval >= 13))
 	{
 #if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
 		/* abort if snprintf fail */
@@ -2167,6 +2572,7 @@ String operator+(int           lhs, String  rhs)
 		return rhs;
 #endif
 	}
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
 
 	return (s + rhs);
 }
@@ -2174,7 +2580,13 @@ String operator+(int           lhs, String  rhs)
 String operator+(unsigned int  lhs, String  rhs)
 {
 	char s[12];
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	size_t retval = unsigned_integer_to_string<unsigned int>(s, 12, (unsigned int) lhs);
+#else
 	int retval = snprintf(s, 12, "%u", lhs);
+#endif
+
 	if ((retval <= 0) || (retval >= 12))
 	{
 #if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
@@ -2189,12 +2601,34 @@ String operator+(unsigned int  lhs, String  rhs)
 
 String operator+(long          lhs, String  rhs)
 {
-	char s[22];
-	int retval;
+	char s[23];
 
-	/* snprintf is defined by C99 */
-	retval = snprintf(s, 22, "%ld", lhs);
-	if ((retval <= 0) || (retval >= 12))
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	char *_s;
+
+	size_t buffer_length;
+
+	size_t retval;
+
+	if (lhs < 0)
+	{
+		s[0] = '-'; /* add minus sign */
+		_s = &(s[1]); /* move 1 element */
+
+		buffer_length = (23 - 1); /* reduce 1 element */
+
+		lhs *= (-1); /* make positive */
+	}
+	else
+	{
+		_s = &(s[0]); /* write from 0 */
+
+		buffer_length = 23; /* use full buffer */
+	}
+
+	/* convert to string */
+	retval = unsigned_integer_to_string<unsigned long>(_s, buffer_length, (unsigned long) lhs);
+	if ((retval <= 0) || (retval >= buffer_length))
 	{
 #if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
 		std::terminate();
@@ -2202,6 +2636,23 @@ String operator+(long          lhs, String  rhs)
 		return rhs;
 #endif
 	}
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+	int retval = snprintf(s, 23, "%ld", lhs);
+	if ((retval <= 0) || (retval >= 23))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		/* abort if snprintf fail */
+		std::terminate(); /* this function is non return */
+#else
+		/**
+			* just return rhs instance
+			* should return lhs
+			*/
+		return rhs;
+#endif
+	}
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
 
 	return (s + rhs);
 }
@@ -2209,8 +2660,14 @@ String operator+(long          lhs, String  rhs)
 String operator+(unsigned long lhs, String  rhs)
 {
 	char s[22];
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+	size_t retval = unsigned_integer_to_string<unsigned long>(s, 22, (unsigned long) lhs);
+#else
 	int retval = snprintf(s, 22, "%lu", lhs);
-	if ((retval <= 0) || (retval >= 12))
+#endif
+
+	if ((retval <= 0) || (retval >= 22))
 	{
 #if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
 		std::terminate();

@@ -10,7 +10,6 @@
 #include <vector>
 #include <utility> /* Required for std::move */
 
-#include <stdbool.h>
 #include <stdio.h>
 
 #include "String.hpp"
@@ -28,17 +27,17 @@ int main(void)
 	String                  sentence("test concat ");
 
 	sentence += value_byte;
-	sentence += " ";
+	sentence += ' ';
 	sentence += value_int;
-	sentence += " ";
+	sentence += ' ';
 	sentence += value_unsigned_int;
-	sentence += " ";
+	sentence += ' ';
 	sentence += value_long;
-	sentence += " ";
+	sentence += ' ';
 	sentence += value_unsigned_long;
-	sentence += " ";
+	sentence += ' ';
 	sentence += value_float;
-	sentence += " ";
+	sentence += ' ';
 	sentence += value_double;
 
 	/* print sentence */
