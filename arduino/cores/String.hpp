@@ -43,12 +43,12 @@
 /* standard header c */
 #include <stddef.h>
 #include <string.h> /* strlen, memcpy, memmove etc. */
-#include <stdlib.h> /* alloc related functions */
+#include <stdlib.h> /* alloc and free related functions */
 
-#include <stdio.h>
+/*#include <stdio.h>*/
 
 /* standard header c++ */
-#include <exception> /* for std::terminate */
+#include <utility> /* for std::move */
 
 /* local header */
 
@@ -173,7 +173,7 @@ public:
 	String(double        value);
 	/* copy constructor */
 	String(const String   &rvalue);
-#if (__cplusplus >= 201103L)
+#if ((__cplusplus) >= 201103L)
 	/* move constructor */
 	String(String        &&rvalue);
 #endif
@@ -329,93 +329,49 @@ public:
 			return true;
 		}
 
-		return this->__non_standard__concat_non_check_argument(parameter);
+		return this->__non_standard__concat_wrapper<const char *>(parameter);
 	}
 
 	inline bool concat(char            parameter)
 	{
 		char s[] = {parameter, '\0'};
-		return this->__non_standard__concat_non_check_argument(s);
+		return this->__non_standard__concat_wrapper<const char *>(s);
 	}
 
 	/* uint8_t */
 	inline bool concat(byte            parameter)
 	{
-		/* reuse unsigned int */
-		return this->concat((unsigned int) parameter);
+		return this->__non_standard__concat_wrapper<byte>(parameter);
 	}
 
 	inline bool concat(int             parameter)
 	{
-		char s[12];
-		int retval = snprintf(s, 12, "%d", parameter);
-		if ((retval <= 0) || (retval >= 12))
-		{
-			return false;
-		}
-
-		return this->__non_standard__concat_non_check_argument(s);
+		return this->__non_standard__concat_wrapper<int>(parameter);
 	}
 
 	inline bool concat(unsigned int    parameter)
 	{
-		char s[12];
-		int retval = snprintf(s, 12, "%u", parameter);
-		if ((retval <= 0) || (retval >= 12))
-		{
-			return false;
-		}
-
-		return this->__non_standard__concat_non_check_argument(s);
+		return this->__non_standard__concat_wrapper<unsigned int>(parameter);
 	}
 
 	inline bool concat(long            parameter)
 	{
-		char s[22];
-		int retval;
-
-		/* snprintf defined by C99 */
-		retval = snprintf(s, 22, "%ld", parameter);
-		if ((retval <= 0) || (retval >= 22))
-		{
-			/**
-				* based on standard (C99) snprintf failed
-				* when return negative number or
-				* more or equal to buffer length
-				*/
-			return false;
-		}
-
-		return this->__non_standard__concat_non_check_argument(s);
+		return this->__non_standard__concat_wrapper<long>(parameter);
 	}
 
 	inline bool concat(unsigned long   parameter)
 	{
-		char s[22];
-		int retval = snprintf(s, 22, "%lu", parameter);
-		if ((retval <= 0) || (retval >= 22))
-		{
-			return false;
-		}
-
-		return this->__non_standard__concat_non_check_argument(s);
+		return this->__non_standard__concat_wrapper<unsigned long>(parameter);
 	}
 
 	inline bool concat(float           parameter)
 	{
-		return concat((double) parameter);
+		return this->__non_standard__concat_wrapper<float>(parameter);
 	}
 
 	inline bool concat(double          parameter)
 	{
-		char s[40];
-		int retval = snprintf(s, 40, "%f", parameter);
-		if ((retval <= 0) || (retval >= 40))
-		{
-			return false;
-		}
-
-		return this->__non_standard__concat_non_check_argument(s);
+		return this->__non_standard__concat_wrapper<double>(parameter);
 	}
 
 	inline bool concat(const String   &parameter)
@@ -425,7 +381,7 @@ public:
 			return true;
 		}
 
-		return this->__non_standard__concat_non_check_argument(parameter);
+		return this->__non_standard__concat_wrapper<const String &>(parameter);
 	}
 
 #if ((__cplusplus) >= 201103L)
@@ -436,13 +392,14 @@ public:
 			return true;
 		}
 
-		return this->__non_standard__concat_non_check_argument(parameter);
+		return this->__non_standard__concat_wrapper<String &&>(std::move(parameter));
 	}
 #endif
 
 	/* helper (implement as private method) */
 private:
-	inline bool __non_standard__concat_non_check_argument(const char     *parameter)
+	template <typename T>
+	inline bool __non_standard__concat_wrapper(T parameter)
 	{
 		const char *s     = this->c_str();
 		size_t      s_len = this->__non_standard__get_string_length();
@@ -462,28 +419,9 @@ private:
 		}
 	}
 
-	inline bool __non_standard__concat_non_check_argument(const String   &parameter)
-	{
-		const char *s     = this->c_str();
-		size_t      s_len = this->__non_standard__get_string_length();
-
-		/* append parameter */
-		(*this) += parameter;
-
-		/* check if successful */
-		if ((s != (this->c_str())) || (s_len != (this->__non_standard__get_string_length())))
-		{
-			return true; /* malloc/realloc happen */
-		}
-		else
-		{
-			/* unsuccesfully add string */
-			return false;
-		}
-	}
-
+#if 0
 #if ((__cplusplus) >= 201103L)
-	inline bool __non_standard__concat_non_check_argument(String        &&parameter)
+	inline bool __non_standard__concat_wrapper_move_semantic(String        &&parameter)
 	{
 		const char *s     = this->c_str();
 		size_t      s_len = this->__non_standard__get_string_length();
@@ -502,6 +440,7 @@ private:
 			return false;
 		}
 	}
+#endif /* ((__cplusplus) >= 201103L) */
 #endif
 
 public:
@@ -674,7 +613,10 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/length
 		*/
-	unsigned int length(void) const;
+	unsigned int length(void) const
+	{
+		return (unsigned int) (this->__non_standard__get_string_length());
+	}
 
 	/**
 		* method remove
@@ -856,7 +798,7 @@ public:
 	String &operator=(float           rvalue);
 	/* copy semantic */
 	String &operator=(const String   &rvalue);
-#if (__cplusplus >= 201103L) /* C++11 */
+#if ((__cplusplus) >= 201103L) /* C++11 */
 	/* move semantic */
 	String &operator=(String        &&rvalue);
 #endif
@@ -939,136 +881,91 @@ public:
 		* operator + (concatenation)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/concatenation"
 		*/
+private:
+	template <typename T>
+	String __non_standard__operator_plus_wrapper(T rhs) const
+	{
+		/* create new instance (copy semantic), since + operator shouldn't modify lhs operand */
+		String lhs(*this);
+
+		/* reuse += operator */
+		return (lhs += rhs);
+	}
+
+#if 0
+#if ((__cplusplus) >= 201103L) /* C++11 */
+	String __non_standard__operator_plus_wrapper_move_semantic(String  &&rhs) const
+	{
+		/* create new instance (copy semantic), since + operator shouldn't modify lhs operand */
+		String lhs(*this);
+
+		/* reuse += operator */
+		return (lhs += rhs);
+	}
+#endif /* ((__cplusplus) >= 201103L) */
+#endif
+
+public:
 	/* with c string */
 	inline String operator+(const char *rhs) const
 	{
-		/* create new instance, since + operator shouldn't modify lhs operand */
-		String lhs(*this);
-
-		/* reuse += operator (const char *) */
-		return (lhs += rhs);
+		return this->__non_standard__operator_plus_wrapper<const char *>(rhs);
 	}
 
 	/* with copy semantic */
 	inline String operator+(const String &rhs) const
 	{
-		String lhs(*this);
-
-		/* reuse += operator for string */
-		return (lhs += rhs);
+		return this->__non_standard__operator_plus_wrapper<const String &>(rhs);
 	}
 
 	/* with move semantic */
-#if (__cplusplus >= 201103L)
+#if ((__cplusplus) >= 201103L)
 	inline String operator+(String &&rhs) const
 	{
-		/*String String_rhs(rhs);*/
-		String lhs(*this);
-
-		/* reuse + operator for string */
-		return (lhs += rhs);
+		return this->__non_standard__operator_plus_wrapper<String &&>(std::move(rhs));
 	}
 #endif
 
 	inline String operator+(char          rhs) const
 	{
 		char s[] = {rhs, '\0'};
-		return ((*this) + s);
+		return ((*this) + s); /* reuse operator+ for string */
 	}
 
 	/* uint8_t */
 	inline String operator+(byte          rhs) const
 	{
-		/* reuse unsigned int */
-		return ((*this) + ((unsigned int) rhs));
+		return this->__non_standard__operator_plus_wrapper<byte>(rhs);
 	}
 
 	inline String operator+(int           rhs) const
 	{
-		char s[12];
-		int retval = snprintf(s, 12, "%d", rhs);
-		if ((retval <= 0) || (retval >= 12))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) + s);
+		return this->__non_standard__operator_plus_wrapper<int>(rhs);
 	}
 
 	inline String operator+(unsigned int  rhs) const
 	{
-		char s[12];
-		int retval = snprintf(s, 12, "%u", rhs);
-		if ((retval <= 0) || (retval >= 12))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) + s);
+		return this->__non_standard__operator_plus_wrapper<unsigned int>(rhs);
 	}
 
 	inline String operator+(long          rhs) const
 	{
-		char s[22];
-		int retval;
-
-		/* snprintf defined by C99 */
-		retval = snprintf(s, 22, "%ld", rhs);
-		if ((retval <= 0) || (retval >= 22))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) + s);
+		return this->__non_standard__operator_plus_wrapper<long>(rhs);
 	}
 
 	inline String operator+(unsigned long rhs) const
 	{
-		char s[22];
-		int retval = snprintf(s, 22, "%lu", rhs);
-		if ((retval <= 0) || (retval >= 22))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) + s);
+		return this->__non_standard__operator_plus_wrapper<unsigned long>(rhs);
 	}
 
 	inline String operator+(float         rhs) const
 	{
-		return ((*this) + ((double) rhs));
+		return this->__non_standard__operator_plus_wrapper<float>(rhs);
 	}
 
 	inline String operator+(double        rhs) const
 	{
-		char s[40];
-		int retval = snprintf(s, 40, "%f", rhs);
-		if ((retval <= 0) || (retval >= 22))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) + s);
+		return this->__non_standard__operator_plus_wrapper<double>(rhs);
 	}
 
 	/**
@@ -1089,101 +986,22 @@ public:
 		return ((*this) += s); /* reuse operator += with c string rvalue */
 	}
 
-	inline String &operator+=(byte           rvalue)
-	{
-		return ((*this) += ((unsigned int) rvalue));
-	}
+	String &operator+=(byte           rvalue);
 
-	inline String &operator+=(int            rvalue)
-	{
-		char s[12];
-		int retval = snprintf(s, 12, "%d", rvalue);
-		if ((retval <= 0) || (retval >= 12))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
+	String &operator+=(int            rvalue);
 
-		return ((*this) += s);
-	}
+	String &operator+=(unsigned int   rvalue);
 
-	inline String &operator+=(unsigned int   rvalue)
-	{
-		char s[12];
-		int retval = snprintf(s, 12, "%d", rvalue);
-		if ((retval <= 0) || (retval >= 12))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
+	String &operator+=(long           rvalue);
 
-		return ((*this) += s);
-	}
-
-	inline String &operator+=(long           rvalue)
-	{
-		char s[22];
-		int retval;
-
-		/* snprintf defined by C99 */
-		retval = snprintf(s, 22, "%ld", rvalue);
-		if ((retval <= 0) || (retval >= 22))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) += s);
-	}
-
-	inline String &operator+=(unsigned long  rvalue)
-	{
-		char s[22];
-		int retval = snprintf(s, 22, "%lu", rvalue);
-		if ((retval <= 0) || (retval >= 22))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) += s);
-	}
+	String &operator+=(unsigned long  rvalue);
 
 	/**
 		* with float types
 		*/
-	inline String &operator+=(float          rvalue)
-	{
-		return (*this) += ((double) rvalue);
-	}
+	String &operator+=(float          rvalue);
 
-	inline String &operator+=(double         rvalue)
-	{
-		char s[40];
-		int retval = snprintf(s, 40, "%f", rvalue);
-		if ((retval <= 0) || (retval >= 22))
-		{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
-			std::terminate();
-#else
-			return (*this);
-#endif
-		}
-
-		return ((*this) += s);
-	}
+	String &operator+=(double         rvalue);
 
 
 	/**
@@ -1273,12 +1091,12 @@ public:
 		return (*this);
 	}
 
-	inline size_t      __non_standard__get_buffer_length(void) const
+	inline size_t   __non_standard__get_buffer_length(void) const
 	{
 		return (this->c_str_buf_len);
 	}
 
-	inline size_t      __non_standard__get_string_length(void) const
+	inline size_t   __non_standard__get_string_length(void) const
 	{
 		return (this->c_str_buf_strlen);
 	}
@@ -1336,7 +1154,9 @@ public:
 	*/
 #ifdef SIMULATION_TEST
 size_t unsigned_char_to_string_export(char *str, size_t str_len, unsigned char value, unsigned int base);
+size_t int_to_string_export(char *str, size_t str_len, int value, unsigned int base);
 size_t unsigned_int_to_string_export(char *str, size_t str_len, unsigned int value, unsigned int base);
+size_t long_to_string_export(char *str, size_t str_len, long value, unsigned int base);
 size_t unsigned_long_to_string_export(char *str, size_t str_len, unsigned long value, unsigned int base);
 #endif
 

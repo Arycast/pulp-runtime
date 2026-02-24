@@ -10,7 +10,6 @@
 #include <vector>
 #include <utility> /* Required for std::move */
 
-#include <stdbool.h>
 #include <stdio.h>
 
 #include "String.hpp"
@@ -42,16 +41,16 @@ int main(void)
 	/* add word into sentence */
 	for (const String& value : destination)
 	{
-		sentence.concat(" " + value);
+		sentence += (" " + value);
 	}
 
-	sentence = lhs_byte          + (" " + sentence + " ") + rhs_byte          + " ";
-	sentence = lhs_int           + (" " + sentence + " ") + rhs_int           + " ";
-	sentence = lhs_unsigned_int  + (" " + sentence + " ") + rhs_unsigned_int  + " ";
-	sentence = lhs_long          + (" " + sentence + " ") + rhs_long          + " ";
-	sentence = lhs_unsigned_long + (" " + sentence + " ") + rhs_unsigned_long + " ";
-	sentence = lhs_float         + (" " + sentence + " ") + rhs_float         + " ";
-	sentence = lhs_double        + (" " + sentence + " ") + rhs_double        /*+ " "*/;
+	sentence = lhs_byte          + (' ' + sentence + ' ') + rhs_byte          + ' ';
+	sentence = lhs_int           + (' ' + sentence + ' ') + rhs_int           + ' ';
+	sentence = lhs_unsigned_int  + (' ' + sentence + ' ') + rhs_unsigned_int  + ' ';
+	sentence = lhs_long          + (' ' + sentence + ' ') + rhs_long          + ' ';
+	sentence = lhs_unsigned_long + (' ' + sentence + ' ') + rhs_unsigned_long + ' ';
+	sentence = lhs_float         + (' ' + sentence + ' ') + rhs_float         + ' ';
+	sentence = lhs_double        + (' ' + sentence + ' ') + rhs_double        /*+ ' '*/;
 
 	/* print sentence */
 	printf("%s\r\n", sentence.c_str());

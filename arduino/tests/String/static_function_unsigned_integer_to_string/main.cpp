@@ -61,35 +61,35 @@ int main(void)
 
 
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 3);
+	retval = int_to_string_export(digit_str, 256, value_int, 3);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base  3: %s\r\n", value_int, digit_str);
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 4);
+	retval = int_to_string_export(digit_str, 256, value_int, 4);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base  4: %s\r\n", value_int, digit_str);
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 5);
+	retval = int_to_string_export(digit_str, 256, value_int, 5);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base  5: %s\r\n", value_int, digit_str);
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 10);
+	retval = int_to_string_export(digit_str, 256, value_int, 10);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base 10: %s\r\n", value_int, digit_str);
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 12);
+	retval = int_to_string_export(digit_str, 256, value_int, 12);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base 12: %s\r\n", value_int, digit_str);
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 16);
+	retval = int_to_string_export(digit_str, 256, value_int, 16);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base 16: %s\r\n", value_int, digit_str);
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 20);
+	retval = int_to_string_export(digit_str, 256, value_int, 20);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base 20: %s\r\n", value_int, digit_str);
 
-	retval = unsigned_int_to_string_export(digit_str, 256, (unsigned int) value_int, 30);
+	retval = int_to_string_export(digit_str, 256, value_int, 30);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %d to base 30: %s\r\n", value_int, digit_str);
 
@@ -131,35 +131,35 @@ int main(void)
 
 
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 3);
+	retval = long_to_string_export(digit_str, 256, value_long, 3);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base  3: %s\r\n", value_long, digit_str);
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 4);
+	retval = long_to_string_export(digit_str, 256, value_long, 4);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base  4: %s\r\n", value_long, digit_str);
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 5);
+	retval = long_to_string_export(digit_str, 256, value_long, 5);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base  5: %s\r\n", value_long, digit_str);
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 10);
+	retval = long_to_string_export(digit_str, 256, value_long, 10);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base 10: %s\r\n", value_long, digit_str);
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 12);
+	retval = long_to_string_export(digit_str, 256, value_long, 12);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base 12: %s\r\n", value_long, digit_str);
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 16);
+	retval = long_to_string_export(digit_str, 256, value_long, 16);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base 16: %s\r\n", value_long, digit_str);
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 20);
+	retval = long_to_string_export(digit_str, 256, value_long, 20);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base 20: %s\r\n", value_long, digit_str);
 
-	retval = unsigned_long_to_string_export(digit_str, 256, (unsigned long) value_long, 30);
+	retval = long_to_string_export(digit_str, 256, value_long, 30);
 	assert((retval > 0) && (retval < 256));
 	printf("convert %ld to base 30: %s\r\n", value_long, digit_str);
 

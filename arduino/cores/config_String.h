@@ -46,4 +46,12 @@
 #define SSTRING_CONF_BASE_UPPERCASE      0
 #endif
 
+
+/**
+	* should we use snprintf for integer and float value conversion
+	*/
+#ifndef SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION
+#define SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION        0
+#endif
+
 #endif /* ! defined(__ARDUINO_CORES_CONFIG_SSTRING_H__) */
