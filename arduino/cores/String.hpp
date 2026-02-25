@@ -144,7 +144,7 @@ class String
 {
 private:
 	static constexpr const char  *empty_string = "";
-	static char                   dummy_char_storage;
+	/*static char                   dummy_char_storage;*/
 
 	char                         *c_str_buf;
 	size_t                        c_str_buf_len;
@@ -196,9 +196,14 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/charAt
 		*/
-	inline char charAt(unsigned int n) const
+	inline char charAt(size_t n) const /* non-standard */
 	{
 		return (*this)[n];
+	}
+
+	inline char charAt(unsigned int n) const
+	{
+		return this->charAt((size_t) n);
 	}
 
 	/**
@@ -810,32 +815,138 @@ public:
 		*
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/elementAccess"
 		*/
+
+	/**
+		* this proxy class is made as work around for possibility of
+		* user changing string data directly
+		*
+		* e.g.
+		* if s string value now is "0123456789", and user decide to do:
+		* s[4] = '\0'
+		* then we need to change c_str_buf_strlen
+		* it is not possible if we just return char pointer to user and user can modify it as their wish
+		*
+		* but in case user doing some pointer magic like:
+		* char *p = &(s[4]);
+		* *p = '\0';
+		* then call to method length() will be different from strlen(s.c_str())
+		* this behaviour is well defined and expected
+		* because String is container class and not plain array
+		*/
+	struct __non_standard__indexing_proxy_s
+	{
+		String  &parent;
+		size_t   selected_index;
+
+		/* L-VALUE: This is called when we write to the index */
+		inline __non_standard__indexing_proxy_s &operator=(char value)
+		{
+			/* get current instance of c string */
+			char       *s         = (this->parent).__non_standard__c_str_non_const();
+			size_t      s_buf_len = (this->parent).__non_standard__get_buffer_length();
+			size_t      s_str_len = (this->parent).__non_standard__get_string_length();
+
+			/* check if we try to write invalid buffer or read-only buffer */
+			if ((s == NULL) || (((const char *) s) == (String::empty_string)))
+			{
+				/* set dummy storage to '\0' in case this operator used as rvalue */
+				/*String::dummy_char_storage = value;*/
+			}
+			else
+			{
+				/* check if we attempt to access memory outside of buffer
+				* (not outside of string) */
+				if      ((this->selected_index) >= s_buf_len)
+				{
+					/* user attempt to write to index outside buffer
+					* do nothing */
+				}
+				else if ((this->selected_index)  > s_str_len)
+				{
+					/* inside buffer, but outside string, just write data */
+					s[this->selected_index] = value;
+				}
+				else if ((this->selected_index) == s_str_len)
+				{
+					/* user attempt to write to end of string and just before buffer end */
+					if (value == '\0')
+					{
+						/* it is ok only to write termination */
+						s[this->selected_index] = '\0';
+					}
+					else
+					{
+						/* get next index */
+						size_t next_index = (this->selected_index) + 1;
+
+						/* should not write anything to end of string ONLY IF next_index is buffer end */
+						if (next_index == s_buf_len)
+						{
+							/* do nothing */
+						}
+						else
+						{
+							/* it is ok to write anything, but make sure to add '\0' after the string */
+							s[this->selected_index] = value; /* can write any character */
+							s[          next_index] = '\0'; /* add termination */
+							(this->parent).__non_standard__set_new_buffer(s, s_buf_len, next_index);
+						}
+					}
+				}
+				else /* ((this->selected_index)  < s_str_len) */
+				{
+					/* we need to modify character inside buffer */
+					if (value == '\0')
+					{
+						/* somehow user want to add '\0', this may cause string length to change */
+						s[this->selected_index] = '\0';
+
+						/* user insert '\0' inside string, update string length */
+						(this->parent).__non_standard__set_new_buffer(s, s_buf_len, this->selected_index);
+					}
+					else
+					{
+						/* user want to add '\0' outside string buffer */
+						s[this->selected_index] = value;
+					}
+				}
+			}
+
+			return (*this); /* return struct instance and not String instance */
+		}
+
+		/* R-VALUE: This is called when we read from the index */
+		inline operator char() const /* return type is automatically char */
+		{
+			/**
+				* reuse charAt, this will call operator[] const
+				*/
+			return (this->parent).charAt(this->selected_index);
+		}
+	}; /* we need to add ';' to struct declaration */
+
+
 	/* r-value operator */
 	char   operator[](size_t index) const
 	{
+		/* in case we use r-value operator, don't need to use proxy */
+
 		/* get current instance string pointer */
-		const char *s = this->c_str();
+		const char *s         = this->c_str();
+		size_t      s_buf_len = this->__non_standard__get_buffer_length();
 
 		/* check if buffer is empty */
-		if ((s == NULL) || (s == (this->empty_string)))
+		if ((s == NULL) || (s == (String::empty_string)) || (index >= s_buf_len))
 		{
 			return '\0';
 		}
 		else
 		{
-			/* check if we attempt to access out of bound memory */
-			size_t s_len = strlen(s);
-
-			/* in attempt of accessing out of bound memory, return '\0' */
-			if (index >= s_len)
-			{
-				return '\0';
-			}
-			else
-			{
-				/* in bound memory */
-				return s[index];
-			}
+			/**
+				* faithfully return any character inside buffer, even if the selected character
+				* is outside string
+				*/
+			return s[index];
 		}
 	}
 
@@ -844,36 +955,14 @@ public:
 		* the nature of l-value operator is to be modified by r-value
 		* therefore don't put const here
 		*/
-	char  &operator[](size_t index)
+	inline struct __non_standard__indexing_proxy_s  operator[](size_t index)
 	{
-		char *s = this->__non_standard__c_str_non_const();
-
-		/* check if we try to write invalid buffer or read-only buffer */
-		if ((s == NULL) || (((const char *) s) == (this->empty_string)))
-		{
-			/* set dummy storage to '\0' in case this operator used as rvalue */
-			String::dummy_char_storage = '\0';
-
-			/* return dummy storage */
-			return (String::dummy_char_storage);
-		}
-		else
-		{
-			/* check if we attempt to access memory outside of buffer
-			* (not outside of string) */
-			if (index >= (this->__non_standard__get_buffer_length()))
-			{
-				/* set dummy storage to '\0' in case this operator used as rvalue */
-				String::dummy_char_storage = '\0';
-
-				/* return dummy storage */
-				return (String::dummy_char_storage);
-			}
-			else
-			{
-				return s[index];
-			}
-		}
+#if ((__cplusplus) >= 202002L)
+		struct String::__non_standard__indexing_proxy_s proxy = {.parent = (*this), .selected_index = index};
+#else
+		struct String::__non_standard__indexing_proxy_s proxy = {*this, index};
+#endif
+		return proxy;
 	}
 
 
@@ -1120,7 +1209,7 @@ public:
 		void *s = this->__non_standard__c_str_non_const();
 
 		/* check if current instance had allocate string */
-		if ((s == NULL) || (s == ((void *) (this->empty_string))))
+		if ((s == NULL) || (s == ((void *) (String::empty_string))))
 		{
 			/* do nothing if this instance have empty string */
 		}

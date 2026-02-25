@@ -192,7 +192,7 @@ static bool unsigned_integer_to_dynamic_string(char **buf, size_t buf_len, size_
 	* static member
 	*/
 /*static constexpr const char  *String::empty_string = "";*/
-char                   String::dummy_char_storage = '\0'; /* init 0 so we don't waste .data and valgrind don't scold up */
+/*char                   String::dummy_char_storage = '\0';*/ /* init 0 so we don't waste .data and valgrind don't scold up */
 
 /* constructor */
 
