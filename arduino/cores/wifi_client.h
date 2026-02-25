@@ -151,6 +151,7 @@ public :
     size_t println(unsigned long val, int BASE) override { return 0; }
     size_t println(double val, int BASE) override { return 0; }
     size_t println(String data, int BASE);
+    size_t println(const String &s) override { return 0; }
 
     void stop(void);
 };

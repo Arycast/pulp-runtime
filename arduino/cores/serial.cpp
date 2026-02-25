@@ -79,7 +79,7 @@ void Serials::flush(void) {
 }
 
 size_t Serials::print(const String &s){
-    return 0;
+    return write(s.c_str());
 }
 
 size_t Serials::print(char val){
@@ -128,6 +128,12 @@ size_t Serials::println(void){
     return write("\r\n");
 }
 
+size_t Serials::println(const String &s){
+    size_t n = print(s);
+    n += println();
+    return n; 
+}
+
 size_t Serials::println(char val){
     size_t n = print(val);
     n += println();
@@ -149,10 +155,6 @@ size_t Serials::println(unsigned int val){
 }
 
 /* missing implementation from above are const char*/
-size_t Serials::println(unsigned char val, int format){
-    return println((unsigned long) val, format);
-}
-
 size_t Serials::println(int val, int format){
     return println((long) val, format);
 }

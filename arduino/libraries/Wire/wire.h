@@ -193,11 +193,11 @@ public:
     size_t print(double val, int format = 2) override { return 0; }
 
     size_t println(void) override { return 0; }
+    size_t println(const String &s) override { return 0; }
     size_t println(char val) override { return 0; }
     size_t println(const char *val) override { return 0; }
     size_t println(int val) override { return 0; }
     size_t println(unsigned int val) override { return 0; }
-    size_t println(unsigned char val, int format) override { return 0; }
     size_t println(int val, int format) override { return 0; }
     size_t println(unsigned int val, int format) override { return 0; }
     size_t println(long val, int format = DEC) override { return 0; }

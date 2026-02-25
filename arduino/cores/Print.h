@@ -64,11 +64,11 @@ class Print {
          * https://docs.arduino.cc/language-reference/en/functions/communication/serial/println/
          */
         virtual size_t println(void) = 0;
+        virtual size_t println(const String &s) = 0;
         virtual size_t println(char val) = 0;
         virtual size_t println(const char *val) = 0;
         virtual size_t println(int val) = 0;
         virtual size_t println(unsigned int val) = 0;
-        virtual size_t println(unsigned char val, int format) = 0; 
         virtual size_t println(int val, int format) = 0;
         virtual size_t println(unsigned int val, int format) = 0;
         virtual size_t println(long val, int format = DEC) = 0;

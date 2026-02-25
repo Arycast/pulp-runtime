@@ -137,11 +137,11 @@ public :
          * https://docs.arduino.cc/language-reference/en/functions/communication/serial/println/
          */
     size_t println(void) override;
+    size_t println(const String &s); 
     size_t println(char val) override;
     size_t println(const char *val) override;
     size_t println(int val) override;
     size_t println(unsigned int val) override;
-    size_t println(unsigned char val, int format) override;
     size_t println(int val, int format) override;
     size_t println(unsigned int val, int format) override;
     size_t println(long val, int format = DEC) override;
