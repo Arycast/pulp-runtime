@@ -123,25 +123,25 @@ size_t Stream::readBytesUntil(char character, byte *buffer, size_t length) {
     return readBytesUntil(character, (char *) buffer, length);
 }
 
-// String Stream::readString(void) {
-//     String retval;
-//     while(true) {
-//         int c = timedRead();
-//         if(c < 0) break;
-//         retval += (char) c;
-//     }
-//     return retval;
-// }
+String Stream::readString(void) {
+    String retval;
+    while(true) {
+        int c = timedRead();
+        if(c < 0) break;
+        retval += (char) c;
+    }
+    return retval;
+}
 
-// String Stream::readStringUntil(char terminator) {
-//     String retval;
-//     while(true) {
-//         int c = timedRead();
-//         if (c < 0 || c == (int) terminator)break;
-//         retval += (char) c;
-//     }
-//     return retval;
-// }
+String Stream::readStringUntil(char terminator) {
+    String retval;
+    while(true) {
+        int c = timedRead();
+        if (c < 0 || c == (int) terminator)break;
+        retval += (char) c;
+    }
+    return retval;
+}
 
 long Stream::parseInt() {
     return parseInt(SKIP_ALL, '\0');

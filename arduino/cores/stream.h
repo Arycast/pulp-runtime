@@ -147,7 +147,7 @@ public :
         * @return A string containing the characters read from the stream, or an empty string if no data is available
         * https://docs.arduino.cc/language-reference/en/functions/communication/stream/streamReadString/
         */
-    // String readString(void);
+    String readString(void);
 
     /**
         * method readStringUntil
@@ -160,7 +160,7 @@ public :
         * (which may be an empty string if no data was available)
         * https://docs.arduino.cc/language-reference/en/functions/communication/stream/streamReadStringUntil/
         */
-    // String readStringUntil(char terminator);
+    String readStringUntil(char terminator);
 
     /**
         * method parseInt
