@@ -2700,3 +2700,13 @@ String operator+(double        lhs, String  rhs)
 
 	return (s + rhs);
 }
+
+
+/**
+	* operator ==
+	*/
+bool operator==(const char *lhs, const String &rhs)
+{
+	/* rotate the operand */
+	return (rhs == lhs);
+}

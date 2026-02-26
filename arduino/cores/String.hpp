@@ -138,6 +138,12 @@ String operator+(double         lhs, String       &&rhs);*/
 
 
 /**
+	* operator ==
+	*/
+bool operator==(const char *lhs, const String &rhs);
+
+
+/**
 	* class definition
 	*/
 class String
@@ -1110,6 +1116,19 @@ public:
 		* operator == (comparison)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/comparison"
 		*/
+	inline bool operator==(const char *rvalue) const
+	{
+		/* reuse compareTo method */
+		int retval = this->compareTo(rvalue);
+		return (retval == 0);
+	}
+
+	inline bool operator==(const String &rvalue) const
+	{
+		/* reuse compareTo method */
+		int retval = this->compareTo(rvalue);
+		return (retval == 0);
+	}
 
 	/**
 		* operator > (greater than)
