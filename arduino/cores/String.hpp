@@ -47,6 +47,7 @@
 
 /*#include <stdio.h>*/
 
+#include <vector> /* for std::vector */
 /* standard header c++ */
 #if ((__cplusplus) >= 201103L) /* C++11 */
 #include <type_traits> /* for std::is_same and std::enable_if */
@@ -209,7 +210,7 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/charAt
 		*/
-	bool charAt(unsigned int n) const /* non-standard */
+	inline char charAt(unsigned int n) const
 	{
 		return (*this)[(size_t) n];
 	}
@@ -219,14 +220,14 @@ public:
 	inline typename std::enable_if<                     /* use SFINAE (Substitution Failure Is Not An Error). */
 		std::is_same<T, size_t>::value &&               /* T must be size_t */
 		! std::is_same<size_t, unsigned int>::value,    /* size_t must NOT be unsigned int */
-		bool                                            /* The actual return type */
+		char                                            /* The actual return type */
 	>::type
 	charAt(T n) const /* non-standard */
 	{
 		return (*this)[n];
 	}
 #else
-	inline bool charAt(unsigned long n) const /* non-standard */
+	inline char charAt(unsigned long n) const /* non-standard */
 	{
 		return (*this)[(size_t) n];
 	}
@@ -508,7 +509,64 @@ public:
 		return this->c_str_buf;
 	}
 
+private:
+	inline bool __non_standard__compare_edge_segment(const char *s, ssize_t s_len = -1, bool check_end = false) const
+	{
+		size_t   _s_len;
 
+		/* this instance */
+		const char    *instance_c_str = this->c_str();
+		size_t         instance_len   = this->__non_standard__get_string_length();
+
+		if ((s == NULL) || (s_len == 0))
+		{
+			/* must be true if compare with empty string */
+			return true;
+		}
+
+		/* check if we need to calculate string length */
+		if (s_len < 0)
+		{
+			/* re-calculate string length */
+			_s_len = strlen(s);
+
+			/* check if string is empty */
+			if (_s_len == 0)
+			{
+				return true;
+			}
+		}
+		else
+		{
+			_s_len = (size_t) s_len; /* s_len > 0 */
+		}
+
+		/* check current instance */
+		if ((instance_c_str == NULL) || (instance_c_str == String::empty_string) ||
+			(instance_len == 0) || (instance_len < _s_len))
+		{
+			/* must be false because we try to compare non-empty string
+			* with this empty instance */
+			return false;
+		}
+
+		/* check if we compare with start of string, or end of string */
+		if (check_end)
+		{
+			instance_c_str += (instance_len - _s_len);
+		}
+
+		if (memcmp(instance_c_str, s, _s_len * sizeof(char)) == 0)
+		{
+			return true; /* when memcmp return 0, string is match */
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+public:
 	/**
 		* method endsWith
 		* Tests whether or not a String ends with
@@ -516,18 +574,15 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/endsWith
 		*/
-	bool endsWith(const char   *str) const; /* not part of arduino standard */
+	inline bool endsWith(const char   *str) const /* not part of arduino standard */
+	{
+		return this->__non_standard__compare_edge_segment(str, -1, true);
+	}
+
 	inline bool endsWith(const String &myString2) const
 	{
-		/* get c string representation of myString2 */
-		const char *str = myString2.c_str();
-
-		/**
-			* check if str is NULL;
-			* if so, return false,
-			* if str is not NULL, evaluate with endsWith string version
-			*/
-		return (str == NULL) ? (this->c_str() == NULL) : (this->endsWith(str));
+		return this->__non_standard__compare_edge_segment(myString2.c_str(),
+			myString2.__non_standard__get_string_length(), true);
 	}
 
 	/**
@@ -693,7 +748,29 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/setCharAt
 		*/
-	void setCharAt(unsigned int index, char c);
+	inline void setCharAt(unsigned int index, char c)
+	{
+		(*this)[(size_t) index] = c;
+	}
+
+#if ((__cplusplus) >= 201103L) /* C++11 */
+	template <typename T>
+	inline typename std::enable_if<                     /* use SFINAE (Substitution Failure Is Not An Error). */
+		std::is_same<T, size_t>::value &&               /* T must be size_t */
+		! std::is_same<size_t, unsigned int>::value,    /* size_t must NOT be unsigned int */
+		void                                            /* The actual return type */
+	>::type
+	setCharAt(T index, char c) const /* non-standard */
+	{
+		(*this)[index] = c;
+	}
+#else
+	inline void setCharAt(unsigned long index, char c) const /* non-standard */
+	{
+		(*this)[(size_t) index] = c;
+	}
+#endif
+
 
 	/**
 		* method startsWith
@@ -702,10 +779,15 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/startsWith
 		*/
-	bool startsWith(const char    *str) const; /* not part of arduino standard */
+	inline bool startsWith(const char    *str) const /* not part of arduino standard */
+	{
+		return this->__non_standard__compare_edge_segment(str);
+	}
+
 	inline bool startsWith(const String  &myString2) const
 	{
-		return this->startsWith(myString2.c_str());
+		return this->__non_standard__compare_edge_segment(
+			myString2.c_str(), myString2.__non_standard__get_string_length());
 	}
 
 	/**
@@ -720,8 +802,57 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/substring
 		*/
-	String  substring(unsigned int from) const;
-	String  substring(unsigned int from, unsigned int to) const;
+	inline String  substring(unsigned int from) const
+	{
+		size_t len = this->__non_standard__get_string_length();
+		return substring(from, (unsigned int) len);
+	}
+
+	inline String  substring(unsigned int from, unsigned int to) const
+	{
+		size_t len = this->__non_standard__get_string_length();
+
+		/* if argument to is beyond len, then trim it to len  */
+		if (((size_t) to) > len)
+		{
+			to = (unsigned int) len;
+		}
+
+		/* check if from is smaller than to (character to is not included in substring) */
+		if (from < to)
+		{
+			const size_t character_to_copy = to - from;
+
+			/* Dynamically allocates a char array of size character to copy + 1 */
+			std::vector<char> buffer(character_to_copy + 1);
+
+			/* to make memcpy work here, don't resize vector! */
+
+			/* copy from source buffer */
+			memcpy(buffer.data(), this->c_str() + from, character_to_copy * sizeof(char));
+
+			/* add string termination */
+			buffer[character_to_copy] = '\0';
+
+			/* create object */
+			do
+			{
+				String s(buffer.data());
+				return s;
+			}
+			while (0);
+		}
+		else
+		{
+			/* return new empty string */
+			do
+			{
+				String s;
+				return s;
+			}
+			while (0);
+		}
+	}
 
 	/**
 		* method toCharArray
