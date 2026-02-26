@@ -48,6 +48,9 @@
 /*#include <stdio.h>*/
 
 /* standard header c++ */
+#if ((__cplusplus) >= 201103L) /* C++11 */
+#include <type_traits> /* for std::is_same and std::enable_if */
+#endif
 #include <utility> /* for std::move */
 
 /* local header */
@@ -206,15 +209,28 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/charAt
 		*/
-	inline char charAt(size_t n) const /* non-standard */
+	bool charAt(unsigned int n) const /* non-standard */
+	{
+		return (*this)[(size_t) n];
+	}
+
+#if ((__cplusplus) >= 201103L) /* C++11 */
+	template <typename T>
+	inline typename std::enable_if<                     /* use SFINAE (Substitution Failure Is Not An Error). */
+		std::is_same<T, size_t>::value &&               /* T must be size_t */
+		! std::is_same<size_t, unsigned int>::value,    /* size_t must NOT be unsigned int */
+		bool                                            /* The actual return type */
+	>::type
+	charAt(T n) const /* non-standard */
 	{
 		return (*this)[n];
 	}
-
-	inline char charAt(unsigned int n) const
+#else
+	inline bool charAt(unsigned long n) const /* non-standard */
 	{
-		return this->charAt((size_t) n);
+		return (*this)[(size_t) n];
 	}
+#endif
 
 	/**
 		* method compareTo and compareToIgnoreCase
