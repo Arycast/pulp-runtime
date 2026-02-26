@@ -175,7 +175,6 @@ static void hal_cpp_linking_workaround(void)
     free(p2);
 }
 #else
-int a, b = 42;
 static void hal_cpp_linking_workaround(void)
 {
     void *p = NULL;
