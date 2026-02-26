@@ -28,6 +28,7 @@ extern "C"
 
 void *memset(void *s, int c, size_t n);
 
+int memcmp(const void *m1, const void *m2, size_t n);
 void *memcpy(void *dst0, const void *src0, size_t len0);
 
 int strcmp(const char *s1, const char *s2);

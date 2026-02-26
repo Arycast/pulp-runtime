@@ -257,7 +257,7 @@ String::String(const String  &s)
 }
 
 /* with move semantic */
-#if ((__cplusplus) == 201103L)
+#if ((__cplusplus) >= 201103L)
 String::String(String       &&s)
 {
 	/* steal buffer */
