@@ -41,7 +41,7 @@ int main(void)
 	sentence += value_double;
 
 	/* print sentence */
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	return 0;
 }

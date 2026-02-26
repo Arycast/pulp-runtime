@@ -20,11 +20,11 @@ int main(void)
 	String *init5 = new String(*init4);
 
 	/* print sentence */
-	printf("init1: %s\r\n", init1->c_str());
-	printf("init2: %s\r\n", init2->c_str());
-	printf("init3: %s\r\n", init3->c_str());
-	printf("init4: %s\r\n", init4->c_str());
-	printf("init5: %s\r\n", init5->c_str());
+	printf("init1: %s\n", init1->c_str());
+	printf("init2: %s\n", init2->c_str());
+	printf("init3: %s\n", init3->c_str());
+	printf("init4: %s\n", init4->c_str());
+	printf("init5: %s\n", init5->c_str());
 
 	delete init1;
 	delete init2;

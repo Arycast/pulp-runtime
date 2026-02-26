@@ -32,46 +32,46 @@ int main(void)
 	}
 
 	/* print sentence */
-	printf("%s\r\n", sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%s\n", sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 
 
 	/* change at index 24 (zero termination) */
 	sentence[24] = '\0';
 
-	printf("%s\r\n", sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%s\n", sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 	/* change at index 24 (zero termination) with any character */
 	c = (sentence[24] = 'a');
 
-	printf("%c: \"%s\"\r\n", c, sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%c: \"%s\"\n", c, sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 	/* change at index 23 (zero termination) */
 	sentence[23] = '\0';
 
-	printf("%s\r\n", sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%s\n", sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 	/* change at index 23 (zero termination) with any character */
 	c = (sentence[23] = 'b');
 
-	printf("%c: \"%s\"\r\n", c, sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%c: \"%s\"\n", c, sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 	/* change at index 10 (zero termination) */
 	sentence[10] = '\0';
 
-	printf("%s\r\n", sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%s\n", sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 	/* change at index 10 (zero termination) with any character */
 	c = (sentence[10] = 'c');
 
-	printf("%c: \"%s\"\r\n", c, sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%c: \"%s\"\n", c, sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 	return 0;
 }

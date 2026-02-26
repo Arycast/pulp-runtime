@@ -41,8 +41,8 @@ int main(void)
 	}
 
 	/* print sentence */
-	printf("%s\r\n", sentence.c_str());
-	printf("string length: %u\r\n", sentence.length());
+	printf("%s\n", sentence.c_str());
+	printf("string length: %u\n", sentence.length());
 
 
 	/* compare equal */

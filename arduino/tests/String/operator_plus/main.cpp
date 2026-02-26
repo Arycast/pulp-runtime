@@ -53,7 +53,7 @@ int main(void)
 	sentence = lhs_double        + (' ' + sentence + ' ') + rhs_double        /*+ ' '*/;
 
 	/* print sentence */
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	return 0;
 }

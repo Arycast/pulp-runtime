@@ -73,7 +73,7 @@ int main(void)
 	assert(retval == true); /* assume alloc success */
 
 	/* print sentence */
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	return 0;
 }

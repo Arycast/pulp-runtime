@@ -70,54 +70,54 @@ int main(void)
 	const String string_unsigned_long_30(value_unsigned_long, 30);
 
 
-	printf("convert %u to base  3: %s\r\n", (unsigned int) value_byte, string_byte_3.c_str()); /* print digit */
-	printf("convert %u to base  4: %s\r\n", (unsigned int) value_byte, string_byte_4.c_str());
-	printf("convert %u to base  5: %s\r\n", (unsigned int) value_byte, string_byte_5.c_str());
-	printf("convert %u to base 10: %s\r\n", (unsigned int) value_byte, string_byte_10.c_str());
-	printf("convert %u to base 12: %s\r\n", (unsigned int) value_byte, string_byte_12.c_str());
-	printf("convert %u to base 16: %s\r\n", (unsigned int) value_byte, string_byte_16.c_str());
-	printf("convert %u to base 20: %s\r\n", (unsigned int) value_byte, string_byte_20.c_str());
-	printf("convert %u to base 30: %s\r\n", (unsigned int) value_byte, string_byte_30.c_str());
+	printf("convert %u to base  3: %s\n", (unsigned int) value_byte, string_byte_3.c_str()); /* print digit */
+	printf("convert %u to base  4: %s\n", (unsigned int) value_byte, string_byte_4.c_str());
+	printf("convert %u to base  5: %s\n", (unsigned int) value_byte, string_byte_5.c_str());
+	printf("convert %u to base 10: %s\n", (unsigned int) value_byte, string_byte_10.c_str());
+	printf("convert %u to base 12: %s\n", (unsigned int) value_byte, string_byte_12.c_str());
+	printf("convert %u to base 16: %s\n", (unsigned int) value_byte, string_byte_16.c_str());
+	printf("convert %u to base 20: %s\n", (unsigned int) value_byte, string_byte_20.c_str());
+	printf("convert %u to base 30: %s\n", (unsigned int) value_byte, string_byte_30.c_str());
 
 
 
-	printf("convert %d to base  3: %s\r\n", value_int, string_int_3.c_str());
-	printf("convert %d to base  4: %s\r\n", value_int, string_int_4.c_str());
-	printf("convert %d to base  5: %s\r\n", value_int, string_int_5.c_str());
-	printf("convert %d to base 10: %s\r\n", value_int, string_int_10.c_str());
-	printf("convert %d to base 12: %s\r\n", value_int, string_int_12.c_str());
-	printf("convert %d to base 16: %s\r\n", value_int, string_int_16.c_str());
-	printf("convert %d to base 20: %s\r\n", value_int, string_int_20.c_str());
-	printf("convert %d to base 30: %s\r\n", value_int, string_int_30.c_str());
+	printf("convert %d to base  3: %s\n", value_int, string_int_3.c_str());
+	printf("convert %d to base  4: %s\n", value_int, string_int_4.c_str());
+	printf("convert %d to base  5: %s\n", value_int, string_int_5.c_str());
+	printf("convert %d to base 10: %s\n", value_int, string_int_10.c_str());
+	printf("convert %d to base 12: %s\n", value_int, string_int_12.c_str());
+	printf("convert %d to base 16: %s\n", value_int, string_int_16.c_str());
+	printf("convert %d to base 20: %s\n", value_int, string_int_20.c_str());
+	printf("convert %d to base 30: %s\n", value_int, string_int_30.c_str());
 
-	printf("convert %u to base  3: %s\r\n", value_unsigned_int, string_unsigned_int_3.c_str());
-	printf("convert %u to base  4: %s\r\n", value_unsigned_int, string_unsigned_int_4.c_str());
-	printf("convert %u to base  5: %s\r\n", value_unsigned_int, string_unsigned_int_5.c_str());
-	printf("convert %u to base 10: %s\r\n", value_unsigned_int, string_unsigned_int_10.c_str());
-	printf("convert %u to base 12: %s\r\n", value_unsigned_int, string_unsigned_int_12.c_str());
-	printf("convert %u to base 16: %s\r\n", value_unsigned_int, string_unsigned_int_16.c_str());
-	printf("convert %u to base 20: %s\r\n", value_unsigned_int, string_unsigned_int_20.c_str());
-	printf("convert %u to base 30: %s\r\n", value_unsigned_int, string_unsigned_int_30.c_str());
+	printf("convert %u to base  3: %s\n", value_unsigned_int, string_unsigned_int_3.c_str());
+	printf("convert %u to base  4: %s\n", value_unsigned_int, string_unsigned_int_4.c_str());
+	printf("convert %u to base  5: %s\n", value_unsigned_int, string_unsigned_int_5.c_str());
+	printf("convert %u to base 10: %s\n", value_unsigned_int, string_unsigned_int_10.c_str());
+	printf("convert %u to base 12: %s\n", value_unsigned_int, string_unsigned_int_12.c_str());
+	printf("convert %u to base 16: %s\n", value_unsigned_int, string_unsigned_int_16.c_str());
+	printf("convert %u to base 20: %s\n", value_unsigned_int, string_unsigned_int_20.c_str());
+	printf("convert %u to base 30: %s\n", value_unsigned_int, string_unsigned_int_30.c_str());
 
 
 
-	printf("convert %ld to base  3: %s\r\n", value_long, string_long_3.c_str());
-	printf("convert %ld to base  4: %s\r\n", value_long, string_long_4.c_str());
-	printf("convert %ld to base  5: %s\r\n", value_long, string_long_5.c_str());
-	printf("convert %ld to base 10: %s\r\n", value_long, string_long_10.c_str());
-	printf("convert %ld to base 12: %s\r\n", value_long, string_long_12.c_str());
-	printf("convert %ld to base 16: %s\r\n", value_long, string_long_16.c_str());
-	printf("convert %ld to base 20: %s\r\n", value_long, string_long_20.c_str());
-	printf("convert %ld to base 30: %s\r\n", value_long, string_long_30.c_str());
+	printf("convert %ld to base  3: %s\n", value_long, string_long_3.c_str());
+	printf("convert %ld to base  4: %s\n", value_long, string_long_4.c_str());
+	printf("convert %ld to base  5: %s\n", value_long, string_long_5.c_str());
+	printf("convert %ld to base 10: %s\n", value_long, string_long_10.c_str());
+	printf("convert %ld to base 12: %s\n", value_long, string_long_12.c_str());
+	printf("convert %ld to base 16: %s\n", value_long, string_long_16.c_str());
+	printf("convert %ld to base 20: %s\n", value_long, string_long_20.c_str());
+	printf("convert %ld to base 30: %s\n", value_long, string_long_30.c_str());
 
-	printf("convert %lu to base  3: %s\r\n", value_unsigned_long, string_unsigned_long_3.c_str());
-	printf("convert %lu to base  4: %s\r\n", value_unsigned_long, string_unsigned_long_4.c_str());
-	printf("convert %lu to base  5: %s\r\n", value_unsigned_long, string_unsigned_long_5.c_str());
-	printf("convert %lu to base 10: %s\r\n", value_unsigned_long, string_unsigned_long_10.c_str());
-	printf("convert %lu to base 12: %s\r\n", value_unsigned_long, string_unsigned_long_12.c_str());
-	printf("convert %lu to base 16: %s\r\n", value_unsigned_long, string_unsigned_long_16.c_str());
-	printf("convert %lu to base 20: %s\r\n", value_unsigned_long, string_unsigned_long_20.c_str());
-	printf("convert %lu to base 30: %s\r\n", value_unsigned_long, string_unsigned_long_30.c_str());
+	printf("convert %lu to base  3: %s\n", value_unsigned_long, string_unsigned_long_3.c_str());
+	printf("convert %lu to base  4: %s\n", value_unsigned_long, string_unsigned_long_4.c_str());
+	printf("convert %lu to base  5: %s\n", value_unsigned_long, string_unsigned_long_5.c_str());
+	printf("convert %lu to base 10: %s\n", value_unsigned_long, string_unsigned_long_10.c_str());
+	printf("convert %lu to base 12: %s\n", value_unsigned_long, string_unsigned_long_12.c_str());
+	printf("convert %lu to base 16: %s\n", value_unsigned_long, string_unsigned_long_16.c_str());
+	printf("convert %lu to base 20: %s\n", value_unsigned_long, string_unsigned_long_20.c_str());
+	printf("convert %lu to base 30: %s\n", value_unsigned_long, string_unsigned_long_30.c_str());
 
 	return 0;
 }

@@ -31,23 +31,23 @@ int main(void)
 	}
 
 	/* print sentence */
-	printf(" \" this is a test sentence\" : %d\r\n", sentence.compareTo(" this is a test sentence"));
-	printf(" \" THIS IS A TEST SENTENCE\" : %d\r\n", sentence.compareToIgnoreCase(" THIS IS A TEST SENTENCE"));
+	printf(" \" this is a test sentence\" : %d\n", sentence.compareTo(" this is a test sentence"));
+	printf(" \" THIS IS A TEST SENTENCE\" : %d\n", sentence.compareToIgnoreCase(" THIS IS A TEST SENTENCE"));
 
-	printf("                       NULL : %d\r\n", sentence.compareTo(NULL));
-	printf("                       NULL : %d\r\n", sentence.compareToIgnoreCase(NULL));
+	printf("                       NULL : %d\n", sentence.compareTo(NULL));
+	printf("                       NULL : %d\n", sentence.compareToIgnoreCase(NULL));
 
-	printf("                     \"test\" : %d\r\n", sentence.compareTo("test"));
-	printf("                     \"TEST\" : %d\r\n", sentence.compareToIgnoreCase("TEST"));
+	printf("                     \"test\" : %d\n", sentence.compareTo("test"));
+	printf("                     \"TEST\" : %d\n", sentence.compareToIgnoreCase("TEST"));
 
-	printf("                    \" this\" : %d\r\n", sentence.compareTo(" this"));
-	printf("                    \" THIS\" : %d\r\n", sentence.compareToIgnoreCase(" THIS"));
+	printf("                    \" this\" : %d\n", sentence.compareTo(" this"));
+	printf("                    \" THIS\" : %d\n", sentence.compareToIgnoreCase(" THIS"));
 
-	printf("                         \"\" : %d\r\n", sentence.compareTo(""));
-	printf("                         \"\" : %d\r\n", sentence.compareToIgnoreCase(""));
+	printf("                         \"\" : %d\n", sentence.compareTo(""));
+	printf("                         \"\" : %d\n", sentence.compareToIgnoreCase(""));
 
-	printf("\" this is a test sentence2\" : %d\r\n", sentence.compareTo(" this is a test sentence2"));
-	printf("\" THIS IS A TEST SENTENCE2\" : %d\r\n", sentence.compareToIgnoreCase(" THIS IS A TEST SENTENCE2"));
+	printf("\" this is a test sentence2\" : %d\n", sentence.compareTo(" this is a test sentence2"));
+	printf("\" THIS IS A TEST SENTENCE2\" : %d\n", sentence.compareToIgnoreCase(" THIS IS A TEST SENTENCE2"));
 
 	return 0;
 }

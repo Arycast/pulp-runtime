@@ -542,7 +542,7 @@ private:
 		}
 
 		/* check current instance */
-		if ((instance_c_str == NULL) || (instance_c_str == String::empty_string) ||
+		if ((instance_c_str == NULL) || (instance_c_str == (String::empty_string)) ||
 			(instance_len == 0) || (instance_len < _s_len))
 		{
 			/* must be false because we try to compare non-empty string
@@ -860,7 +860,40 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/toCharArray
 		*/
-	void toCharArray(char *buf, unsigned int len) const;
+	void toCharArray(char *buf, unsigned int len) const
+	{
+		const char    *instance_c_str = this->c_str();
+		size_t         instance_len   = this->__non_standard__get_string_length();
+
+		size_t        _len = (size_t) len;
+
+		/* no storage to copy */
+		if ((buf == NULL) || (_len == 0))
+		{
+			return;
+		}
+
+		/* check current instance */
+		if ((instance_c_str == NULL) || (instance_c_str == (String::empty_string)) || (instance_len == 0) || (_len == 1))
+		{
+			buf[0] = '\0'; /* just write string termination */
+			return;
+		}
+
+		/* check if destination buffer has enough space */
+		if (_len > instance_len)
+		{
+			/* shrink len */
+			_len = instance_len + 1; /* add string termination */
+		}
+
+		/* copy string up to len - 1 */
+		memcpy(buf, instance_c_str, _len - 1);
+
+		/* add termination string */
+		buf[_len - 1] = '\0';
+	}
+
 
 	/**
 		* method toDouble
@@ -1326,7 +1359,7 @@ public:
 		if ((new_buffer == NULL) || (new_buffer == ((char *) (String::empty_string))) ||
 			(buffer_length == 0))
 		{
-			return this->__non_standard__set_new_buffer((char *) String::empty_string, 0, 0);
+			return this->__non_standard__set_new_buffer((char *) (String::empty_string), 0, 0);
 		}
 		else
 		{

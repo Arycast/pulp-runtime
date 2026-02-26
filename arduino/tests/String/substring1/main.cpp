@@ -31,13 +31,13 @@ int main(void)
 
 
 	/* print sentence */
-	printf("%s\r\n", sentence.substring(10).c_str());
-	printf("%s\r\n", sentence.substring(20).c_str());
-	printf("%s\r\n", sentence.substring(30).c_str());
+	printf("%s\n", sentence.substring(10).c_str());
+	printf("%s\n", sentence.substring(20).c_str());
+	printf("%s\n", sentence.substring(30).c_str());
 
-	printf("%s\r\n", sentence.substring(10, 16).c_str());
-	printf("%s\r\n", sentence.substring(20, 26).c_str());
-	printf("%s\r\n", sentence.substring(30, 36).c_str());
+	printf("%s\n", sentence.substring(10, 16).c_str());
+	printf("%s\n", sentence.substring(20, 26).c_str());
+	printf("%s\n", sentence.substring(30, 36).c_str());
 
 	return 0;
 }

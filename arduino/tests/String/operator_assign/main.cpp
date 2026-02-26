@@ -33,52 +33,52 @@ int main(void)
 	constexpr double        value2_double        = -4276.28735; /* double doesn't need suffix */
 
 	sentence = sentence1;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = sentence2;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value1_byte;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value2_byte;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value1_int;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value2_int;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value1_unsigned_int;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value2_unsigned_int;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value1_long;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value2_long;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value1_unsigned_long;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value2_unsigned_long;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value1_float;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value2_float;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value1_double;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	sentence = value2_double;
-	printf("%s\r\n", sentence.c_str());
+	printf("%s\n", sentence.c_str());
 
 	return 0;
 }

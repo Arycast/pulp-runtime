@@ -63,54 +63,54 @@ int main(void)
 
 
 	/* test */
-	printf("vector: \"%s\"\r\n", sentence.c_str());
+	printf("vector: \"%s\"\n", sentence.c_str());
 
-	printf("test start with c \"%s\" : \"%s\"\r\n", (start1 == NULL) ? "NULL" : start1, bool_to_string(buf, sentence.startsWith(start1)));
-	printf("test start with c \"%s\" : \"%s\"\r\n", (start2 == NULL) ? "NULL" : start2, bool_to_string(buf, sentence.startsWith(start2)));
-	printf("test start with c \"%s\" : \"%s\"\r\n", (start3 == NULL) ? "NULL" : start3, bool_to_string(buf, sentence.startsWith(start3)));
-	printf("test start with c \"%s\" : \"%s\"\r\n", (start4 == NULL) ? "NULL" : start4, bool_to_string(buf, sentence.startsWith(start4)));
-	printf("test start with c \"%s\" : \"%s\"\r\n", (start5 == NULL) ? "NULL" : start5, bool_to_string(buf, sentence.startsWith(start5)));
-	printf("test start with string \"%s\" : \"%s\"\r\n", s_start1.c_str(), bool_to_string(buf, sentence.startsWith(s_start1)));
-	printf("test start with string \"%s\" : \"%s\"\r\n", s_start2.c_str(), bool_to_string(buf, sentence.startsWith(s_start2)));
-	printf("test start with string \"%s\" : \"%s\"\r\n", s_start3.c_str(), bool_to_string(buf, sentence.startsWith(s_start3)));
-	printf("test start with string \"%s\" : \"%s\"\r\n", s_start4.c_str(), bool_to_string(buf, sentence.startsWith(s_start4)));
-	printf("test start with string \"%s\" : \"%s\"\r\n", s_start5.c_str(), bool_to_string(buf, sentence.startsWith(s_start5)));
+	printf("test start with c \"%s\" : \"%s\"\n", (start1 == NULL) ? "NULL" : start1, bool_to_string(buf, sentence.startsWith(start1)));
+	printf("test start with c \"%s\" : \"%s\"\n", (start2 == NULL) ? "NULL" : start2, bool_to_string(buf, sentence.startsWith(start2)));
+	printf("test start with c \"%s\" : \"%s\"\n", (start3 == NULL) ? "NULL" : start3, bool_to_string(buf, sentence.startsWith(start3)));
+	printf("test start with c \"%s\" : \"%s\"\n", (start4 == NULL) ? "NULL" : start4, bool_to_string(buf, sentence.startsWith(start4)));
+	printf("test start with c \"%s\" : \"%s\"\n", (start5 == NULL) ? "NULL" : start5, bool_to_string(buf, sentence.startsWith(start5)));
+	printf("test start with string \"%s\" : \"%s\"\n", s_start1.c_str(), bool_to_string(buf, sentence.startsWith(s_start1)));
+	printf("test start with string \"%s\" : \"%s\"\n", s_start2.c_str(), bool_to_string(buf, sentence.startsWith(s_start2)));
+	printf("test start with string \"%s\" : \"%s\"\n", s_start3.c_str(), bool_to_string(buf, sentence.startsWith(s_start3)));
+	printf("test start with string \"%s\" : \"%s\"\n", s_start4.c_str(), bool_to_string(buf, sentence.startsWith(s_start4)));
+	printf("test start with string \"%s\" : \"%s\"\n", s_start5.c_str(), bool_to_string(buf, sentence.startsWith(s_start5)));
 
-	printf("test end with c \"%s\" : \"%s\"\r\n", (end1 == NULL) ? "NULL" : end1, bool_to_string(buf, sentence.endsWith(end1)));
-	printf("test end with c \"%s\" : \"%s\"\r\n", (end2 == NULL) ? "NULL" : end2, bool_to_string(buf, sentence.endsWith(end2)));
-	printf("test end with c \"%s\" : \"%s\"\r\n", (end3 == NULL) ? "NULL" : end3, bool_to_string(buf, sentence.endsWith(end3)));
-	printf("test end with c \"%s\" : \"%s\"\r\n", (end4 == NULL) ? "NULL" : end4, bool_to_string(buf, sentence.endsWith(end4)));
-	printf("test end with c \"%s\" : \"%s\"\r\n", (end5 == NULL) ? "NULL" : end5, bool_to_string(buf, sentence.endsWith(end5)));
-	printf("test end with c \"%s\" : \"%s\"\r\n", (end6 == NULL) ? "NULL" : end6, bool_to_string(buf, sentence.endsWith(end6)));
-	printf("test end with string \"%s\" : \"%s\"\r\n", s_end1.c_str(), bool_to_string(buf, sentence.endsWith(s_end1)));
-	printf("test end with string \"%s\" : \"%s\"\r\n", s_end2.c_str(), bool_to_string(buf, sentence.endsWith(s_end2)));
-	printf("test end with string \"%s\" : \"%s\"\r\n", s_end3.c_str(), bool_to_string(buf, sentence.endsWith(s_end3)));
-	printf("test end with string \"%s\" : \"%s\"\r\n", s_end4.c_str(), bool_to_string(buf, sentence.endsWith(s_end4)));
-	printf("test end with string \"%s\" : \"%s\"\r\n", s_end5.c_str(), bool_to_string(buf, sentence.endsWith(s_end5)));
-	printf("test end with string \"%s\" : \"%s\"\r\n", s_end6.c_str(), bool_to_string(buf, sentence.endsWith(s_end6)));
+	printf("test end with c \"%s\" : \"%s\"\n", (end1 == NULL) ? "NULL" : end1, bool_to_string(buf, sentence.endsWith(end1)));
+	printf("test end with c \"%s\" : \"%s\"\n", (end2 == NULL) ? "NULL" : end2, bool_to_string(buf, sentence.endsWith(end2)));
+	printf("test end with c \"%s\" : \"%s\"\n", (end3 == NULL) ? "NULL" : end3, bool_to_string(buf, sentence.endsWith(end3)));
+	printf("test end with c \"%s\" : \"%s\"\n", (end4 == NULL) ? "NULL" : end4, bool_to_string(buf, sentence.endsWith(end4)));
+	printf("test end with c \"%s\" : \"%s\"\n", (end5 == NULL) ? "NULL" : end5, bool_to_string(buf, sentence.endsWith(end5)));
+	printf("test end with c \"%s\" : \"%s\"\n", (end6 == NULL) ? "NULL" : end6, bool_to_string(buf, sentence.endsWith(end6)));
+	printf("test end with string \"%s\" : \"%s\"\n", s_end1.c_str(), bool_to_string(buf, sentence.endsWith(s_end1)));
+	printf("test end with string \"%s\" : \"%s\"\n", s_end2.c_str(), bool_to_string(buf, sentence.endsWith(s_end2)));
+	printf("test end with string \"%s\" : \"%s\"\n", s_end3.c_str(), bool_to_string(buf, sentence.endsWith(s_end3)));
+	printf("test end with string \"%s\" : \"%s\"\n", s_end4.c_str(), bool_to_string(buf, sentence.endsWith(s_end4)));
+	printf("test end with string \"%s\" : \"%s\"\n", s_end5.c_str(), bool_to_string(buf, sentence.endsWith(s_end5)));
+	printf("test end with string \"%s\" : \"%s\"\n", s_end6.c_str(), bool_to_string(buf, sentence.endsWith(s_end6)));
 
 	/* try substring */
-	printf("substring test 1 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(1).startsWith("this")));
-	printf("substring test 2 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(2).startsWith("this")));
-	printf("substring test 3 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(3).startsWith("this")));
-	printf("substring test 4 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(4).startsWith("this")));
-	printf("substring test 5 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(5).startsWith("this")));
-	printf("substring test 6 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(6).startsWith("this")));
-	printf("substring test 7 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(7).startsWith("this")));
-	printf("substring test 8 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(8).startsWith("this")));
-	printf("substring test 9 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(9).startsWith("this")));
-	printf("substring test 10 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(10).startsWith("this")));
+	printf("substring test 1 : \"%s\"\n", bool_to_string(buf, sentence.substring(1).startsWith("this")));
+	printf("substring test 2 : \"%s\"\n", bool_to_string(buf, sentence.substring(2).startsWith("this")));
+	printf("substring test 3 : \"%s\"\n", bool_to_string(buf, sentence.substring(3).startsWith("this")));
+	printf("substring test 4 : \"%s\"\n", bool_to_string(buf, sentence.substring(4).startsWith("this")));
+	printf("substring test 5 : \"%s\"\n", bool_to_string(buf, sentence.substring(5).startsWith("this")));
+	printf("substring test 6 : \"%s\"\n", bool_to_string(buf, sentence.substring(6).startsWith("this")));
+	printf("substring test 7 : \"%s\"\n", bool_to_string(buf, sentence.substring(7).startsWith("this")));
+	printf("substring test 8 : \"%s\"\n", bool_to_string(buf, sentence.substring(8).startsWith("this")));
+	printf("substring test 9 : \"%s\"\n", bool_to_string(buf, sentence.substring(9).startsWith("this")));
+	printf("substring test 10 : \"%s\"\n", bool_to_string(buf, sentence.substring(10).startsWith("this")));
 
-	printf("substring test 1 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(1, 5).endsWith("is")));
-	printf("substring test 2 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(2, 6).endsWith("is")));
-	printf("substring test 3 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(3, 7).endsWith("is")));
-	printf("substring test 4 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(4, 8).endsWith("is")));
-	printf("substring test 5 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(5, 9).endsWith("is")));
-	printf("substring test 6 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(6, 10).endsWith("is")));
-	printf("substring test 7 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(7, 11).endsWith("is")));
-	printf("substring test 8 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(8, 12).endsWith("is")));
-	printf("substring test 9 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(9, 13).endsWith("is")));
-	printf("substring test 10 : \"%s\"\r\n", bool_to_string(buf, sentence.substring(10, 14).endsWith("is")));
+	printf("substring test 1 : \"%s\"\n", bool_to_string(buf, sentence.substring(1, 5).endsWith("is")));
+	printf("substring test 2 : \"%s\"\n", bool_to_string(buf, sentence.substring(2, 6).endsWith("is")));
+	printf("substring test 3 : \"%s\"\n", bool_to_string(buf, sentence.substring(3, 7).endsWith("is")));
+	printf("substring test 4 : \"%s\"\n", bool_to_string(buf, sentence.substring(4, 8).endsWith("is")));
+	printf("substring test 5 : \"%s\"\n", bool_to_string(buf, sentence.substring(5, 9).endsWith("is")));
+	printf("substring test 6 : \"%s\"\n", bool_to_string(buf, sentence.substring(6, 10).endsWith("is")));
+	printf("substring test 7 : \"%s\"\n", bool_to_string(buf, sentence.substring(7, 11).endsWith("is")));
+	printf("substring test 8 : \"%s\"\n", bool_to_string(buf, sentence.substring(8, 12).endsWith("is")));
+	printf("substring test 9 : \"%s\"\n", bool_to_string(buf, sentence.substring(9, 13).endsWith("is")));
+	printf("substring test 10 : \"%s\"\n", bool_to_string(buf, sentence.substring(10, 14).endsWith("is")));
 
 	return 0;
 }
