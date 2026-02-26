@@ -45,15 +45,33 @@ int main(void)
 	printf("string length: %u\r\n", sentence.length());
 
 
-	/* compare */
-	printf("compare with sentence1: %s\n", bool_to_string(buf, sentence == sentence1));
-	printf("compare with sentence2: %s\n", bool_to_string(buf, sentence == sentence2));
+	/* compare equal */
+	printf("compare equal with sentence1: %s\n", bool_to_string(buf, sentence == sentence1));
+	printf("compare equal with sentence2: %s\n", bool_to_string(buf, sentence == sentence2));
 
-	printf("compare with rhs char1: %s\n", bool_to_string(buf, sentence == sentence1_string));
-	printf("compare with rhs char2: %s\n", bool_to_string(buf, sentence == sentence2_string));
+	printf("compare equal with rhs char1: %s\n", bool_to_string(buf, sentence == sentence1_string));
+	printf("compare equal with rhs char2: %s\n", bool_to_string(buf, sentence == sentence2_string));
 
-	printf("compare with lhs char1: %s\n", bool_to_string(buf, sentence1_string == sentence));
-	printf("compare with lhs char2: %s\n", bool_to_string(buf, sentence2_string == sentence));
+	printf("compare equal with lhs char1: %s\n", bool_to_string(buf, sentence1_string == sentence));
+	printf("compare equal with lhs char2: %s\n", bool_to_string(buf, sentence2_string == sentence));
+
+	printf("self compare equal sentence: %s\n", bool_to_string(buf, sentence == sentence));
+	printf("self compare equal sentence1: %s\n", bool_to_string(buf, sentence1 == sentence1));
+	printf("self compare equal sentence2: %s\n", bool_to_string(buf, sentence2 == sentence2));
+
+	/* compare not equal */
+	printf("compare not equal with sentence1: %s\n", bool_to_string(buf, sentence != sentence1));
+	printf("compare not equal with sentence2: %s\n", bool_to_string(buf, sentence != sentence2));
+
+	printf("compare not equal with rhs char1: %s\n", bool_to_string(buf, sentence != sentence1_string));
+	printf("compare not equal with rhs char2: %s\n", bool_to_string(buf, sentence != sentence2_string));
+
+	printf("compare not equal with lhs char1: %s\n", bool_to_string(buf, sentence1_string != sentence));
+	printf("compare not equal with lhs char2: %s\n", bool_to_string(buf, sentence2_string != sentence));
+
+	printf("self compare not equal sentence: %s\n", bool_to_string(buf, sentence != sentence));
+	printf("self compare not equal sentence1: %s\n", bool_to_string(buf, sentence1 != sentence1));
+	printf("self compare not equal sentence2: %s\n", bool_to_string(buf, sentence2 != sentence2));
 
 	return 0;
 }

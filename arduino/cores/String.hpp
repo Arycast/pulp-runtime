@@ -142,6 +142,10 @@ String operator+(double         lhs, String       &&rhs);*/
 	*/
 bool operator==(const char *lhs, const String &rhs);
 
+/**
+	* operator !=
+	*/
+bool operator!=(const char *lhs, const String &rhs);
 
 /**
 	* class definition
@@ -520,16 +524,15 @@ public:
 		*/
 	inline bool equals(const char    *str) const /* not part of standard */
 	{
-		/**
-			* reuse compareTo(str) and check if it return 0
-			* method compareTo should handle case of str (and c_str()) is NULL
-			* gracefully
-			*/
-		return ((this->compareTo(str)) == 0);
+		/* reuse compareTo method */
+		int retval = this->compareTo(str);
+		return (retval == 0);
 	}
 	inline bool equals(const String  &myString2) const
 	{
-		return this->equals(myString2.c_str());
+		/* reuse compareTo method */
+		int retval = this->compareTo(myString2);
+		return (retval == 0);
 	}
 
 	/**
@@ -542,11 +545,14 @@ public:
 		*/
 	inline bool equalsIgnoreCase(const char    *str) const
 	{
-		return ((this->compareToIgnoreCase(str)) == 0);
+		/* reuse compareTo method */
+		int retval = this->compareToIgnoreCase(str);
+		return (retval == 0);
 	}
 	inline bool equalsIgnoreCase(const String  &myString2) const
 	{
-		return this->equalsIgnoreCase(myString2.c_str());
+		int retval = this->compareToIgnoreCase(myString2);
+		return (retval == 0);
 	}
 
 	/**
@@ -1118,16 +1124,12 @@ public:
 		*/
 	inline bool operator==(const char *rvalue) const
 	{
-		/* reuse compareTo method */
-		int retval = this->compareTo(rvalue);
-		return (retval == 0);
+		return this->equals(rvalue);
 	}
 
 	inline bool operator==(const String &rvalue) const
 	{
-		/* reuse compareTo method */
-		int retval = this->compareTo(rvalue);
-		return (retval == 0);
+		return this->equals(rvalue);
 	}
 
 	/**
@@ -1154,6 +1156,15 @@ public:
 		* operator != (different from)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/differentFrom"
 		*/
+	inline bool operator!=(const char *rvalue) const
+	{
+		return ! (this->equals(rvalue));
+	}
+
+	inline bool operator!=(const String &rvalue) const
+	{
+		return ! (this->equals(rvalue));
+	}
 
 	/**
 		* set new string to this instance, new argument should be dynamically
