@@ -34,7 +34,8 @@ compiler.warning_flags.all=-Wall -Wextra -Wconversion -pedantic
 ## Preprocessing
 
 compiler.arch_flags=-march=rv32imfcxpulpv2
-compiler.define_flags=-D__riscv__ -D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12400000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0
+arduino_related_defines=-DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch}
+compiler.define_flags=-D__riscv__ -D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12400000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0 {arduino_related_defines}
 compiler.include_flags=-I{pulp_runtime.include.path} -I{pulp_runtime.include.path}/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/archi/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/hal/chips/{pulp_runtime.soc} -I{pulp_runtime_libc.include.path} -include {pulp_runtime.include.path}/chips/pulpissimo/config.h
 
 
@@ -63,7 +64,7 @@ compiler.c.elf.cmd=riscv32-unknown-elf-g++
 compiler.c.elf.flags={compiler.arch_flags} {compiler.c.elf.cmd.option_flags} -nostartfiles -nostdlib -Wl,--gc-sections,--print-gc-sections,--print-memory-usage,--verbose=4 -ggdb -T{pulp_runtime.path}/kernel/chips/pulpissimo/link.ld
 
 compiler.libraries.ldflags=-L{build.path}
-compiler.libraries.libs=-lstdc++ -lm -lgcc -lc
+compiler.libraries.libs=-lstdc++ -lm -lgcc
 
 
 ## ELF processing

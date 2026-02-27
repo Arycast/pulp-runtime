@@ -27,7 +27,7 @@
 #include "simulation_test.h"
 #else
 #include "variables.h" /* for various data type, including native data type */
-#include "pgmspace.h" /* for various string macro */
+/*#include "pgmspace.h"*/ /* for various string macro */
 #endif
 
 /**
@@ -42,7 +42,7 @@
 
 /* standard header c */
 #include <stddef.h>
-#include <string.h> /* strlen, memcpy, memmove etc. */
+#include <string.h> /* strlen, memcpy, memmove, etc. */
 #include <stdlib.h> /* alloc and free related functions */
 
 /*#include <stdio.h>*/
@@ -145,6 +145,26 @@ String operator+(double         lhs, String       &&rhs);*/
 	* operator ==
 	*/
 bool operator==(const char *lhs, const String &rhs);
+
+/**
+	* operator >
+	*/
+bool operator>(const char *lhs, const String &rhs);
+
+/**
+	* operator >=
+	*/
+bool operator>=(const char *lhs, const String &rhs);
+
+/**
+	* operator <
+	*/
+bool operator<(const char *lhs, const String &rhs);
+
+/**
+	* operator <=
+	*/
+bool operator<=(const char *lhs, const String &rhs);
 
 /**
 	* operator !=
@@ -270,10 +290,10 @@ public:
 				lvalue_c_str = String::empty_string;
 			}
 
-			/* use strncasecmp from pgmspace */
+			/* if we ignore case, use strncasecmp instead of strncmp */
 			if (ignore_case)
 			{
-				return strncasecmp_PF(lvalue_c_str, rvalue_c_str,
+				return strncasecmp(lvalue_c_str, rvalue_c_str,
 					lvalue_string_length + 1);
 			}
 			else
@@ -318,10 +338,10 @@ public:
 				rvalue_c_str = String::empty_string;
 			}
 
-			/* use strncasecmp from pgmspace */
+			/* if we ignore case, use strncasecmp instead of strncmp */
 			if (ignore_case)
 			{
-				return strncasecmp_PF(lvalue_c_str, rvalue_c_str,
+				return strncasecmp(lvalue_c_str, rvalue_c_str,
 					((lvalue_string_length > rvalue_string_length) ? rvalue_string_length : lvalue_string_length) + 1);
 			}
 			else
@@ -510,6 +530,19 @@ public:
 	}
 
 private:
+	/**
+		* helper code for matching start or end string
+		* to be used by startsWith and endsWith
+		*
+		* if @arg check_end == true, then checking is done in the beginning of the string
+		* if @arg check_end == false, then checking is done in the end of the string
+		* if @arg s_len < 0, then length of string @arg s will be calculated
+		* if @arg s_len >= 0, then matching will be done without calculating string @arg s length
+		* @arg s length is assumed to be @arg s_len
+		* this function accept @arg s is NULL, in that case @arg s_len is ignored and function is instantly return true
+		* this function also accept @arg s_len is 0 and @arg s is empty string (only contain '\0') which also
+		* this function instatly return true
+		*/
 	inline bool __non_standard__compare_edge_segment(const char *s, ssize_t s_len = -1, bool check_end = false) const
 	{
 		size_t   _s_len;
@@ -1316,21 +1349,66 @@ public:
 		* operator > (greater than)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/greaterThan"
 		*/
+	inline bool operator>(const char *rvalue) const
+	{
+		/* reuse compareTo method */
+		int retval = this->compareTo(rvalue);
+		return (retval > 0);
+	}
+
+	inline bool operator>(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval > 0);
+	}
 
 	/**
 		* operator >= (greater than or equal to)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/greaterThanOrEqualTo"
 		*/
+	inline bool operator>=(const char *rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval >= 0);
+	}
+
+	inline bool operator>=(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval >= 0);
+	}
 
 	/**
 		* operator < (less than)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/lessThan"
 		*/
+	inline bool operator<(const char *rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval < 0);
+	}
+
+	inline bool operator<(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval < 0);
+	}
 
 	/**
 		* operator <= (less than or equal to)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/lessThanOrEqualTo"
 		*/
+	inline bool operator<=(const char *rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval <= 0);
+	}
+
+	inline bool operator<=(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval <= 0);
+	}
 
 	/**
 		* operator != (different from)

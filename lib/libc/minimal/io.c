@@ -25,6 +25,45 @@
 #include "io.h"
 #include <pulp.h>
 
+/**
+    * when arduino is used, provide implementation for:
+    * strnlen
+    * strcasecmp
+    * strncasecmp
+    * strtok_r
+    *
+    * when arduino is not used (e.g. when compiling with
+    * makefile to native test/unit test or to pulp-runtime-examples), rely on libc
+    * implementation. link with -lc
+    */
+#ifdef ARDUINO
+/**
+    * instead of inclusion of pgmspace.h, which will messed up this library,
+    * just declare necessary function prototype
+    */
+extern size_t pgmspace_strnlen(const char *s, size_t maxlen);
+
+extern int pgmspace_strcasecmp(const char *s1, const char *s2);
+extern int pgmspace_strncasecmp(const char *s1, const char *s2, size_t n);
+
+extern char *pgmspace_strtok_r(char * restrict str, const char * restrict delim,
+    char ** restrict saveptr);
+
+/* pgmspace_strnlen is renamed to strnlen_P when POSIX.1-2008 is not defined */
+/* pgmspace_strcasecmp, pgmspace_strncasecmp, pgmspace_strtok_r is renamed
+to strcasecmp_P, strncasecmp_P, strtok_rP when POSIX.1-2001 is not defined */
+#if (! (defined(_POSIX_C_SOURCE) && ((_POSIX_C_SOURCE) >= 200809L)))
+#define    pgmspace_strnlen          strnlen_P
+#endif
+
+#if (! (defined(_POSIX_C_SOURCE) && ((_POSIX_C_SOURCE) >= 200112L)))
+#define    pgmspace_strcasecmp       strcasecmp_P
+#define    pgmspace_strncasecmp      strncasecmp_P
+#define    pgmspace_strtok_r         strtok_rP
+#endif
+
+#endif /* defined(ARDUINO) */
+
 
 #if defined(CONFIG_IO_UART) && CONFIG_IO_UART == 1 && defined(ARCHI_HAS_CLUSTER)
 static L1_DATA int io_lock = 0;
@@ -74,6 +113,21 @@ int strncmp(const char *s1, const char *s2, size_t n)
 }
 
 
+/**
+    * when arduino is used, strcasecmp and strncasecmp is provided by pgmspace
+    * when arduino is not used, rely on linking with libc (-lc)
+    */
+#ifdef ARDUINO
+int strcasecmp(const char *s1, const char *s2)
+{
+    return pgmspace_strcasecmp(s1, s2);
+}
+
+int strncasecmp(const char *s1, const char *s2, size_t n)
+{
+    return pgmspace_strncasecmp(s1, s2, n);
+}
+#endif /* defined(ARDUINO) */
 
 size_t strlen(const char *str)
 {
@@ -84,7 +138,28 @@ size_t strlen(const char *str)
     return str - start;
 }
 
+/**
+    * when arduino is used, strnlen is provided by pgmspace
+    * when arduino is not used, rely on linking with libc (-lc)
+    */
+#ifdef ARDUINO
+size_t  strnlen(const char *str, size_t maxlen)
+{
+    return pgmspace_strnlen(str, maxlen);
+}
+#endif /* defined(ARDUINO) */
 
+/**
+    * when arduino is used, strtok_r is provided by pgmspace
+    * when arduino is not used, rely on linking with libc (-lc)
+    */
+#ifdef ARDUINO
+char * strtok_r(char * restrict str, const char * restrict delim,
+    char ** restrict saveptr)
+{
+    return pgmspace_strtok_r(str, delim, saveptr);
+}
+#endif /* defined(ARDUINO) */
 
 int memcmp(const void *m1, const void *m2, size_t n)
 {

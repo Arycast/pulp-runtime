@@ -28,7 +28,7 @@ void analogReadResolution(int bits);
  *
  * https://docs.arduino.cc/language-reference/en/functions/analog-io/analogReference 
  */
-void analogReference(uint8_t type);
+void analogReference(int type);
 
 /**
  * function analogWrite

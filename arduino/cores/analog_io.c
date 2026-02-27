@@ -25,7 +25,7 @@ void analogReadResolution(int bits){
     
 }
 
-void analogReference(uint8_t type){
+void analogReference(int type){
 
 }
 

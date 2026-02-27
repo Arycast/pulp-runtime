@@ -18,6 +18,7 @@
 #define __RTIO_STRING_H__
 
 #include <stddef.h>
+#include "compatibility.h"
 
 /*#define NULL ((void *)0)*/
 
@@ -43,6 +44,19 @@ char *strcpy(char *d, const char *s);
 char *strcat(char *dest, const char *src);
 
 size_t strlen(const char *str);
+size_t strnlen(const char *s, size_t maxlen); /* provide declaration only,
+	implementation is depend whether arduino is user or not; when not, link with -lc */
+
+/**
+	* provide declaration-only, if arduino used, then pgmspace implementation is used
+	* when not, -lc is required
+	*/
+int strcasecmp(const char *s1, const char *s2);
+int strncasecmp(const char *s1, const char *s2, size_t n);
+
+/* provide declaration only */
+char * strtok_r(char * restrict str, const char * restrict delim,
+	char ** restrict saveptr);
 
 #ifdef __cplusplus
 }
