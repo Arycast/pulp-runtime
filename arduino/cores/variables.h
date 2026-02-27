@@ -277,6 +277,106 @@
 
 #define  NOT_A_PIN         99
 
+
+/**
+	* voltage reference value (not all of this are usable)
+	* for adc
+	*/
+
+#define DEFAULT               0
+#define AR_DEFAULT            (DEFAULT)
+
+#define EXTERNAL              (-1)
+#define AR_EXTERNAL
+
+#define INTERNAL              (1)
+#define AR_INTERNAL
+
+#define AR_VDD                (DEFAULT)
+
+/* all value is in microvolt (uV) */
+
+#define INTERNAL0V55          ( 550000 * (INTERNAL))
+#define AR_INTERNAL0V55       (INTERNAL0V55)
+#define AR_INTERNAL_0_55V     (INTERNAL0V55)
+
+#define INTERNAL1V0           (1000000 * (INTERNAL))
+#define AR_INTERNAL1V0        (INTERNAL1V0)
+#define AR_INTERNAL_1_0V      (INTERNAL1V0)
+
+#define EXTERNAL1V024         (1024000 * (EXTERNAL))
+#define AR_EXTERNAL1V024      (EXTERNAL1V024)
+#define AR_EXTERNAL_1_024V    (EXTERNAL1V024)
+
+#define INTERNAL1V1           (1100000 * (INTERNAL))
+#define AR_INTERNAL1V1        (INTERNAL1V1)
+#define AR_INTERNAL_1_1V      (INTERNAL1V1)
+
+#define INTERNAL1V2           (1200000 * (INTERNAL))
+#define AR_INTERNAL1V2        (INTERNAL1V2)
+#define AR_INTERNAL_1_2V      (INTERNAL1V2)
+
+#define INTERNAL1V5           (1500000 * (INTERNAL))
+#define AR_INTERNAL1V5        (INTERNAL1V5)
+#define AR_INTERNAL_1_5V      (INTERNAL1V5)
+
+#define INTERNAL1V65          (1650000 * (INTERNAL))
+#define AR_INTERNAL1V65       (INTERNAL1V65)
+#define AR_INTERNAL_1_65V     (INTERNAL1V65)
+
+#define INTERNAL1V8           (1800000 * (INTERNAL))
+#define AR_INTERNAL1V8        (INTERNAL1V8)
+#define AR_INTERNAL_1_8V      (INTERNAL1V8)
+
+#define INTERNAL2V0           (2000000 * (INTERNAL))
+#define AR_INTERNAL2V0        (INTERNAL2V0)
+#define AR_INTERNAL_2_0V      (INTERNAL2V0)
+
+#define EXTERNAL2V048         (2048000 * (EXTERNAL))
+#define AR_EXTERNAL2V048      (EXTERNAL2V048)
+#define AR_EXTERNAL_2_048V    (EXTERNAL2V048)
+
+#define INTERNAL2V23          (2230000 * (INTERNAL))
+#define AR_INTERNAL2V23       (INTERNAL2V23)
+#define AR_INTERNAL_2_23V     (INTERNAL2V23)
+
+#define INTERNAL2V4           (2400000 * (INTERNAL))
+#define AR_INTERNAL2V4        (INTERNAL2V4)
+#define AR_INTERNAL_2_4V      (INTERNAL2V4)
+
+#define INTERNAL2V5           (2500000 * (INTERNAL))
+#define AR_INTERNAL2V5        (INTERNAL2V5)
+#define AR_INTERNAL_2_5V      (INTERNAL2V5)
+
+#define INTERNAL2V56          (2560000 * (INTERNAL))
+#define AR_INTERNAL2V56       (INTERNAL2V56)
+#define AR_INTERNAL_2_56V     (INTERNAL2V56)
+
+#define INTERNAL3V0           (3000000 * (INTERNAL))
+#define AR_INTERNAL3V0        (INTERNAL3V0)
+#define AR_INTERNAL_3_0V      (INTERNAL3V0)
+
+#define EXTERNAL3V072         (3072000 * (EXTERNAL))
+#define AR_EXTERNAL3V072      (EXTERNAL3V072)
+#define AR_EXTERNAL_3_072V    (EXTERNAL3V072)
+
+#define INTERNAL3V3           (3300000 * (INTERNAL))
+#define AR_INTERNAL3V3        (INTERNAL3V3)
+#define AR_INTERNAL_3_3V      (INTERNAL3V3)
+
+#define EXTERNAL4V096         (4096000 * (EXTERNAL))
+#define AR_EXTERNAL4V096      (EXTERNAL4V096)
+#define AR_EXTERNAL_4_096V    (EXTERNAL4V096)
+
+#define INTERNAL4V3           (4300000 * (INTERNAL))
+#define AR_INTERNAL4V3        (INTERNAL4V3)
+#define AR_INTERNAL_4_3V      (INTERNAL4V3)
+
+#define INTERNAL5V0           (5000000 * (INTERNAL))
+#define AR_INTERNAL5V0        (INTERNAL5V0)
+#define AR_INTERNAL_5_0V      (INTERNAL5V0)
+
+
 /**
 	* interrupt mode definition
 	*/
