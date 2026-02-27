@@ -147,6 +147,26 @@ String operator+(double         lhs, String       &&rhs);*/
 bool operator==(const char *lhs, const String &rhs);
 
 /**
+	* operator >
+	*/
+bool operator>(const char *lhs, const String &rhs);
+
+/**
+	* operator >=
+	*/
+bool operator>=(const char *lhs, const String &rhs);
+
+/**
+	* operator <
+	*/
+bool operator<(const char *lhs, const String &rhs);
+
+/**
+	* operator <=
+	*/
+bool operator<=(const char *lhs, const String &rhs);
+
+/**
 	* operator !=
 	*/
 bool operator!=(const char *lhs, const String &rhs);
@@ -1316,21 +1336,66 @@ public:
 		* operator > (greater than)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/greaterThan"
 		*/
+	inline bool operator>(const char *rvalue) const
+	{
+		/* reuse compareTo method */
+		int retval = this->compareTo(rvalue);
+		return (retval > 0);
+	}
+
+	inline bool operator>(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval > 0);
+	}
 
 	/**
 		* operator >= (greater than or equal to)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/greaterThanOrEqualTo"
 		*/
+	inline bool operator>=(const char *rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval >= 0);
+	}
+
+	inline bool operator>=(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval >= 0);
+	}
 
 	/**
 		* operator < (less than)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/lessThan"
 		*/
+	inline bool operator<(const char *rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval < 0);
+	}
+
+	inline bool operator<(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval < 0);
+	}
 
 	/**
 		* operator <= (less than or equal to)
 		* "https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Operators/lessThanOrEqualTo"
 		*/
+	inline bool operator<=(const char *rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval <= 0);
+	}
+
+	inline bool operator<=(const String &rvalue) const
+	{
+		int retval = this->compareTo(rvalue);
+		return (retval <= 0);
+	}
 
 	/**
 		* operator != (different from)

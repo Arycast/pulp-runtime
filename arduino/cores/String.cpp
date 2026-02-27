@@ -2712,6 +2712,42 @@ bool operator==(const char *lhs, const String &rhs)
 }
 
 /**
+	* operator >
+	*/
+bool operator>(const char *lhs, const String &rhs)
+{
+	/* rotate operand */
+	return (rhs < lhs);
+}
+
+/**
+	* operator >=
+	*/
+bool operator>=(const char *lhs, const String &rhs)
+{
+	/* rotate operand */
+	return (rhs <= lhs);
+}
+
+/**
+	* operator <
+	*/
+bool operator<(const char *lhs, const String &rhs)
+{
+	/* rotate operand */
+	return (rhs > lhs);
+}
+
+/**
+	* operator <=
+	*/
+bool operator<=(const char *lhs, const String &rhs)
+{
+	/* rotate operand */
+	return (rhs >= lhs);
+}
+
+/**
 	* operator !=
 	*/
 bool operator!=(const char *lhs, const String &rhs)
