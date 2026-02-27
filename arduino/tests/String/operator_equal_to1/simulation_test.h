@@ -21,9 +21,6 @@
 
 typedef uint8_t byte;
 
-#define strncasecmp_PF                 strncasecmp_P
-#define strncasecmp_P(s1, s2, size)    (0)
-
 /*#define BIN 2*/
 /*#define OCT 8*/
 #define DEC 10

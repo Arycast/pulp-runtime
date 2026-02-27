@@ -11,12 +11,9 @@ ARDUINO_BASEDIR = ../../..
 # cores
 ARDUINO_CORES = $(ARDUINO_BASEDIR)/cores
 
-# variants
-ARDUINO_VARIANTS = $(ARDUINO_BASEDIR)/variants/soft-pulpissimo_pynq-z1
-
 # source
 ASM_SRCS =
-C_SRCS = $(ARDUINO_CORES)/pgmspace.c
+C_SRCS =
 CXX_SRCS = main.cpp $(ARDUINO_CORES)/String.cpp
 
 # object
@@ -29,9 +26,9 @@ CXX_OBJS = $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(pats
 APP = main.elf
 
 # compilation flags
-ASMFLAGS = -ggdb -Wall -Wextra -pedantic -flto -I$(ARDUINO_CORES) -I$(ARDUINO_VARIANTS) -I. -DSIMULATION_TEST
-CFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -std=c11 -flto -I$(ARDUINO_CORES) -I$(ARDUINO_VARIANTS) -I. -DSIMULATION_TEST
-CXXFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto -I$(ARDUINO_CORES) -I$(ARDUINO_VARIANTS) -I. -DSIMULATION_TEST
+ASMFLAGS = -ggdb -Wall -Wextra -pedantic -flto -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+CFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -std=c11 -flto -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+CXXFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
 
 HAS_C = $(C_SRCS)
 HAS_CXX = $(CXX_SRCS)

@@ -77,10 +77,13 @@ static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, uns
 	{
 		do
 		{
-			/* fill string buffer */
+			/**
+				* fill string buffer
+				* (MODULO IS AN EXPENSIVE OPERATION!)
+				*/
 			str[len++] = base_char_map[value % _base];
 
-			/* reduce value */
+			/* reduce value (THIS IS AN EXPENSIVE OPERATION!) */
 			value /= _base;
 		}
 		while ((value > zero) && (len < str_len));

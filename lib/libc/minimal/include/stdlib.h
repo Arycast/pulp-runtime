@@ -33,6 +33,13 @@ void *realloc(void *ptr, size_t size);
 
 void free(void *ptr);
 
+/**
+	* declare stdlib's random
+	* for now, implementation rely on -lc in linking
+	*/
+long random(void);
+void srandom(unsigned int seed);
+
 #ifdef __cplusplus
 }
 #endif

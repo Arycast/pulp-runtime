@@ -17,9 +17,9 @@
 #error this headers hould be used only for simulation/test
 #endif
 
-/* re-include variables and pgmspace */
-#include <variables.h>
-#include <pgmspace.h>
+#include <stdint.h>
+
+typedef uint8_t byte;
 
 /*#define BIN 2*/
 /*#define OCT 8*/
