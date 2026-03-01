@@ -54,4 +54,18 @@
 #define SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION        0
 #endif
 
+/**
+	* default length of precision for conversion from double to string
+	*/
+#ifndef SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_DEFAULT_LEN
+#define SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_DEFAULT_LEN        6
+#endif
+
+/**
+	* maximum length of precision for conversion from double to string
+	*/
+#ifndef SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_MAX_LEN
+#define SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_MAX_LEN        16
+#endif
+
 #endif /* ! defined(__ARDUINO_CORES_CONFIG_SSTRING_H__) */

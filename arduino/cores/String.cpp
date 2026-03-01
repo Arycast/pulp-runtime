@@ -18,10 +18,14 @@
 #include "assert_helper.h"
 
 /* standard header c */
+#include <stdbool.h>
+#include <stdint.h>
 #include <stddef.h>
 #include <string.h> /* strlen, memcpy, memmove etc. */
 #include <stdlib.h> /* alloc related functions */
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0)
 #include <stdio.h> /* snprintf */
+#endif
 
 /* standard header c++ */
 #include <exception> /* for std::terminate */
@@ -100,6 +104,138 @@ static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, uns
 
 	return len;
 }
+
+/**
+	* @brief Converts a double to a string without FPU or sprintf.
+	* @arg str          Output character buffer.
+	* @arg str_len      Length of output buffer @arg str, this value should including termination '\0'
+	* @arg value        The double value to convert.
+	* @arg precision    Number of digits after the decimal (e.g., 6).
+	* @return           number of character written to buffer @arg str excluding terimination '\0'
+	*                   error if return 0 (which buffer @arg str content is undefined) or str_len
+	*                   (which mean buffer @arg str is too small)
+	*/
+static size_t double_to_string(char *str, size_t str_len, double value, size_t precision)
+{
+	constexpr const char base_char_map[] = "0123456789";
+
+	bool     add_minus_sign = false; /* indicator if we need to add minus sign */
+	size_t   len = 0; /* counter number of character written to buffer */
+
+	/* for separation of integer and floating part */
+	uint64_t i_part;
+	double   f_part;
+
+	size_t   retval;
+
+
+	/* check if value is negative number */
+	if (value < 0)
+	{
+		add_minus_sign = true;
+	}
+
+	/* cannot write anything if string buffer is empty or invalid */
+	if ((str == NULL) ||
+		((!add_minus_sign) && (str_len <= 1)) ||
+		(  add_minus_sign  && (str_len <= 2))) /* need space for sign */
+	{
+		/* cannot write to buffer or buffer is not enough */
+		return 0;
+	}
+
+	/* add sign */
+	if (add_minus_sign)
+	{
+		*str++ = '-';
+		len++; /* increment len */
+
+		/* decrease str_len */
+		str_len--;
+
+		value = -value; /* make value positive */
+	}
+
+	/**
+		* Extract integer part
+		* Note: Casting double to unsigned long int usually requires a soft-float library
+		* if no FPU exists. For pure hardware, you'd process the raw IEEE-754 bits.
+		*
+		* we don't do rounding
+		* for example, if precision == 1 then
+		* 0.88     will be 0.8 instead of 0.9
+		* 0.999999 will be 0.9 instead of 1.0
+		*/
+	i_part = (uint64_t) value;
+
+	/* remove integer part from value */
+	f_part = value - ((double) i_part);
+
+	/* Convert integer part to string */
+	retval = unsigned_integer_to_string<uint64_t>(str, str_len, i_part);
+	/* check if error */
+	if (retval <= 0)
+	{
+		/* nothing to write, we expect at least 1 character written ('0') */
+		return 0; /* return error */
+	}
+	else if (retval >= str_len)
+	{
+		/* digit truncated, buffer is not enough */
+		return 0; /* return 0 */
+	}
+
+	/* move pointer based on retval */
+	str += retval;
+	len += retval; /* increment character count */
+
+	str_len -= retval; /* decrease buffer length */
+
+
+	/* Handle decimal point and fractional part */
+	if (precision > 0)
+	{
+		size_t i;
+
+		/* check if we can add '.' and number as much as required precision */
+		if (str_len < (precision + 2))
+		{
+			return 0; /* not enough for '.' and precision and '\0' */
+		}
+
+		/* add fraction separator */
+		*str++ = '.';
+
+		/* Convert fractional part to a scaled integer
+		* Example: 0.123 -> 123000 (if precision is 6) */
+		for (i = 0; i < precision; i++)
+		{
+			size_t digit;
+
+			/* make fractional part integer */
+			f_part *= 10;
+
+			/* get digit by getting integer part only */
+			digit = (size_t) f_part;
+
+			/* write to str */
+			*str++ = base_char_map[digit];
+
+			/* remove integer part */
+			f_part -= ((double) digit);
+		}
+	}
+
+	/* add termination if buffer still enough */
+	if (str_len >= 1)
+	{
+		*str = '\0';
+	}
+
+	/* return number of character written */
+	return len;
+}
+
 
 /* for testing only, export convertion function */
 #ifdef SIMULATION_TEST
@@ -560,7 +696,68 @@ String::String(float         value) : String((double) value)
 {
 }
 
-String::String(double        value)
+String::String(float         value, unsigned int precision) : String((double) value, precision)
+{
+}
+
+String::String(double        value) : String(value, SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_DEFAULT_LEN)
+{
+}
+
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+String::String(double        value, unsigned int precision)
+{
+	char *new_string;
+	size_t buffer_length;
+
+	size_t retval;
+
+	/* check if user give too large precision */
+	if (precision > SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_MAX_LEN)
+	{
+		/* to much precision, reduce it to maximum */
+		precision = SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_MAX_LEN;
+	}
+
+	/* set buffer_length */
+	buffer_length = 23 + precision; /* 23: 1 sign + 20 digit + 1 '.' symbol + 1 '\0' symbol */
+
+	/* allocate buffer to write */
+	new_string = (char *) malloc(buffer_length * sizeof(char));
+	if (new_string == NULL)
+	{
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
+		std::terminate();
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* convert double value to string */
+	retval = double_to_string(new_string, buffer_length, value, (size_t) precision);
+	if ((retval <= 0) || (retval >= buffer_length))
+	{
+		free(new_string); /* free new_string before return error */
+
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		this->__non_standard__set_new_buffer(NULL, 0);
+#endif
+		return;
+	}
+
+	/* allocation success */
+	_ASSERT(new_string != NULL);
+	_ASSERT(retval < buffer_length);
+
+	/* put into buffer */
+	this->__non_standard__set_new_buffer(new_string, buffer_length, retval);
+}
+/* (SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0 */
+#else /* (SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0 */
+String::String(double        value, unsigned int precision)
 {
 	constexpr size_t buffer_length = 40;
 	size_t string_length;
@@ -569,9 +766,13 @@ String::String(double        value)
 
 	int retval;
 
+	/* cannot use precision */
+	(void) precision;
+
+	/* check if allocation success */
 	if (new_string == NULL)
 	{
-#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+#if ((SSTRING_CONF_ABORT_ON_ALLOC_FAIL) != 0)
 		std::terminate();
 #else
 		this->__non_standard__set_new_buffer(NULL, 0);
@@ -593,6 +794,7 @@ String::String(double        value)
 		return;
 	}
 
+	/* string_length is snprintf return value */
 	string_length = (size_t) retval;
 
 	/* allocation success */
@@ -602,6 +804,7 @@ String::String(double        value)
 	/* put into buffer */
 	this->__non_standard__set_new_buffer(new_string, buffer_length, string_length);
 }
+#endif /* (SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0 */
 
 
 
@@ -1948,7 +2151,28 @@ String &String::operator+=(float          rvalue)
 
 String &String::operator+=(double         rvalue)
 {
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+
+	constexpr size_t buffer_length = 23 + SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_DEFAULT_LEN;
+
+	char s[buffer_length];
+
+	/* we don't have function to print double value, force reuse snprintf */
+	size_t retval = double_to_string(s, buffer_length, rvalue, SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_DEFAULT_LEN);
+	if ((retval <= 0) || (retval >= buffer_length))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return (*this);
+#endif
+	}
+
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+
 	char s[40];
+
 	/* we don't have function to print double value, force reuse snprintf */
 	int retval = snprintf(s, 40, "%f", rvalue);
 	if ((retval <= 0) || (retval >= 40))
@@ -1959,6 +2183,8 @@ String &String::operator+=(double         rvalue)
 		return (*this);
 #endif
 	}
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+
 
 	return ((*this) += s);
 }
@@ -2690,6 +2916,23 @@ String operator+(float         lhs, String  rhs)
 
 String operator+(double        lhs, String  rhs)
 {
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
+
+	constexpr size_t buffer_length = 23 + SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_DEFAULT_LEN;
+	char s[23 + buffer_length];
+	size_t retval = double_to_string(s, buffer_length, lhs, SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_DEFAULT_LEN);
+	if ((retval <= 0) || (retval >= buffer_length))
+	{
+#if ((SSTRING_CONF_ABORT_ON_SNPRINTF_FAIL) != 0)
+		std::terminate();
+#else
+		return rhs;
+#endif
+	}
+
+/* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
+#else /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
+
 	char s[40];
 	int retval = snprintf(s, 40, "%f", lhs);
 	if ((retval <= 0) || (retval >= 40))
@@ -2700,6 +2943,8 @@ String operator+(double        lhs, String  rhs)
 		return rhs;
 #endif
 	}
+
+#endif  /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0) */
 
 	return (s + rhs);
 }

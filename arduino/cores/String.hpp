@@ -204,7 +204,9 @@ public:
 	explicit String(unsigned long value);
 	explicit String(unsigned long value, unsigned int base);
 	String(float         value);
+	String(float         value, unsigned int precision);
 	String(double        value);
+	String(double        value, unsigned int precision);
 	/* copy constructor */
 	String(const String   &rvalue);
 #if ((__cplusplus) >= 201103L)
