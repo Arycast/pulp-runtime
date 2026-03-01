@@ -115,6 +115,7 @@ static size_t unsigned_integer_to_string(char *str, size_t str_len, T value, uns
 	*                   error if return 0 (which buffer @arg str content is undefined) or str_len
 	*                   (which mean buffer @arg str is too small)
 	*/
+#if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0)
 static size_t double_to_string(char *str, size_t str_len, double value, size_t precision)
 {
 	constexpr const char base_char_map[] = "0123456789";
@@ -235,6 +236,7 @@ static size_t double_to_string(char *str, size_t str_len, double value, size_t p
 	/* return number of character written */
 	return len;
 }
+#endif /* ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) == 0) */
 
 
 /* for testing only, export convertion function */
