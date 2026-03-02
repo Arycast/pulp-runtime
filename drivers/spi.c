@@ -110,9 +110,9 @@ void spim_transfer(spim_t *spim, void *tx_data, void *rx_data, size_t len, spim_
   int buffer_size = len/8;
   int cfg = UDMA_CHANNEL_CFG_SIZE_8 | UDMA_CHANNEL_CFG_EN;
 
+  plp_udma_enqueue(UDMA_SPIM_CMD_ADDR(spim->id), (int)cmd, 4*4, cfg);
   plp_udma_enqueue(UDMA_SPIM_TX_ADDR(spim->id), (int)tx_data, buffer_size, cfg);
   plp_udma_enqueue(UDMA_SPIM_RX_ADDR(spim->id), (int)rx_data, buffer_size, cfg);
-  plp_udma_enqueue(UDMA_SPIM_CMD_ADDR(spim->id), (int)cmd, 4*4, cfg);
 
   while(plp_udma_busy(UDMA_SPIM_TX_ADDR(spim->id)));
   while(plp_udma_busy(UDMA_SPIM_RX_ADDR(spim->id)));

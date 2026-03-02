@@ -6,7 +6,7 @@ static spim_conf_t conf; //defined in pulp.h, spi section
 
 SPIClass SPI;
 
-SPIClass::current_type SPIClass::current = {1000000, MSBFIRST, SPI_MODE0};
+SPIClass::current_type SPIClass::current = {1000000, SPI_MSBFIRST, SPI_MODE0};
 
 void SPIClass::begin(void) {
     spim_conf_init(&conf);
@@ -50,22 +50,40 @@ void SPIClass::end(void) {
 }
 
 void SPIClass::setBitOrder(uint8_t bitOrder) {
-    current.bitOrder = bitOrder;
+    if(spim) {
+        current.bitOrder = bitOrder;
+        spim->bitOrder = bitOrder;
+    }
 }
 
 void SPIClass::setClockDivider(uint8_t divider) {
-    current.clock = divider;
+    if(spim) {
+        current.clock = divider;
+        spim->max_baudrate = divider;
+        int div = spi_get_div(spim->max_baudrate);
+        spim->div = div;
+        spim->cfg = SPI_CMD_CFG(div, spim->polarity, spim->phase);
+    }
 }
 
 void SPIClass::setDataMode(uint8_t dataMode) {
-    current.dataMode = dataMode;
+    if(spim) {
+        current.dataMode = dataMode;
+        spim->polarity = (dataMode & 0x02)? 1 : (dataMode & 0x03)? 1 : 0;
+        spim->phase = (dataMode & 0x01)? 1 : (dataMode & 0x03)? 1 : 0;
+        int div = spi_get_div(spim->max_baudrate);
+        spim->cfg = SPI_CMD_CFG(div, spim->polarity, spim->phase);
+    }
 }
 
-byte SPIClass::transfer(byte *val) {
+byte SPIClass::transfer(byte val) {
     if (!spim) return -1;
-    uint8_t rx_buffer;
-    spim_transfer(spim, val, &rx_buffer, 8, SPIM_CS_KEEP);
-    return rx_buffer;
+
+    uint8_t tx_data = val;
+    uint8_t rx_data;
+
+    spim_transfer(spim, &tx_data, &rx_data, 8, SPIM_CS_KEEP);
+    return rx_data;
 }
 
 uint16_t SPIClass::transfer16(uint16_t *val16) {
@@ -74,8 +92,7 @@ uint16_t SPIClass::transfer16(uint16_t *val16) {
 
 void SPIClass::transfer(byte *buffer, size_t size) {
     if (!spim) return;
-    uint8_t rx_buffer[size];
-    spim_transfer(spim, buffer, rx_buffer, size*8, SPIM_CS_KEEP);
+    spim_transfer(spim, buffer, buffer, size*8, SPIM_CS_KEEP);
 }
 
 void SPIClass::usingInterrupt(int interruptNumber) {

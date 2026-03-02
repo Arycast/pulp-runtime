@@ -11,8 +11,8 @@
 #include "variables.h" /* provides MSBFIRST and LSBFIRST definition */
 
 
-/* #define MSBFIRST 1
-#define LSBFIRST 0 */
+#define SPI_MSBFIRST 0
+#define SPI_LSBFIRST 1
 
 #define PIN_SPI_CS 4
 
@@ -47,7 +47,7 @@ public:
     /**
         * default constructor
         */
-    SPISettings() : clock(1000000), bitOrder(MSBFIRST), dataMode(SPI_MODE0) {}
+    SPISettings() : clock(1000000), bitOrder(SPI_MSBFIRST), dataMode(SPI_MODE0) {}
 };
 
 /**
@@ -129,7 +129,7 @@ public:
         * @param size The number of data to be transferred
         * https://docs.arduino.cc/language-reference/en/functions/communication/SPI/transfer/ 
         */
-    static byte transfer(byte *val);
+    static byte transfer(byte val);
     static uint16_t transfer16(uint16_t *val16);
     static void transfer(byte *buffer, size_t size);
 
