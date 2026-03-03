@@ -3471,17 +3471,11 @@ unsigned int String::indexOf(char           val, unsigned int from) const
 	size_t       string_length = this->__non_standard__get_string_length();
 	const char  *s = this->c_str();
 
-	/* check if requested index is beyond string data */
-	if (((size_t) from) >= string_length)
-	{
-		return (unsigned int) (-1);
-	}
-
 	/* check if we search end of string character */
 	if (val == '\0')
 	{
 		/* end of string */
-		return (unsigned int) string_length;
+		return (unsigned int) ((from > string_length) ? (-1) : string_length);
 	}
 	else if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0))
 	{
@@ -3490,6 +3484,16 @@ unsigned int String::indexOf(char           val, unsigned int from) const
 	}
 	else
 	{
+		/* user want non-zero character and this instance has valid string */
+
+		/* check if requested index is beyond string data */
+		if (from >= string_length)
+		{
+			/* return error */
+			return (unsigned int) (-1);
+		}
+
+		/* search using memchr */
 		const char *p = (const char *) memchr(s + from, (int) val, string_length - from);
 		if (p == NULL)
 		{
@@ -3520,35 +3524,48 @@ unsigned int String::indexOf(const char    *val, unsigned int from) const
 	/* get val/needle length */
 	val_length = strlen(val);
 
-	if (from > string_length)
+	switch (val_length)
 	{
-		/* nothing to search */
-		return (unsigned int) (-1);
-	}
-	else if (val_length == 0)
-	{
-		/* same behaviour as search '\0' in string, return string length */
-		return (unsigned int) string_length;
-	}
-	else if (from == string_length)
-	{
-		/* val_length > 0, but user want to search from end of string */
-		return (unsigned int) (-1);
-	}
+	case (0):
+		return (unsigned int) ((from > string_length) ? (-1) : string_length);
+		break; /* should never reach here */
 
-	/**
-		* val must be not null, and proper/non-empty string,
-		* rely on memmem argument check to check argument validity
-		*/
-	p = (const char *) __non_standard__memmem(s + from, string_length - from, val, val_length);
-	if (p == NULL)
-	{
-		/* not found */
-		return (unsigned int) (-1);
-	}
-	else
-	{
-		return (unsigned int) (p - s);
+	case (1):
+		/**
+			* use memchr for non-zero character
+			* but only call memchr when from is less than string_length
+			* first check also automatically true if this instance has empty string
+			*/
+		p = (from >= string_length) ? NULL : ((const char *) memchr(s + from, (int) (val[0]), string_length - from));
+		if (p == NULL)
+		{
+			/* maybe because from is outside bound or character is not found by memchr */
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
+		break; /* should never reach here */
+
+	default:
+		/**
+			* 2 characters or more, use memmem
+			* but only call memmem when @arg from is less than string_length
+			*/
+		p =
+			/*((string_length < val_length) || (from > (string_length - val_length))) ?*/
+			((from + val_length) > string_length) ?
+				NULL : (const char *) __non_standard__memmem(s + from, string_length - from, val, val_length);
+		if (p == NULL)
+		{
+			/* not found */
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
 	}
 }
 
@@ -3562,159 +3579,220 @@ unsigned int String::indexOf(const String  &val, unsigned int from) const
 
 	const char  *p;
 
-	if (from > string_length)
+	switch (val_length)
 	{
-		/* nothing to search */
-		return (unsigned int) (-1);
-	}
-	else if (val_length == 0)
-	{
-		/* same behaviour as search '\0' in string, return string length */
-		return (unsigned int) string_length;
-	}
-	else if (from == string_length)
-	{
-		/* val_length > 0, but user want to search from end of string */
-		return (unsigned int) (-1);
-	}
+	case (0):
+		return (unsigned int) ((from > string_length) ? (-1) : string_length);
+		break; /* should never reach here */
 
-	/**
-		* val must be not null, and proper/non-empty string,
-		* rely on memmem argument check to check argument validity
-		*/
-	p = (const char *) __non_standard__memmem(s + from, string_length - from, s_val, val_length);
-	if (p == NULL)
-	{
-		/* not found */
-		return (unsigned int) (-1);
-	}
-	else
-	{
-		return (unsigned int) (p - s);
+	case (1):
+		/**
+			* use memchr for non-zero character
+			* but only call memchr when from is less than string_length
+			* first check also automatically true if this instance has empty string
+			*/
+		p = (from >= string_length) ? NULL : ((const char *) memchr(s + from, (int) (s_val[0]), string_length - from));
+		if (p == NULL)
+		{
+			/* maybe because from is outside bound or character is not found by memchr */
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
+		break; /* should never reach here */
+
+	default:
+		/**
+			* 2 characters or more, use memmem
+			* but only call memmem when @arg from is less than string_length
+			*/
+		p =
+			/*((string_length < val_length) || (from > (string_length - val_length))) ?*/
+			((from + val_length) > string_length) ?
+				NULL : (const char *) __non_standard__memmem(s + from, string_length - from, s_val, val_length);
+		if (p == NULL)
+		{
+			/* not found */
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
 	}
 }
 
 unsigned int String::lastIndexOf(char           val, unsigned int from) const
 {
 	size_t       string_length = this->__non_standard__get_string_length();
-	const char  *s = this->c_str();
-	const char  *p;
 
-	/* check if current instance have string or not */
-	if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0) || (val == '\0'))
+	/* check value */
+	if (val == '\0')
 	{
-		/* fail to search if user want non-empty character in empty/invalid string */
-		return (unsigned int) (-1);
+		/**
+			* return is depend on value of from
+			* if @arg from value is more or equal than string_length then
+			* return string_length
+			*/
+		return (unsigned int) ((from >= string_length) ? string_length : (-1));
 	}
-
-	/* this instance have valid string */
-
-	/* check from argument */
-#if 0
-	if (from == 0)
+	else if (string_length == 0)
 	{
-		/* only need to match single character  */
-		return (val == (*s)) ? 0 : (unsigned int) (-1);
-	}
-	else
-#endif
-	if (((size_t) from) >= string_length) /* check if requested index is beyond string length */
-	{
-		/* shrink search space */
-		from = (unsigned int) (string_length - 1); /* string_length must be not 0 */
-	}
-
-	/* search */
-	p = (const char *) __non_standard__memrchr(s, (int) val, from + 1);
-	if (p == NULL)
-	{
+		/**
+			* user asking for non-zero character
+			* but current string is empty
+			*
+			* even if from is 0, character wont be found (since string is empty)
+			*/
 		return (unsigned int) (-1);
 	}
 	else
 	{
-		return (unsigned int) (p - s);
+		const char  *s = this->c_str();
+		const char  *p;
+
+		/**
+			* string length must not be 0 and user asking for non-zero character
+			* check @arg from (trim it if necessary)
+			*/
+		if (from >= string_length) /* check if requested index is beyond string length */
+		{
+			/* shrink search space, don't include end of string because we know that user don't asking for '\0' */
+			from = (unsigned int) (string_length - 1); /* and string_length must be not 0 */
+		}
+
+		/* search, add 1 to from because last argumen of memrchr is buffer length */
+		p = (const char *) __non_standard__memrchr(s, (int) val, from + 1);
+		if (p == NULL)
+		{
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
 	}
 }
 
 unsigned int String::lastIndexOf(const char    *val, unsigned int from) const
 {
 	size_t       string_length = this->__non_standard__get_string_length();
-	const char  *s = this->c_str();
-	const char  *p;
-
 	size_t       val_length;
 
-	/* check if current instance have string or not */
-	if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0) ||
-		(val == NULL) || (val_length = strlen(val), val_length == 0))
+	/* check value */
+	if (val == NULL)
 	{
-		/* fail to search if user want non-empty character in empty/invalid string */
+		/* return not found regardless */
 		return (unsigned int) (-1);
 	}
 
-	/**
-		* this instance have valid string
-		* and val_length should not 0
-		*/
+	/* val must be non-null */
+	val_length = strlen(val);
 
-	/* check from argument */
-	if (((size_t) from) >= string_length) /* check if requested index is beyond string length */
+	if (val_length == 0)
 	{
-		/* shrink search space */
-		from = (unsigned int) (string_length - 1); /* string_length must be not 0 */
+		/**
+			* user try to search empty needle
+			* return depend on value of @arg from
+			* if @arg from value is less than string_length then return not found
+			*/
+		return (unsigned int) ((from >= string_length) ? string_length : (-1));
 	}
-
-	/* search */
-	p = (const char *) __non_standard__memrmem(s, from + 1, val, val_length);
-	if (p == NULL)
+	else if ((string_length < val_length) || (from < (val_length - 1)))
 	{
+		/**
+			* user asking for non-zero character
+			* but if haystack is smaller than needle (string_length < val_length) or
+			* start index is below minimum, then automatically not found
+			*
+			* even if from is 0, character wont be found (since string is empty)
+			*/
 		return (unsigned int) (-1);
 	}
 	else
 	{
-		return (unsigned int) (p - s);
+		const char  *s = this->c_str();
+		const char  *p;
+
+		/**
+			* string length must be at least same as val length and val_length must be more than 0
+			*
+			* check @arg from, we have to trim it because we don't want memmem to access memory beyond
+			* filled string
+			*/
+		if (from >= string_length) /* check if requested index is beyond string length */
+		{
+			/* shrink search space, don't include end of string because we know that user don't asking for '\0' */
+			from = (unsigned int) (string_length - 1); /* and string_length must be not 0 */
+		}
+
+		/* search, add 1 to @arg from value because haystack length argumen of memrmem is buffer length */
+		p = (const char *) __non_standard__memrmem(s, from + 1, val, val_length);
+		if (p == NULL)
+		{
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
 	}
 }
 
 unsigned int String::lastIndexOf(const String  &val, unsigned int from) const
 {
-	size_t         string_length = this->__non_standard__get_string_length();
-	const char    *s             = this->c_str();
+	size_t       string_length = this->__non_standard__get_string_length();
+	size_t       val_length    =   val.__non_standard__get_string_length();
 
-	size_t         val_length    =   val.__non_standard__get_string_length();
-	const char  *s_val           =   val.c_str();
-
-	const char  *p;
-
-	/* check if current instance have string or not */
-	if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0) ||
-		(s_val == NULL) || (s_val == (String::empty_string)) || (val_length == 0))
+	if (val_length == 0)
 	{
-		/* fail to search if user want non-empty character in empty/invalid string */
-		return (unsigned int) (-1);
+		/**
+			* user try to search empty needle
+			* return depend on value of @arg from
+			* if @arg from value is less than string_length then return not found
+			*/
+		return (unsigned int) ((from >= string_length) ? string_length : (-1));
 	}
-
-	/**
-		* this instance have valid string
-		* and val_length should not 0
-		*/
-
-	/* check from argument */
-	if (((size_t) from) >= string_length) /* check if requested index is beyond string length */
+	else if ((string_length < val_length) || (from < (val_length - 1)))
 	{
-		/* shrink search space */
-		from = (unsigned int) (string_length - 1); /* string_length must be not 0 */
-	}
-
-	/* search */
-	p = (const char *) __non_standard__memrmem(s, from + 1, s_val, val_length);
-	if (p == NULL)
-	{
+		/**
+			* user asking for non-zero character
+			* but if haystack is smaller than needle (string_length < val_length) or
+			* start index is below minimum, then automatically not found
+			*
+			* even if from is 0, character wont be found (since string is empty)
+			*/
 		return (unsigned int) (-1);
 	}
 	else
 	{
-		return (unsigned int) (p - s);
+		const char  *s = this->c_str();
+		const char  *p;
+
+		/**
+			* string length must be at least same as val length and val_length must be more than 0
+			*
+			* check @arg from, we have to trim it because we don't want memmem to access memory beyond
+			* filled string
+			*/
+		if (from >= string_length) /* check if requested index is beyond string length */
+		{
+			/* shrink search space, don't include end of string because we know that user don't asking for '\0' */
+			from = (unsigned int) (string_length - 1); /* and string_length must be not 0 */
+		}
+
+		/* search, add 1 to @arg from value because haystack length argumen of memrmem is buffer length */
+		p = (const char *) __non_standard__memrmem(s, from + 1, val.c_str(), val_length);
+		if (p == NULL)
+		{
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
 	}
 }
 

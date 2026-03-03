@@ -256,37 +256,49 @@ static void compare_index_of_with_strchr(const char *sentence, char needle, int 
 
 static void compare_index_of_with_strstr(const char *sentence, const char *needle, int result)
 {
-	if (/*((*sentence) == '\0') ||*/ ((*needle) == '\0'))
+	const char *p = strstr(sentence, needle);
+	if (p == NULL)
 	{
-		/* try to strstr empty string, skip! */
-		puts("SKIP");
-	}
-	else
-	{
-		const char *p = strstr(sentence, needle);
-		if (p == NULL)
+		if (result == (-1))
 		{
-			if (result == (-1))
-			{
-				puts("PASS");
-			}
-			else
-			{
-				puts("FAILED");
-				abort();
-			}
+			puts("PASS");
 		}
 		else
 		{
-			if (result == ((int) (p - sentence)))
-			{
-				puts("PASS");
-			}
-			else
-			{
-				puts("FAILED");
-				abort();
-			}
+			puts("FAILED");
+			abort();
+		}
+	}
+	else
+	{
+		/**
+			* p is not null, but here is the different
+			* by standard, strstr may return haystack (which is not null)
+			* if needle is zero-length string
+			*
+			* but our api will return haystacklen when needle is empty string
+			* considering the different in behaviour, we have to check needle
+			*/
+		if      ((needle    == NULL) && (result == (-1)))
+		{
+			/* when needle NULL, result is always -1 */
+			puts("PASS");
+		}
+		else if ((needle[0] == '\0') && (result == ((int) strlen(sentence))))
+		{
+			/* when needle empty string, return length of string */
+			puts("PASS");
+		}
+		else if (result == ((int) (p - sentence)))
+		{
+			/* when needle is not null and not empty string, result should match with strstr return */
+			puts("PASS");
+		}
+		else
+		{
+			/* other condition means failure */
+			puts("FAILED");
+			abort();
 		}
 	}
 }
@@ -294,48 +306,50 @@ static void compare_index_of_with_strstr(const char *sentence, const char *needl
 
 static void compare_last_index_of_with_strchr(const char *sentence, char needle, int result)
 {
-	if (needle == '\0')
+	const char *p = strrchr(sentence, needle);
+	if (p == NULL)
 	{
-		/* try to check last index of string end,
-		* skip because behaviour is different */
-		puts("SKIP");
-	}
-	else
-	{
-		const char *p = strrchr(sentence, needle);
-		if (p == NULL)
+		if (result == (-1))
 		{
-			if (result == (-1))
-			{
-				puts("PASS");
-			}
-			else
-			{
-				puts("FAILED");
-				abort();
-			}
+			puts("PASS");
 		}
 		else
 		{
-			if (result == ((int) (p - sentence)))
-			{
-				puts("PASS");
-			}
-			else
-			{
-				puts("FAILED");
-				abort();
-			}
+			puts("FAILED");
+			abort();
+		}
+	}
+	else
+	{
+		if (result == ((int) (p - sentence)))
+		{
+			puts("PASS");
+		}
+		else
+		{
+			puts("FAILED");
+			abort();
 		}
 	}
 }
 
 static void compare_last_index_of_with_strstr(const char *sentence, const char *needle, int result)
 {
-	if (/*((*sentence) == '\0') ||*/ ((*needle) == '\0'))
+	if ((*needle) == '\0')
 	{
-		/* try to strstr empty string, skip! */
-		puts("SKIP");
+		/**
+			* try to strstr empty string
+			* return end of string
+			*/
+		if (result == ((int) strlen(sentence)))
+		{
+			puts("PASS");
+		}
+		else
+		{
+			puts("FAILED");
+			abort();
+		}
 	}
 	else
 	{

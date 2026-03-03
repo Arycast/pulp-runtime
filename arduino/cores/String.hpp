@@ -709,39 +709,99 @@ public:
 		*/
 	inline unsigned int lastIndexOf(char           val) const
 	{
+		/* get string length */
 		size_t string_length = this->__non_standard__get_string_length();
-		if (string_length <= 0)
-		{
-			/* nothing to search when string length is 0 */
-			return (-1);
-		}
 
-		/* search from end index of string */
-		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
+		/* before calling lastIndexOf with argument, check val first */
+		if (val == '\0')
+		{
+			/* return string_length instantly without checking string_length */
+			return string_length;
+		}
+		else if (string_length <= 0)
+		{
+			/**
+				* user asking for non-zero character but in empty string
+				* return not found
+				*/
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			/**
+				* user asking non-zero character in non-zero-length string
+				* use lastIndexOf to search
+				* set @arg from as last index in string
+				*/
+			return this->lastIndexOf(val, (unsigned int) (string_length - 1));
+		}
 	}
 	inline unsigned int lastIndexOf(const char    *val) const
 	{
 		size_t string_length = this->__non_standard__get_string_length();
-		if (string_length <= 0)
-		{
-			/* nothing to search when string length is 0 */
-			return (-1);
-		}
 
-		/* search from end index of string */
-		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
+		/* before calling lastIndexOf with argument, check val first */
+		if (val == NULL)
+		{
+			/* return not found regardless */
+			return (unsigned int) (-1);
+		}
+		else if (val[0] == '\0')
+		{
+			/**
+				* user want to search with empty needle
+				* return end of string regardless if this instance have valid string or not
+				*/
+			return string_length;
+		}
+		else if (string_length <= 0)
+		{
+			/**
+				* user asking for non-zero character but in empty string
+				* return not found
+				*/
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			/**
+				* user asking non-zero character in non-zero-length string
+				* use lastIndexOf to search
+				* set @arg from as last index in string
+				*/
+			return this->lastIndexOf(val, (unsigned int) (string_length - 1));
+		}
 	}
 	inline unsigned int lastIndexOf(const String  &val) const
 	{
 		size_t string_length = this->__non_standard__get_string_length();
-		if (string_length <= 0)
-		{
-			/* nothing to search when string length is 0 */
-			return (-1);
-		}
 
-		/* search from end index of string */
-		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
+		/* before calling lastIndexOf with argument, check val first */
+		if ((val.__non_standard__get_string_length()) == 0)
+		{
+			/**
+				* user want to search with empty needle
+				* return end of string regardless if this instance have valid string or not
+				*/
+			return string_length;
+		}
+		else if (string_length <= 0)
+		{
+			/**
+				* user asking for non-zero character but in empty string
+				* return not found
+				*/
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			/**
+				* user asking non-zero character in non-zero-length string
+				* use lastIndexOf to search
+				* set @arg from as last index in string
+				*/
+			return this->lastIndexOf(val, (unsigned int) (string_length - 1));
+		}
 	}
 	unsigned int lastIndexOf(char           val, unsigned int from) const;
 	unsigned int lastIndexOf(const char    *val, unsigned int from) const;
