@@ -40,6 +40,18 @@
 #include "simulation_test.h"
 #endif
 
+struct search_token_s
+{
+	void    *previous_content;
+	size_t   previous_content_length;
+
+	void    *match;
+	size_t   match_length;
+
+	void    *next_content;
+	size_t   next_content_length;
+};
+
 #if ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) == 0)
 static const uint8_t *memmem_kmp(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
 static const uint8_t *memrmem_kmp(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
@@ -47,6 +59,16 @@ static const uint8_t *memrmem_kmp(const uint8_t *haystack, size_t haystacklen, c
 static const uint8_t *memmem_twoway(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
 static const uint8_t *memrmem_twoway(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
 #endif
+
+
+static ssize_t mem_replace(void **buffer, size_t *content_length, size_t *buffer_length, const void *match, size_t match_length, const void *replacement, size_t replacement_length, bool content_is_string);
+
+static ssize_t mem_replace_with_smaller_size( void  *buffer,                         size_t *buffer_length, const void *match, size_t match_length, const void *replacement, size_t replacement_length);
+static ssize_t mem_replace_with_larger_size(  void **buffer, size_t *content_length, size_t *buffer_length, const void *match, size_t match_length, const void *replacement, size_t replacement_length);
+static ssize_t mem_replace_with_same_size(    void  *buffer,                         size_t  buffer_length, const void *match,                      const void *replacement, size_t match_and_replacement_length);
+
+static void *mem_search_tokenize(const void *buffer, size_t buffer_length, const void *match, size_t match_length, struct search_token_s *token);
+
 
 /**
 	* helper to convert integer to string
@@ -3821,6 +3843,402 @@ void String::remove(unsigned int index, unsigned int count)
 	/* set buffer, buffer_length and s not changed */
 	this->__non_standard__set_new_buffer(s, buffer_length, index + length_to_move);
 }
+
+void String::replace(const char   *substring1, const char   *substring2)
+{
+	char         *buffer = this->__non_standard__c_str_non_const();
+	size_t        buffer_length = this->__non_standard__get_buffer_length();
+	size_t        string_length = this->__non_standard__get_string_length();
+
+	size_t        substring1_length;
+	size_t        substring2_length;
+
+	void        *_buffer = (void *) buffer;
+
+	/* don't replacement anything if match or current string is empty */
+	if ((buffer == NULL) || (buffer == (String::empty_string)) || (string_length == 0) ||
+		(substring1 == NULL) || (substring1_length = strlen(substring1), substring1_length == 0))
+	{
+		/* nothing to replace */
+		return;
+	}
+
+	/* guard againts empty replacement */
+	if (substring2 == NULL)
+	{
+		/* when substring2_length set to 0, substring2 value don't relevant */
+		substring2_length = 0;
+	}
+	else
+	{
+		/* we also allow substring2_length 0 here */
+		substring2_length = strlen(substring2);
+	}
+
+	/* use mem_replace */
+	mem_replace(&_buffer, &string_length, &buffer_length, substring1, substring1_length, substring2, substring2_length, true);
+
+	/* make sure buffer_length > string_length */
+	_ASSERT(buffer_length > string_length);
+
+	/* set termination string, since we use mem-based replacement */
+	*(((char *) _buffer) + string_length) = '\0';
+
+	/* replace buffer without reallocation */
+	this->__non_standard__set_new_buffer((char *) _buffer, buffer_length, string_length);
+}
+
+void String::replace(const char   *substring1, const String &substring2)
+{
+	char         *buffer = this->__non_standard__c_str_non_const();
+	size_t        buffer_length = this->__non_standard__get_buffer_length();
+	size_t        string_length = this->__non_standard__get_string_length();
+
+	size_t        substring1_length;
+	size_t        substring2_length = substring2.__non_standard__get_string_length();
+
+	void        *_buffer = (void *) buffer;
+
+	/* don't replacement anything if match or current string is empty */
+	if ((buffer == NULL) || (buffer == (String::empty_string)) || (string_length == 0) ||
+		(substring1 == NULL) || (substring1_length = strlen(substring1), substring1_length == 0))
+	{
+		/* nothing to replace */
+		return;
+	}
+
+	/* use mem_replace */
+	mem_replace(&_buffer, &string_length, &buffer_length, substring1, substring1_length, substring2.c_str(), substring2_length, true);
+
+	/* make sure buffer_length > string_length */
+	_ASSERT(buffer_length > string_length);
+
+	/* set termination string, since we use mem-based replacement */
+	*(((char *) _buffer) + string_length) = '\0';
+
+	/* replace buffer without reallocation */
+	this->__non_standard__set_new_buffer((char *) _buffer, buffer_length, string_length);
+}
+
+void String::replace(const String &substring1, const char   *substring2)
+{
+	char         *buffer = this->__non_standard__c_str_non_const();
+	size_t        buffer_length = this->__non_standard__get_buffer_length();
+	size_t        string_length = this->__non_standard__get_string_length();
+
+	const char   *substring1_buffer        = substring1.c_str();
+	size_t        substring1_string_length = substring1.__non_standard__get_string_length();
+
+	/*size_t        substring1_length;*/
+	size_t        substring2_length;
+
+	void        *_buffer = (void *) buffer;
+
+	/* don't replacement anything if match or current string is empty */
+	if ((buffer == NULL) || (buffer == (String::empty_string)) || (string_length == 0) ||
+		(substring1_buffer == NULL) || (substring1_buffer == (String::empty_string)) || (substring1_string_length == 0))
+	{
+		/* nothing to replace */
+		return;
+	}
+
+	/* guard againts empty replacement */
+	if (substring2 == NULL)
+	{
+		/* when substring2_length set to 0, substring2 value don't relevant */
+		substring2_length = 0;
+	}
+	else
+	{
+		/* we also allow substring2_length 0 here */
+		substring2_length = strlen(substring2);
+	}
+
+	/* use mem_replace */
+	mem_replace(&_buffer, &string_length, &buffer_length, substring1_buffer, substring1_string_length, substring2, substring2_length, true);
+
+	/* make sure buffer_length > string_length */
+	_ASSERT(buffer_length > string_length);
+
+	/* set termination string, since we use mem-based replacement */
+	*(((char *) _buffer) + string_length) = '\0';
+
+	/* replace buffer without reallocation */
+	this->__non_standard__set_new_buffer((char *) _buffer, buffer_length, string_length);
+}
+
+void String::replace(const String &substring1, const String &substring2)
+{
+	char         *buffer = this->__non_standard__c_str_non_const();
+	size_t        buffer_length = this->__non_standard__get_buffer_length();
+	size_t        string_length = this->__non_standard__get_string_length();
+
+	const char   *substring1_buffer        = substring1.c_str();
+	size_t        substring1_string_length = substring1.__non_standard__get_string_length();
+
+	/*size_t        substring1_length;*/
+	size_t        substring2_length = substring2.__non_standard__get_string_length();
+
+	void        *_buffer = (void *) buffer;
+
+	/* don't replacement anything if match or current string is empty */
+	if ((buffer == NULL) || (buffer == (String::empty_string)) || (string_length == 0) ||
+		(substring1_buffer == NULL) || (substring1_buffer == (String::empty_string)) || (substring1_string_length == 0))
+	{
+		/* nothing to replace */
+		return;
+	}
+
+	/* use mem_replace */
+	mem_replace(&_buffer, &string_length, &buffer_length, substring1_buffer, substring1_string_length, substring2.c_str(), substring2_length, true);
+
+	/* make sure buffer_length > string_length */
+	_ASSERT(buffer_length > string_length);
+
+	/* set termination string, since we use mem-based replacement */
+	*(((char *) _buffer) + string_length) = '\0';
+
+	/* replace buffer without reallocation */
+	this->__non_standard__set_new_buffer((char *) _buffer, buffer_length, string_length);
+}
+
+
+/**
+	* inplace replacement with buffer can be reallocate and buffer_length can be changed
+	* return number of replacement occur, negative number if error happen
+	* return 0 means no replacement
+	* return -1 means error happen before any replacement can be done
+	* return -2 means error happen before 2nd replacement can be done (1st replacement is success)
+	* return -3 means error happen before 3rd replacement can be done (1st and 2nd replacement is success)
+	* and so on
+	* return 1 means 1 replacement is done
+	* return 2 means 2 replacement is done
+	* and so on
+	* when error happen, buffer content and buffer len maybe changed, but allocation
+	* is still valid and length is keep to be valid
+	* content before replacemtn
+	*/
+static ssize_t mem_replace(void **buffer, size_t *content_length, size_t *buffer_length, const void *match, size_t match_length, const void *replacement, size_t replacement_length, bool content_is_string)
+{
+	/* call suitable replacement function based on match_length and replacement_length */
+	if      (replacement_length == match_length)
+	{
+		return mem_replace_with_same_size(*buffer, *content_length, match, replacement, replacement_length);
+	}
+	else if (replacement_length  > match_length)
+	{
+		/* special handling for string, add 1 to content_length so zero termination is always allocated */
+		size_t    extra_content_length = *content_length;
+		ssize_t   retval;
+		if (content_is_string)
+		{
+			extra_content_length++; /* increment extra_content_length */
+		}
+		retval = mem_replace_with_larger_size(buffer, &extra_content_length, buffer_length, match, match_length, replacement, replacement_length);
+		*content_length = (content_is_string) ? extra_content_length - 1 : extra_content_length; /* decrement again if needed */
+		return retval;
+	}
+	else  /* replacement_length  < match_length */
+	{
+		return mem_replace_with_smaller_size(*buffer, content_length, match, match_length, replacement, replacement_length);
+	}
+}
+
+static ssize_t mem_replace_with_smaller_size(void *buffer, size_t *buffer_length, const void *match, size_t match_length, const void *replacement, size_t replacement_length)
+{
+	void                       *next_search_buffer        =   buffer;
+	size_t                      next_search_buffer_length =  *buffer_length;
+
+	size_t                      buffer_new_length = 0;
+
+	/* token */
+	struct search_token_s       token;
+
+	size_t                      replacement_counter = 0;
+
+	void                       *found;
+
+	/* search and replace */
+	while (found = mem_search_tokenize(next_search_buffer, next_search_buffer_length, match, match_length, &token), found != NULL)
+	{
+		/* replace only if replacement_length > 0, in case replacement_length == 0, replacement can be NULL */
+		if (replacement_length > 0)
+		{
+			memcpy(found, replacement, replacement_length);
+		}
+
+		/* search next token */
+		next_search_buffer        = (void *) (((uint8_t *) found) + replacement_length);
+		next_search_buffer_length = token.next_content_length;
+
+		memmove(next_search_buffer, token.next_content, token.next_content_length);
+
+		/* increment counter */
+		replacement_counter++;
+
+		/* set buffer_new_length */
+		buffer_new_length += (token.previous_content_length + replacement_length);
+	}
+
+	/* add (last) next_content_length only if replacement_counter bigger than 0 */
+	if (replacement_counter > 0)
+	{
+		buffer_new_length += token.next_content_length;
+	}
+
+	/* set new buffer length */
+	*buffer_length = buffer_new_length;
+
+	/* return number of replacement */
+	return (ssize_t) replacement_counter;
+}
+
+static ssize_t mem_replace_with_larger_size(void **buffer, size_t *content_length, size_t *buffer_length, const void *match, size_t match_length, const void *replacement, size_t replacement_length)
+{
+	void                       *next_search_buffer        = *buffer;
+	size_t                      next_search_buffer_length = *content_length;
+
+	void                       *current_buffer            = *buffer;
+	size_t                      current_buffer_length     = *buffer_length;
+
+	/*size_t                      delta                     = replacement_length - match_length;*/
+
+	/* accumulation of processed content */
+	size_t                      new_content_length = 0;
+
+	/* token */
+	struct search_token_s       token;
+
+	size_t                      replacement_counter = 0;
+
+	void                       *found;
+
+	/* search and replace */
+	while (found = mem_search_tokenize(next_search_buffer, next_search_buffer_length, match, match_length, &token), found != NULL)
+	{
+		/* found matching data */
+		size_t        needed_space;
+
+		/* increment replacement_counter before processing buffer */
+		++replacement_counter;
+
+		/* accumulate content length */
+		new_content_length += token.previous_content_length;
+
+		/* space needed to store data */
+		needed_space = new_content_length + replacement_length + token.next_content_length;
+
+		/* check if current buffer length is enough to store replacement */
+		if (needed_space > current_buffer_length)
+		{
+			/* make current buffer same size as predicted content size/needed space */
+			current_buffer_length = needed_space;
+
+			/* realloc original buffer */
+			current_buffer = realloc(current_buffer, current_buffer_length);
+			if (current_buffer == NULL)
+			{
+				/**
+					* failed to realloc, but current_buffer is left untouced
+					* current_buffer should be already saved in previous loop run
+					*/
+				return ((ssize_t) replacement_counter) * (-1); /* return negative value of replacement counter */
+			}
+
+			/**
+				* realloc success
+				* we need to move pointer to new buffer
+				*
+				* pointer set by token is invalid
+				* only rely on found
+				*/
+			found = (void *) (((uint8_t *) current_buffer) + new_content_length);
+		}
+
+		/* move data */
+		memmove(((uint8_t *) found) + replacement_length, ((uint8_t *) found) + match_length, token.next_content_length);
+
+		/* copy data */
+		memcpy(found, replacement, replacement_length);
+
+		/* setup new search point */
+		next_search_buffer = (void *) (((uint8_t *) found) + replacement_length);
+		next_search_buffer_length = token.next_content_length;
+
+		/* save buffer every run */
+		*buffer         = current_buffer;
+		*buffer_length  = current_buffer_length;
+
+		/* update content length with needed space */
+		*content_length = needed_space;
+	}
+
+	/* content length, buffer, and buffer_length already set in loop */
+	return (ssize_t) replacement_counter;
+}
+
+static ssize_t mem_replace_with_same_size(void *buffer, size_t buffer_length, const void *match, const void *replacement, size_t match_and_replacement_length)
+{
+	void                       *next_search_buffer        =  buffer;
+	size_t                      next_search_buffer_length =  buffer_length;
+
+	/* token */
+	struct search_token_s       token;
+
+	size_t                      replacement_counter = 0;
+
+	void                       *found;
+
+	/* search and replace */
+	while (found = mem_search_tokenize(next_search_buffer, next_search_buffer_length, match, match_and_replacement_length, &token), found != NULL)
+	{
+		/* replace */
+		memcpy(found, replacement, match_and_replacement_length);
+
+		/* search next token */
+		next_search_buffer        = token.next_content;
+		next_search_buffer_length = token.next_content_length;
+
+		/* increment counter */
+		replacement_counter++;
+	}
+
+	/* return number of replacement */
+	return (ssize_t) replacement_counter;
+}
+
+static void *mem_search_tokenize(const void *buffer, size_t buffer_length, const void *match, size_t match_length, struct search_token_s *token)
+{
+	/* use memmem to search for token */
+	void *found = __non_standard__memmem(buffer, buffer_length, match, match_length);
+
+	/* check return value */
+	if (found == NULL)
+	{
+		/* not found */
+		return NULL;
+	}
+	else
+	{
+		size_t previous_content_length = ((uint8_t *) found) - ((uint8_t *) buffer);
+
+		/* previous content */
+		token->previous_content        = (void *) buffer; /* remove qualifier */
+		token->previous_content_length = previous_content_length;
+
+		/* match content */
+		token->match                   = found;
+		token->match_length            = match_length;
+
+		/* next content */
+		token->next_content            = (void *) (((uint8_t *) found) + match_length);
+		token->next_content_length     = buffer_length - match_length - previous_content_length;
+
+		/* return found */
+		return found;
+	}
+}
+
 
 void String::toLowerCase(void)
 {

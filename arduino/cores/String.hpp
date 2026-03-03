@@ -780,10 +780,9 @@ public:
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/replace
 		*/
 	void replace(const char   *substring1, const char   *substring2); /* not part of arduino standard */
-	inline void replace(const String &substring1, const String &substring2)
-	{
-		this->replace(substring1.c_str(), substring2.c_str());
-	}
+	void replace(const char   *substring1, const String &substring2);
+	void replace(const String &substring1, const char   *substring2);
+	void replace(const String &substring1, const String &substring2);
 
 	/**
 		* method reserve
@@ -1164,7 +1163,12 @@ public:
 		inline operator char() const /* return type is automatically char */
 		{
 			/**
-				* reuse charAt, this will call operator[] const
+				* reuse charAt
+				* why use charAt instead of implement indexing or use operator indexing?
+				* we already implement operator indexing with const instance (r-value)
+				* but that operator only able to use when instance is const
+				* in struct, parent is not const, so by calling charAt which then
+				* call r-value operator[]
 				*/
 			return (this->parent).charAt(this->selected_index);
 		}
