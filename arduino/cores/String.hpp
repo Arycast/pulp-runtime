@@ -716,7 +716,7 @@ public:
 		if (val == '\0')
 		{
 			/* return string_length instantly without checking string_length */
-			return string_length;
+			return (unsigned int) string_length;
 		}
 		else if (string_length <= 0)
 		{
@@ -752,7 +752,7 @@ public:
 				* user want to search with empty needle
 				* return end of string regardless if this instance have valid string or not
 				*/
-			return string_length;
+			return (unsigned int) string_length;
 		}
 		else if (string_length <= 0)
 		{
@@ -783,7 +783,7 @@ public:
 				* user want to search with empty needle
 				* return end of string regardless if this instance have valid string or not
 				*/
-			return string_length;
+			return (unsigned int) string_length;
 		}
 		else if (string_length <= 0)
 		{
