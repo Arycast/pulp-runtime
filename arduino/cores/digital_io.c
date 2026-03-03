@@ -2,40 +2,6 @@
 #include "variables.h"
 #include "digital_io.h"
 
-/* Validates pin range and returns the mapped physical pad index*/
-static inline uint32_t digitalPinToPad(uint8_t pin){
-
-	/* Ensure the pin index doesn't exceed the mapping table's size*/
-    if (pin >= (sizeof(digital_pin_to_pad) / sizeof(digital_pin_to_pad[0])))
-        return NOT_A_PIN;
-    return digital_pin_to_pad[pin];
-}
-
-static inline void setPadmuxToGPIO(uint32_t pad_index) {
-    uint32_t reg_addr;
-
-	/* Calculate bit position: each pad uses 2 bits, so we shift by (index % 16) * 2 */
-    uint32_t shift = (pad_index % 16) * 2;
-
-	/* Select the appropriate register: PADMUX_0 for pads 0-15, PADMUX_1 for 16-31 */
-    if (pad_index < 16) {
-		reg_addr = PADMUX_0;
-	}	else {
-			reg_addr = PADMUX_1;
-		}
-    
-	/* Read the current register value from hardware*/
-    uint32_t reg_val = pulp_read32(reg_addr);
-
-    /*reg_val &= ~(0b11 << shift);
-    reg_val |= (0b01 << shift);*/
-    reg_val &= ~(0x3 << shift);
-    reg_val |=  (0x1 << shift);
-
-	/* Write the modified configuration back to the hardware register*/
-    pulp_write32(reg_addr, reg_val);
-}
-
 int digitalRead(int pin){
 	/* switch pad function from default to GPIO mode */
     setPadmuxToGPIO(digitalPinToPad(pin));
