@@ -26,6 +26,7 @@
 #if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0)
 #include <stdio.h> /* snprintf */
 #endif
+#include <ctype.h>
 
 /* standard header c++ */
 #include <exception> /* for std::terminate */
@@ -37,6 +38,14 @@
 /* when do simulation test, include simulation header */
 #ifdef SIMULATION_TEST
 #include "simulation_test.h"
+#endif
+
+#if ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) == 0)
+static const uint8_t *memmem_kmp(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
+static const uint8_t *memrmem_kmp(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
+#else
+static const uint8_t *memmem_twoway(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
+static const uint8_t *memrmem_twoway(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen);
 #endif
 
 /**
@@ -326,7 +335,435 @@ static bool unsigned_integer_to_dynamic_string(char **buf, size_t buf_len, size_
 }
 
 
+static void *__non_standard__memrchr(const void *s, int c, size_t n)
+{
+	size_t          i;
+	const uint8_t *_s;
 
+	/* check input buffer */
+	if ((s == NULL) || (n == 0))
+	{
+		return NULL; /* not found if buffer is invalid or have zero length */
+	}
+
+	/* scan buffer s from end position */
+	for (i = 0, _s = (const uint8_t *) s, _s += (n - 1); i < n; ++i, --_s)
+	{
+		/* check if matching byte is found */
+		if ((*_s) == ((uint8_t) c))
+		{
+			/* match found
+			* remove qualifier and make it general pointer */
+			return (void *) _s;
+		}
+	}
+
+	/* no match found */
+	return NULL;
+}
+
+/**
+	* simulate memmem and reverse of memmem
+	*/
+static void *__non_standard__memmem(const void *haystack, size_t haystacklen,
+	const void *needle, size_t needlelen)
+{
+	/* 1st check as always check if haystack length is smaller than needle length */
+	if ((haystacklen < needlelen) || (haystacklen == 0) || (needlelen == 0))
+	{
+		/* not found */
+		return NULL;
+	}
+
+	/* check some special case */
+	if (needlelen == 1)
+	{
+		/**
+			* do memchr when we only search 1 character
+			* without typecast to (void *) to remove qualifier this will throw error
+			* when compiling in C++ with system standard library
+			* because system's string.h provide both (via polymorphism):
+			* const void *memchr(const void *,...)
+			*       void *memchr(      void *,...)
+			*/
+		return (void *) memchr(haystack, (int) (*((char *) needle)), haystacklen);
+	}
+
+	/* when needlelen more than 0 */
+#if ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) == 0)
+	/* use KMP algorithm */
+	/* remove const qualifier */
+	return (void *) memmem_kmp((const uint8_t *) haystack, haystacklen, (const uint8_t *) needle, needlelen);
+#else
+	/* use two-way algorithm */
+	return (void *) memmem_twoway((const uint8_t *) haystack, haystacklen, (const uint8_t *) needle, needlelen);
+#endif
+}
+
+static void *__non_standard__memrmem(const void *haystack, size_t haystacklen,
+	const void *needle, size_t needlelen)
+{
+	/* 1st check as always check if haystack length is smaller than needle length */
+	if ((haystacklen < needlelen) || (haystacklen == 0) || (needlelen == 0))
+	{
+		/* not found */
+		return NULL;
+	}
+
+	/* check some special case */
+	if (needlelen == 1)
+	{
+		/* do memchr when we only search 1 character */
+		return __non_standard__memrchr(haystack, (int) (*((char *) needle)), haystacklen);
+	}
+
+	/* when needle more than 0 */
+#if ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) == 0)
+	/* use KMP algorithm */
+	/* remove const qualifier */
+	return (void *) memrmem_kmp((const uint8_t *) haystack, haystacklen, (const uint8_t *) needle, needlelen);
+#else
+	/* use two-way algorithm */
+	return (void *) memrmem_twoway((const uint8_t *) haystack, haystacklen, (const uint8_t *) needle, needlelen);
+#endif
+}
+
+#if ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) == 0)
+/**
+	* Helper to build the LPS (Longest Proper Prefix) table for memmem and memrmem operation
+	*/
+static void kmp_compute_lps_table(const uint8_t *needle, size_t needlelen, std::vector<size_t> &lps_table)
+{
+	size_t matched = 0;
+	size_t i;
+
+	/* set first element to 0 */
+	lps_table[0] = 0;
+
+	/* for every needle fragment, calculate longest prefix, suffix match value */
+	for (i = 1; i < needlelen; ++i)
+	{
+		/**
+			* here we iterate needle try to build prefix match
+			* for i = 1, we build for n[0], n[1]
+			* for i = 2, we build for n[0], n[1], n[2]
+			* for i = 3, we build for n[0], n[1], n[2], n[3]
+			* for i = 4, we build for n[0], n[1], n[2], n[3], n[4]
+			* and so on...
+			* for every matching value. we save it in lps[i]
+			*/
+
+		/**
+			* do backtrack
+			* backtrack is try to found last character in needle that
+			* match with current looked up character
+			*
+			* if character is same, then prefix is exit from while loop
+			* if character is not same, go back based on previous backtrack result
+			* to find last matching character
+			*
+			* (backtrack will stop at lps_table[0] because lps_table[0] guaranteed to be 0)
+			*/
+		while ((matched > 0) && (needle[i] != needle[matched]))
+		{
+			matched = lps_table[matched - 1];
+		}
+
+		/* if match found, then current character is match with prefix */
+		if (needle[i] == needle[matched])
+		{
+			matched++;
+		}
+
+		/* set prefix */
+		lps_table[i] = matched;
+	}
+}
+
+/**
+	* Knuth-Morris-Pratt (KMP) algorithm as the backend for memmem
+	* intentionally do not check argument, argument checked by front end
+	* we working on 8-bit (1 byte) unit
+	*/
+static const uint8_t *memmem_kmp(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen)
+{
+	/**
+		* Allocate LPS table on the stack for small needles, or heap for large ones
+		* since C++ don't support VLA (Variable-Length Arrays), use vector
+		* to allocate the memory
+		*/
+	std::vector<size_t> lps_table(needlelen);
+
+	size_t haystack_index; /* index for haystack */
+	size_t needle_index; /* index for needle */
+
+	/* we hope allocation is success */
+	if ((lps_table.data()) == NULL)
+	{
+		/* cannot allocate lps table */
+		return NULL;
+	}
+
+	/* generate lps */
+	kmp_compute_lps_table(needle, needlelen, lps_table);
+
+	/* search */
+	needle_index = 0;
+	for (haystack_index = 0; haystack_index < haystacklen; ++haystack_index)
+	{
+		while ((needle_index > 0) && (haystack[haystack_index] != needle[needle_index]))
+		{
+			needle_index = lps_table[needle_index - 1]; /* The "Magic": Skip unnecessary comparisons */
+		}
+
+		/* check if match */
+		if (haystack[haystack_index] == needle[needle_index])
+		{
+			needle_index++;
+		}
+
+		/* all needle match with haystack segment */
+		if (needle_index == needlelen)
+		{
+			/* return haystack pointer that align with start of the needle */
+			return (haystack + haystack_index - needlelen + 1);
+		}
+	}
+
+	return NULL;
+}
+
+/**
+	* same with memmem_kmp, but search in reverse direction
+	* also skip argument check
+	*/
+static const uint8_t *memrmem_kmp(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen)
+{
+	/* allocate reversed version of needle */
+	std::vector<uint8_t>  needle_reversed(needlelen); /* reversed version of needle */
+	uint8_t              *needle_reversed_p; /* pointer to needle_reversed internal buffer */
+
+	/* allocate lps_table */
+	std::vector<size_t>   lps_table_reverse(needlelen);
+
+	size_t needle_index;
+	size_t haystack_index;
+
+	size_t i, j;
+
+	/* check if allocation success */
+	if ((needle_reversed_p = needle_reversed.data(), needle_reversed_p == NULL) || ((lps_table_reverse.data()) == NULL))
+	{
+		/**
+			* should throw exception, but just return null if we fail to allocate
+			* vector will be free'd automatically
+			*/
+		return NULL;
+	}
+
+	/**
+		* fill needle_reversed as inverse of needle
+		* start to use needle_reversed_p to access buffer
+		* and do not use container object needle_reversed
+		*/
+	for (i = 0, j = needlelen - 1; i < needlelen; ++i, --j)
+	{
+		needle_reversed_p[i] = needle[j];
+	}
+
+	/**
+		* build lps_table
+		* since lps table lookup will use needle index, and
+		* we will use reversed needle, lps_table will also reversed
+		*/
+	kmp_compute_lps_table(needle_reversed_p, needlelen, lps_table_reverse);
+
+	/**
+		* Scan haystack from end to beginning, but set needle index to 0 because
+		* needle we use is reversed
+		* use i for counting forward
+		*/
+	needle_index = 0;
+	for (i = 0, haystack_index = haystacklen - 1; i < haystacklen; ++i, --haystack_index)
+	{
+		/* basically same with memmem_kmp */
+		while ((needle_index > 0) && (haystack[haystack_index] != needle_reversed_p[needle_index]))
+		{
+			needle_index = lps_table_reverse[needle_index - 1];
+		}
+
+		if (haystack[haystack_index] == needle_reversed_p[needle_index])
+		{
+			needle_index++;
+		}
+
+		if (needle_index == needlelen)
+		{
+			return (haystack + haystack_index);
+		}
+	}
+
+	return NULL;
+}
+
+/* ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) == 0) */
+#else /* ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) != 0) */
+
+/**
+	* Helper: Finds the maximal suffix of a string
+	*/
+static size_t max_suffix(const uint8_t *needle, size_t needlelen, bool reversed)
+{
+	size_t i = 0, j = 1, k = 1, p = 1;
+	while ((j + k) <= needlelen)
+	{
+		uint8_t a = needle[i + k - 1];
+		uint8_t b = needle[j + k - 1];
+
+		/* Compare based on the 'reversed' flag to find different orderings */
+		if (reversed ? (a < b) : (a > b)) /* a and b comparison is part of Cesari-Crochemore Theorem */
+		{
+			j += k;
+			k = 1;
+			p = j - i;
+		}
+		else if (a == b)
+		{
+			if (k == p)
+			{
+				j += p;
+				k = 1;
+			}
+			else
+			{
+				k++;
+			}
+		}
+		else
+		{
+			i = j;
+			j = i + 1;
+			k = p = 1;
+		}
+	}
+	return i;
+}
+
+/**
+	* libc two-way algorithm
+	*/
+static const uint8_t *memmem_twoway(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen)
+{
+	/* 1. Pre-processing: Find the critical factorization point */
+	size_t i = max_suffix(needle, needlelen, false);
+	size_t j = max_suffix(needle, needlelen, true);
+	size_t cut = (i > j) ? i : j; /* MAX(i, j) */
+
+	/* 2. Search Logic */
+	size_t pos = 0;
+	while (pos <= haystacklen - needlelen)
+	{
+		/* Start matching from the 'cut' to the right */
+		size_t k = cut; /* MAX(cut, 0) */
+
+		/* Match the right part */
+		while ((k < needlelen) && (needle[k] == haystack[pos + k]))
+		{
+			k++;
+		}
+
+		if (k < needlelen)
+		{
+			/* Mismatch in the right part */
+			pos += (k - cut + 1);
+		}
+		else
+		{
+			/* k >= needlelen */
+
+			/* Right part matches, now check the left part (0 to cut) */
+			size_t f = cut;
+			while ((f > 0) && (needle[f - 1] == haystack[pos + f - 1]))
+			{
+				f--;
+			}
+
+			/* check if all left part is full match */
+			if (f == 0)
+			{
+				return (haystack + pos); /* Full match! */
+			}
+
+			pos++; /* Shift and try again */
+		}
+	}
+
+	return NULL;
+}
+
+static const uint8_t *memrmem_twoway(const uint8_t *haystack, size_t haystacklen, const uint8_t *needle, size_t needlelen)
+{
+	/* 1. Pre-processing: Find the critical factorization point */
+	size_t i = max_suffix(needle, needlelen, false);
+	size_t j = max_suffix(needle, needlelen, true);
+	size_t cut = (i > j) ? i : j; /* MAX(i, j) */
+
+	/* 2. Search Logic (Starting from the end) */
+	size_t pos = haystacklen - needlelen;
+
+	while (1)
+	{
+		/* In reverse search, we verify the "left" part (0 to cut) first */
+		size_t k = 0;
+		while (k <= cut && needle[k] == haystack[pos + k])
+		{
+			k++;
+		}
+
+		if (k <= cut)
+		{
+			/* Mismatch in the left part.
+			* Shift logic: we move backward. */
+			size_t shift = cut - k + 1;
+
+			/* exit loop condition */
+			if (shift > pos)
+			{
+				break; /* Cannot shift further left */
+			}
+
+			pos -= shift;
+		}
+		else
+		{
+			/* Left part matches, now check the right part (cut + 1 to needlelen - 1) */
+			size_t r = cut + 1;
+
+			while ((r < needlelen) && (needle[r] == haystack[pos + r]))
+			{
+				r++;
+			}
+
+			if (r == needlelen)
+			{
+				/* Full match found! */
+				return (haystack + pos);
+			}
+
+			/* exit loop condition */
+			if (pos == 0)
+			{
+				break;
+			}
+
+			pos--; /* Default shift */
+		}
+	}
+
+	return NULL;
+}
+
+#endif /* ((SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY) != 0) */
 
 
 /**
@@ -3004,4 +3441,481 @@ bool operator!=(const char *lhs, const String &rhs)
 {
 	/* rotate the operand */
 	return (rhs != lhs);
+}
+
+
+unsigned int String::indexOf(char           val, unsigned int from) const
+{
+	size_t       string_length = this->__non_standard__get_string_length();
+	const char  *s = this->c_str();
+
+	/* check if requested index is beyond string data */
+	if (((size_t) from) >= string_length)
+	{
+		return (unsigned int) (-1);
+	}
+
+	/* check if we search end of string character */
+	if (val == '\0')
+	{
+		/* end of string */
+		return (unsigned int) string_length;
+	}
+	else if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0))
+	{
+		/* fail to search if user want non-empty character in empty/invalid string */
+		return (unsigned int) (-1);
+	}
+	else
+	{
+		const char *p = (const char *) memchr(s + from, (int) val, string_length - from);
+		if (p == NULL)
+		{
+			return (unsigned int) (-1);
+		}
+		else
+		{
+			return (unsigned int) (p - s);
+		}
+	}
+}
+
+unsigned int String::indexOf(const char    *val, unsigned int from) const
+{
+	size_t       string_length = this->__non_standard__get_string_length();
+	const char  *s             = this->c_str();
+	const char  *p;
+
+	size_t val_length; /* val string length, don't calculate val_length before we sure that val is not NULL */
+
+	/* get val length */
+	if (val == NULL)
+	{
+		/* return false regardless */
+		return (unsigned int) (-1);
+	}
+
+	/* get val/needle length */
+	val_length = strlen(val);
+
+	if (from > string_length)
+	{
+		/* nothing to search */
+		return (unsigned int) (-1);
+	}
+	else if (val_length == 0)
+	{
+		/* same behaviour as search '\0' in string, return string length */
+		return (unsigned int) string_length;
+	}
+	else if (from == string_length)
+	{
+		/* val_length > 0, but user want to search from end of string */
+		return (unsigned int) (-1);
+	}
+
+	/**
+		* val must be not null, and proper/non-empty string,
+		* rely on memmem argument check to check argument validity
+		*/
+	p = (const char *) __non_standard__memmem(s + from, string_length - from, val, val_length);
+	if (p == NULL)
+	{
+		/* not found */
+		return (unsigned int) (-1);
+	}
+	else
+	{
+		return (unsigned int) (p - s);
+	}
+}
+
+unsigned int String::indexOf(const String  &val, unsigned int from) const
+{
+	size_t         string_length = this->__non_standard__get_string_length();
+	const char  *  s             = this->c_str();
+
+	size_t         val_length    =   val.__non_standard__get_string_length();
+	const char  *s_val           =   val.c_str();
+
+	const char  *p;
+
+	if (from > string_length)
+	{
+		/* nothing to search */
+		return (unsigned int) (-1);
+	}
+	else if (val_length == 0)
+	{
+		/* same behaviour as search '\0' in string, return string length */
+		return (unsigned int) string_length;
+	}
+	else if (from == string_length)
+	{
+		/* val_length > 0, but user want to search from end of string */
+		return (unsigned int) (-1);
+	}
+
+	/**
+		* val must be not null, and proper/non-empty string,
+		* rely on memmem argument check to check argument validity
+		*/
+	p = (const char *) __non_standard__memmem(s + from, string_length - from, s_val, val_length);
+	if (p == NULL)
+	{
+		/* not found */
+		return (unsigned int) (-1);
+	}
+	else
+	{
+		return (unsigned int) (p - s);
+	}
+}
+
+unsigned int String::lastIndexOf(char           val, unsigned int from) const
+{
+	size_t       string_length = this->__non_standard__get_string_length();
+	const char  *s = this->c_str();
+	const char  *p;
+
+	/* check if current instance have string or not */
+	if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0) || (val == '\0'))
+	{
+		/* fail to search if user want non-empty character in empty/invalid string */
+		return (unsigned int) (-1);
+	}
+
+	/* this instance have valid string */
+
+	/* check from argument */
+#if 0
+	if (from == 0)
+	{
+		/* only need to match single character  */
+		return (val == (*s)) ? 0 : (unsigned int) (-1);
+	}
+	else
+#endif
+	if (((size_t) from) >= string_length) /* check if requested index is beyond string length */
+	{
+		/* shrink search space */
+		from = (unsigned int) (string_length - 1); /* string_length must be not 0 */
+	}
+
+	/* search */
+	p = (const char *) __non_standard__memrchr(s, (int) val, from + 1);
+	if (p == NULL)
+	{
+		return (unsigned int) (-1);
+	}
+	else
+	{
+		return (unsigned int) (p - s);
+	}
+}
+
+unsigned int String::lastIndexOf(const char    *val, unsigned int from) const
+{
+	size_t       string_length = this->__non_standard__get_string_length();
+	const char  *s = this->c_str();
+	const char  *p;
+
+	size_t       val_length;
+
+	/* check if current instance have string or not */
+	if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0) ||
+		(val == NULL) || (val_length = strlen(val), val_length == 0))
+	{
+		/* fail to search if user want non-empty character in empty/invalid string */
+		return (unsigned int) (-1);
+	}
+
+	/**
+		* this instance have valid string
+		* and val_length should not 0
+		*/
+
+	/* check from argument */
+	if (((size_t) from) >= string_length) /* check if requested index is beyond string length */
+	{
+		/* shrink search space */
+		from = (unsigned int) (string_length - 1); /* string_length must be not 0 */
+	}
+
+	/* search */
+	p = (const char *) __non_standard__memrmem(s, from + 1, val, val_length);
+	if (p == NULL)
+	{
+		return (unsigned int) (-1);
+	}
+	else
+	{
+		return (unsigned int) (p - s);
+	}
+}
+
+unsigned int String::lastIndexOf(const String  &val, unsigned int from) const
+{
+	size_t         string_length = this->__non_standard__get_string_length();
+	const char    *s             = this->c_str();
+
+	size_t         val_length    =   val.__non_standard__get_string_length();
+	const char  *s_val           =   val.c_str();
+
+	const char  *p;
+
+	/* check if current instance have string or not */
+	if ((s == NULL) || (s == (String::empty_string)) || (string_length == 0) ||
+		(s_val == NULL) || (s_val == (String::empty_string)) || (val_length == 0))
+	{
+		/* fail to search if user want non-empty character in empty/invalid string */
+		return (unsigned int) (-1);
+	}
+
+	/**
+		* this instance have valid string
+		* and val_length should not 0
+		*/
+
+	/* check from argument */
+	if (((size_t) from) >= string_length) /* check if requested index is beyond string length */
+	{
+		/* shrink search space */
+		from = (unsigned int) (string_length - 1); /* string_length must be not 0 */
+	}
+
+	/* search */
+	p = (const char *) __non_standard__memrmem(s, from + 1, s_val, val_length);
+	if (p == NULL)
+	{
+		return (unsigned int) (-1);
+	}
+	else
+	{
+		return (unsigned int) (p - s);
+	}
+}
+
+int String::reserve(unsigned int size)
+{
+	/* check if user want to free all buffer */
+	if (size == 0)
+	{
+		/* invalidate string */
+		this->__non_standard__free_string_non_invalidate().__non_standard__invalidate_string();
+	}
+	else
+	{
+		/* requested size must be > 0 */
+
+		/* get current buffer */
+		char *s = this->__non_standard__c_str_non_const();
+
+		/* get current length */
+		/*size_t  buffer_length = this->__non_standard__get_buffer_length();*/
+		size_t  string_length = this->__non_standard__get_string_length();
+
+		/* realloc if needed, we allow buffer to shrink smaller than current size */
+		if ((s == NULL) || (s == (String::empty_string)))
+		{
+			/* allocate buffer */
+			char *new_string = (char *) malloc(size * sizeof(char));
+			if (new_string == NULL)
+			{
+				/* by standard, return 0 when failure */
+				return 0;
+			}
+
+			/* set first character to '\0' */
+			*new_string = '\0';
+
+			/* set buffer */
+			this->__non_standard__set_new_buffer(new_string, size, 0);
+		}
+		else
+		{
+			/* realloc */
+			char *new_string = (char *) realloc(s, size * sizeof(char));
+			if (new_string == NULL)
+			{
+				/* realloc fail, old buffer unchanged */
+				return 0;
+			}
+
+			/**
+				* check new size
+				* only check with string_length, dont need to check with buffer_length
+				*/
+			if (size <= string_length)
+			{
+				/* string_length changed (truncated) */
+				string_length = size - 1; /* string length should less than size */
+
+				/* truncate string */
+				new_string[string_length] = '\0';
+			}
+
+			/* set buffer */
+			this->__non_standard__set_new_buffer(new_string, size, string_length);
+		}
+	}
+
+	/* return success */
+	return 1;
+}
+
+void String::remove(unsigned int index)
+{
+	/**
+		* we can effectively remove all character after index by set current index to '\0'
+		* out-of-bound and string length changing already handled by operator
+		*/
+	(*this)[index] = '\0';
+}
+
+void String::remove(unsigned int index, unsigned int count)
+{
+	char     *s, *_s;
+	size_t    buffer_length;
+	size_t    string_length = this->__non_standard__get_string_length();
+
+	size_t    length_to_move;
+
+	if ((index >= string_length) || (count == 0))
+	{
+		/* nothing to remove */
+		return;
+	}
+
+	/* count must be non zero and index is inside string */
+
+	/**
+		* check if we need to move string after count or all string
+		* after index are lost
+		*/
+	if ((index + count) >= string_length)
+	{
+		/* fall back to simple remove method */
+		this->remove(index);
+
+		/* operation finished */
+		return;
+	}
+
+	/* if we reach here, there is string to move */
+	length_to_move = string_length - (index + count);
+
+	/* get current buffer */
+	s             = this->__non_standard__c_str_non_const();
+	buffer_length = this->__non_standard__get_buffer_length();
+
+	/* move s to index */
+	_s = s + index;
+
+	/* move end of string to beginning */
+	memmove(_s, _s + count, length_to_move);
+
+	/* add '\0' */
+	_s[length_to_move] = '\0';
+
+	/* set buffer, buffer_length and s not changed */
+	this->__non_standard__set_new_buffer(s, buffer_length, index + length_to_move);
+}
+
+void String::toLowerCase(void)
+{
+	char *s;
+	size_t i;
+	for (i = 0, s = this->__non_standard__c_str_non_const(); i < (this->__non_standard__get_string_length()); ++i, ++s)
+	{
+		int s_lower = tolower((int) (*s));
+		*s = (char) s_lower;
+	}
+}
+
+void String::toUpperCase(void)
+{
+	char *s;
+	size_t i;
+	for (i = 0, s = this->__non_standard__c_str_non_const(); i < (this->__non_standard__get_string_length()); ++i, ++s)
+	{
+		int s_upper = toupper((int) (*s));
+		*s = (char) s_upper;
+	}
+}
+
+/**
+	* this trim behave different from what specified by arduino
+	* instead trim done at start and end of whole string, this
+	* trim remove extra space and tab per line, so this trim works
+	* for multiline string
+	*/
+void String::trim(void)
+{
+	char *s = this->__non_standard__c_str_non_const();
+
+	char *read;
+	char *write;
+
+	if ((s == NULL) || (s == (String::empty_string)) || (this->__non_standard__get_string_length() == 0))
+	{
+		/* nothing to be done */
+		return;
+	}
+
+	/* pointer to read and write in-place */
+	read = s;
+	write = s;
+
+	/* trim as long we not found termination */
+	while ((*read) != '\0')
+	{
+		char c;
+
+		char *content_start;
+		char *content_end;
+
+		/* 1. Skip leading whitespace for the current line
+		* We check for isspace but make sure we don't skip the newline itself! */
+		while (c = (*read), (c != '\0') && (c != '\r') && (c != '\n') && isspace((int) c))
+		{
+			read++;
+		}
+
+		content_start = read;
+		content_end = read;
+
+		/* 2. Scan the line to find its end and track the last non-space character */
+		while (c = (*read), (c != '\0') && (c != '\r') && (c != '\n'))
+		{
+			if (! isspace((int) c))
+			{
+				content_end = read + 1; /* Mark the position just after the last non-space */
+			}
+			read++;
+		}
+
+		/* 3. Copy the "useful" content of the line to the write position */
+		while (content_start < content_end)
+		{
+			*write++ = *content_start++;
+		}
+
+		/* 4. If we stopped because of a newline, preserve it and move to next line */
+		if (c = (*read), (c == '\r') || (c == '\n'))
+		{
+			*write++ = c;
+			read++;
+		}
+	}
+
+	/* 5. Always null-terminate the newly shortened string */
+	*write = '\0';
+
+	/**
+		* set new buffer/string length
+		* do not remove buffer in case of resulting string is zero length
+		* because current buffer may allocated by reserve
+		*/
+	this->__non_standard__set_new_buffer(s, this->__non_standard__get_buffer_length(), write - s);
 }

@@ -696,10 +696,7 @@ public:
 	}
 	unsigned int indexOf(char           val, unsigned int from) const;
 	unsigned int indexOf(const char    *val, unsigned int from) const; /* not part of standard */
-	inline unsigned int indexOf(const String  &val, unsigned int from) const
-	{
-		return this->indexOf(val.c_str(), from);
-	}
+	unsigned int indexOf(const String  &val, unsigned int from) const;
 
 	/**
 		* method lastIndexOf
@@ -712,22 +709,43 @@ public:
 		*/
 	inline unsigned int lastIndexOf(char           val) const
 	{
-		return this->lastIndexOf(val, (unsigned int) 0);
+		size_t string_length = this->__non_standard__get_string_length();
+		if (string_length <= 0)
+		{
+			/* nothing to search when string length is 0 */
+			return (-1);
+		}
+
+		/* search from end index of string */
+		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
 	}
 	inline unsigned int lastIndexOf(const char    *val) const
 	{
-		return this->lastIndexOf(val, (unsigned int) 0);
+		size_t string_length = this->__non_standard__get_string_length();
+		if (string_length <= 0)
+		{
+			/* nothing to search when string length is 0 */
+			return (-1);
+		}
+
+		/* search from end index of string */
+		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
 	}
 	inline unsigned int lastIndexOf(const String  &val) const
 	{
-		return this->lastIndexOf(val, (unsigned int) 0);
+		size_t string_length = this->__non_standard__get_string_length();
+		if (string_length <= 0)
+		{
+			/* nothing to search when string length is 0 */
+			return (-1);
+		}
+
+		/* search from end index of string */
+		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
 	}
 	unsigned int lastIndexOf(char           val, unsigned int from) const;
 	unsigned int lastIndexOf(const char    *val, unsigned int from) const;
-	inline unsigned int lastIndexOf(const String  &val, unsigned int from) const
-	{
-		return this->lastIndexOf(val.c_str(), from);
-	}
+	unsigned int lastIndexOf(const String  &val, unsigned int from) const;
 
 	/**
 		* method length

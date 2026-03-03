@@ -68,4 +68,13 @@
 #define SSTRING_CONF_DOUBLE_TO_STRING_PRECISION_MAX_LEN        16
 #endif
 
+/**
+	* search algorithm chosen
+	* when set to 1: use two way algorithm (from libc)
+	* whan set to 2: use Knuth-Morris-Pratt (KMP) algorithm (memory heavy)
+	*/
+#ifndef SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY
+#define SSTRING_CONF_SEARCH_ALGORITHM_TWOWAY        1
+#endif
+
 #endif /* ! defined(__ARDUINO_CORES_CONFIG_SSTRING_H__) */
