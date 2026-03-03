@@ -6,6 +6,8 @@ static spim_conf_t conf; //defined in pulp.h, spi section
 
 SPIClass SPI;
 
+uint32_t SPIClass::_interruptMask = 0;
+
 SPIClass::current_type SPIClass::current = {1000000, SPI_MSBFIRST, SPI_MODE0};
 
 void SPIClass::begin(void) {
@@ -20,6 +22,14 @@ void SPIClass::begin(void) {
 }
 
 void SPIClass::beginTransaction(SPISettings s) {
+    
+    if(_interruptMask != 0) {
+        uint32_t curr_intenVal = gpio_inten_get(ARCHI_GPIO_ADDR);
+        uint32_t new_intenVal = curr_intenVal & ~(_interruptMask);
+
+        gpio_inten_set(ARCHI_GPIO_ADDR, new_intenVal);
+    }
+    
     current.clock = s.clock;
     current.bitOrder = s.bitOrder;
     current.dataMode = s.dataMode;
@@ -39,7 +49,12 @@ void SPIClass::beginTransaction(SPISettings s) {
 }
 
 void SPIClass::endTransaction(void) {
-    
+    if(_interruptMask != 0) {
+        uint32_t current = gpio_inten_get(ARCHI_GPIO_ADDR);
+        uint32_t restore_intenVal = current | _interruptMask;
+
+        gpio_inten_set(ARCHI_GPIO_ADDR, restore_intenVal);
+    }
 }
 
 void SPIClass::end(void) {
@@ -96,5 +111,7 @@ void SPIClass::transfer(byte *buffer, size_t size) {
 }
 
 void SPIClass::usingInterrupt(int interruptNumber) {
-    
+    if(interruptNumber < 32) {
+        _interruptMask |= (1 << interruptNumber);
+    }
 }

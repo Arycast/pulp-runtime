@@ -154,6 +154,8 @@ private:
         uint8_t bitOrder;
         uint8_t dataMode;
     } static current;
+
+    static uint32_t _interruptMask;
 };
 
 /**
