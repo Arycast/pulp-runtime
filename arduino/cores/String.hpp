@@ -696,10 +696,7 @@ public:
 	}
 	unsigned int indexOf(char           val, unsigned int from) const;
 	unsigned int indexOf(const char    *val, unsigned int from) const; /* not part of standard */
-	inline unsigned int indexOf(const String  &val, unsigned int from) const
-	{
-		return this->indexOf(val.c_str(), from);
-	}
+	unsigned int indexOf(const String  &val, unsigned int from) const;
 
 	/**
 		* method lastIndexOf
@@ -712,22 +709,43 @@ public:
 		*/
 	inline unsigned int lastIndexOf(char           val) const
 	{
-		return this->lastIndexOf(val, (unsigned int) 0);
+		size_t string_length = this->__non_standard__get_string_length();
+		if (string_length <= 0)
+		{
+			/* nothing to search when string length is 0 */
+			return (-1);
+		}
+
+		/* search from end index of string */
+		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
 	}
 	inline unsigned int lastIndexOf(const char    *val) const
 	{
-		return this->lastIndexOf(val, (unsigned int) 0);
+		size_t string_length = this->__non_standard__get_string_length();
+		if (string_length <= 0)
+		{
+			/* nothing to search when string length is 0 */
+			return (-1);
+		}
+
+		/* search from end index of string */
+		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
 	}
 	inline unsigned int lastIndexOf(const String  &val) const
 	{
-		return this->lastIndexOf(val, (unsigned int) 0);
+		size_t string_length = this->__non_standard__get_string_length();
+		if (string_length <= 0)
+		{
+			/* nothing to search when string length is 0 */
+			return (-1);
+		}
+
+		/* search from end index of string */
+		return this->lastIndexOf(val, (unsigned int) (string_length - 1));
 	}
 	unsigned int lastIndexOf(char           val, unsigned int from) const;
 	unsigned int lastIndexOf(const char    *val, unsigned int from) const;
-	inline unsigned int lastIndexOf(const String  &val, unsigned int from) const
-	{
-		return this->lastIndexOf(val.c_str(), from);
-	}
+	unsigned int lastIndexOf(const String  &val, unsigned int from) const;
 
 	/**
 		* method length
@@ -762,10 +780,9 @@ public:
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/replace
 		*/
 	void replace(const char   *substring1, const char   *substring2); /* not part of arduino standard */
-	inline void replace(const String &substring1, const String &substring2)
-	{
-		this->replace(substring1.c_str(), substring2.c_str());
-	}
+	void replace(const char   *substring1, const String &substring2);
+	void replace(const String &substring1, const char   *substring2);
+	void replace(const String &substring1, const String &substring2);
 
 	/**
 		* method reserve
@@ -1146,7 +1163,12 @@ public:
 		inline operator char() const /* return type is automatically char */
 		{
 			/**
-				* reuse charAt, this will call operator[] const
+				* reuse charAt
+				* why use charAt instead of implement indexing or use operator indexing?
+				* we already implement operator indexing with const instance (r-value)
+				* but that operator only able to use when instance is const
+				* in struct, parent is not const, so by calling charAt which then
+				* call r-value operator[]
 				*/
 			return (this->parent).charAt(this->selected_index);
 		}

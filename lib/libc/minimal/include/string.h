@@ -58,6 +58,9 @@ int strncasecmp(const char *s1, const char *s2, size_t n);
 char * strtok_r(char * restrict str, const char * restrict delim,
 	char ** restrict saveptr);
 
+/* C++11 memchr */
+void *memchr(const void *s, int c, size_t n);
+
 #ifdef __cplusplus
 }
 #endif

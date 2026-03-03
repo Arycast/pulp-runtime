@@ -228,6 +228,32 @@ void *memcpy(void *dst0, const void *src0, size_t len0)
 }
 
 
+void *memchr(const void *s, int c, size_t n)
+{
+    size_t          i;
+    const uint8_t *_s;
+
+    /* check input buffer */
+    if ((s == NULL) || (n == 0))
+    {
+        return NULL; /* not found if buffer is invalid or have zero length */
+    }
+
+    /* scan buffer s */
+    for (i = 0, _s = s; i < n; ++i, ++_s)
+    {
+        /* check if matching byte is found */
+        if ((*_s) == ((uint8_t) c))
+        {
+            /* match found */
+            return _s;
+        }
+    }
+
+    /* no match found */
+    return NULL;
+}
+
 
 void *memmove(void *d, const void *s, size_t n)
 {

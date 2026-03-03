@@ -53,6 +53,10 @@ GDB_OPT =
 VALGRIND = valgrind
 VALGRIND_OPT = --verbose --read-inline-info=yes --read-var-info=yes --leak-check=full --show-leak-kinds=all --leak-check-heuristics=all --track-origins=yes
 
+# massif
+MASSIF_OUTPUT = $(patsubst %.elf,%.elf.massif.out,$(APP))
+MASSIF_OPT =
+
 # rules that don't need output
 .PHONY: all clean distclean
 
@@ -95,21 +99,27 @@ endif
 %.cxx.o : %.cxx
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
+# massif output
+%.elf.massif.out : %.elf
+	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) --tool=massif --massif-out-file="$$1" "./$$(basename "$$2")"' -- $@ $<
+
 # clean and distclean
 clean:
-	$(RM) --verbose $(ASM_OBJS) $(C_OBJS) $(CXX_OBJS)
+	$(RM) --verbose $(ASM_OBJS) $(C_OBJS) $(CXX_OBJS) $(MASSIF_OUTPUT)
 
 distclean: clean
 	$(RM) --verbose $(APP)
 
 # instrumentation
-.PHONY: run run-valgrind debug debug-valgrind-server debug-valgrind-client
+.PHONY: run run-valgrind run-massif debug debug-valgrind-server debug-valgrind-client
 
 run: $(APP)
 	sh -c 'cd "$$(dirname "$$1")" && "./$$(basename "$$1")"' -- $<
 
 run-valgrind: $(APP)
 	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) $(VALGRIND_OPT) "./$$(basename "$$1")"' -- $<
+
+run-massif: $(MASSIF_OUTPUT)
 
 debug: $(APP)
 	$(GDB) $(GDB_OPT) $<
