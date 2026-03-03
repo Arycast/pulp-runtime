@@ -105,12 +105,11 @@ void detachInterrupt(int interrupt){
 }
 
 int digitalPinToInterrupt(int pin){
-    if (pin >= 0 && pin < MAX_DIGITAL_PINS){
-        /* If the pin is available for interrupt, it will return the given pin */
+    /* Maximum number of digital pins mapped for the PYNQ-Z1 board implementation is 32*/
+    if (pin >= 0 && pin < 32){
         return pin;
     }
     else{
-        /* if the pin is not available for interrupt, it will return -1 */
         return -1;
     }
 }

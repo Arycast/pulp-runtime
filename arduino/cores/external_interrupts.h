@@ -1,18 +1,18 @@
+#include "archi/chips/pulpissimo/memory_map.h"
+#include "archi/gpio/gpio_v3.h"
+#include "archi/itc/itc_v1.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Memory-mapped I/O (MMIO) adresses based on Pulpissimo Datasheet*/
-#define APB_GPIO_BASE   0x1A101000
-#define PADDIR_REG      (*(volatile uint32_t*)(APB_GPIO_BASE + 0x00)) // Hal 17
-#define INTEN_REG       (*(volatile uint32_t*)(APB_GPIO_BASE + 0x18)) // Hal 19
-#define INTTYPE_0_15    (*(volatile uint32_t*)(APB_GPIO_BASE + 0x1C)) // Hal 19
-#define INTTYPE_16_31   (*(volatile uint32_t*)(APB_GPIO_BASE + 0x20)) // Hal 19
-#define INTSTATUS_REG   (*(volatile uint32_t*)(APB_GPIO_BASE + 0x24)) // Hal 20
-#define ITC_INT_CLEAR_REG (*(volatile uint32_t*)(0x1A109000 + 0x14)) // Hal 31
-
-/* Maximum number of digital pins mapped for the PYNQ-Z1 board implementation */
-#define MAX_DIGITAL_PINS 32
+#define PADDIR_REG      (*(volatile uint32_t*)(ARCHI_GPIO_ADDR  + GPIO_PADDIR_OFFSET ))
+#define INTEN_REG       (*(volatile uint32_t*)(ARCHI_GPIO_ADDR + GPIO_INTEN_OFFSET))
+#define INTTYPE_0_15    (*(volatile uint32_t*)(ARCHI_GPIO_ADDR + GPIO_INTTYPE0_OFFSET))
+#define INTTYPE_16_31   (*(volatile uint32_t*)(ARCHI_GPIO_ADDR + GPIO_INTTYPE1_OFFSET ))
+#define INTSTATUS_REG   (*(volatile uint32_t*)(ARCHI_GPIO_ADDR  + GPIO_INTSTATUS_OFFSET ))
+#define ITC_INT_CLEAR_REG (*(volatile uint32_t*)(0x1A109000 + ITC_STATUS_CLR_OFFSET))
 
 /**
  * function attachInterrupts
