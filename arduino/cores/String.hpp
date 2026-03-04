@@ -1312,8 +1312,14 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
-			a += rvalue;
+			/**
+				* increment a
+				* C++ doing this weird thing called integral promotion
+				* so we need to explicitly typecast operation
+				* result to char to make compound assignment work
+				*/
+			/*a += rvalue;*/
+			a = static_cast<char>(a + rvalue);
 
 			/* reuse assign operator */
 			return ((*this) = a);
@@ -1324,8 +1330,9 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
-			a -= rvalue;
+			/* decrement a */
+			/*a -= rvalue;*/
+			a = static_cast<char>(a - rvalue);
 
 			/* reuse assign operator */
 			return ((*this) = a);
@@ -1336,8 +1343,9 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
-			a *= rvalue;
+			/* multiply a */
+			/*a *= rvalue;*/
+			a = static_cast<char>(a * rvalue);
 
 			/* reuse assign operator */
 			return ((*this) = a);
@@ -1348,7 +1356,7 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
+			/* devide a (no integral promotion occur) */
 			a /= rvalue;
 
 			/* reuse assign operator */
@@ -1360,7 +1368,7 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
+			/* mod a (no integral promotion occur) */
 			a %= rvalue;
 
 			/* reuse assign operator */
@@ -1369,7 +1377,7 @@ public:
 
 
 		/**
-			* logic
+			* bit logic
 			*/
 
 		inline char operator&=(char rvalue) /* AND */
@@ -1377,7 +1385,7 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
+			/* bitwise AND a */
 			a &= rvalue;
 
 			/* reuse assign operator */
@@ -1389,7 +1397,7 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
+			/* bitwise OR a */
 			a |= rvalue;
 
 			/* reuse assign operator */
@@ -1401,7 +1409,7 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
+			/* bitwise XOR a */
 			a ^= rvalue;
 
 			/* reuse assign operator */
@@ -1418,8 +1426,9 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
-			a <<= rvalue;
+			/* shift left a */
+			/*a <<= rvalue;*/
+			a = static_cast<char>(a << rvalue);
 
 			/* reuse assign operator */
 			return ((*this) = a);
@@ -1430,8 +1439,9 @@ public:
 			/* reuse cast operator to get raw char value */
 			char a = *this;
 
-			/* increment a */
-			a >>= rvalue;
+			/* shift right a */
+			/*a >>= rvalue;*/
+			a = static_cast<char>(a >> rvalue);
 
 			/* reuse assign operator */
 			return ((*this) = a);
