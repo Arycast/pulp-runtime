@@ -40,18 +40,18 @@ int main(void)
 
 	/* (corner case) change at index 25 (outside of buffer) */
 	c = sentence[25]++;
-	printf("before increment: %d (%u)\n", (int) c, sentence.length());
-	printf(" after increment: %d (%u)\n", (int) sentence[25], sentence.length());
+	printf("before increment (25): %d (%u)\n", (int) c, sentence.length());
+	printf(" after increment (25): %d (%u)\n", (int) sentence[25], sentence.length());
 
 	/* (corner case) change at index 24 (outside of string/at zero termination) */
 	c = sentence[24]++;
-	printf("before increment: %d (%u)\n", (int) c, sentence.length());
-	printf(" after increment: %d (%u)\n", (int) sentence[24], sentence.length());
+	printf("before increment (24): %d (%u)\n", (int) c, sentence.length());
+	printf(" after increment (24): %d (%u)\n", (int) sentence[24], sentence.length());
 
 	/* change at index 23 */
 	c = sentence[23]--;
-	printf("before increment: %c (%u)\n", c, sentence.length());
-	printf(" after increment: %c (%u)\n", (char) sentence[23], sentence.length());
+	printf("before decrement (23): %c (%u)\n", c, sentence.length());
+	printf(" after decrement (23): %c (%u)\n", (char) sentence[23], sentence.length());
 
 	/* print sentence again */
 
@@ -70,8 +70,8 @@ int main(void)
 	/* increment */
 	c = sentence[3]++;
 
-	printf("before increment: %c (%u)\n", c, sentence.length());
-	printf(" after increment: %d (%u)\n", (int) sentence[3], sentence.length());
+	printf("before increment (3): %c (%u)\n", c, sentence.length());
+	printf(" after increment (3): %d (%u)\n", (int) sentence[3], sentence.length());
 
 
 	/* return c3 */
@@ -82,18 +82,18 @@ int main(void)
 
 	/* (corner case) change at index 25 */
 	c = --sentence[25];
-	printf("before increment: %d (%u)\n", (int) c, sentence.length());
-	printf(" after increment: %d (%u)\n", (int) sentence[25], sentence.length());
+	printf("before decrement (25): %d (%u)\n", (int) c, sentence.length());
+	printf(" after decrement (25): %d (%u)\n", (int) sentence[25], sentence.length());
 
 	/* (corner case) change at index 24 */
 	c = --sentence[24];
-	printf("before increment: %d (%u)\n", (int) c, sentence.length());
-	printf(" after increment: %d (%u)\n", (int) sentence[24], sentence.length());
+	printf("before decrement (24): %d (%u)\n", (int) c, sentence.length());
+	printf(" after decrement (24): %d (%u)\n", (int) sentence[24], sentence.length());
 
 	/* change at index 23 */
 	c = ++sentence[23];
-	printf("before increment: %c (%u)\n", c, sentence.length());
-	printf(" after increment: %c (%u)\n", (char) sentence[23], sentence.length());
+	printf("before increment (23): %c (%u)\n", c, sentence.length());
+	printf(" after increment (23): %c (%u)\n", (char) sentence[23], sentence.length());
 
 	/* print sentence again */
 

@@ -1434,10 +1434,13 @@ public:
 
 		/* get current instance string pointer */
 		const char *s         = this->c_str();
-		size_t      s_buf_len = this->__non_standard__get_buffer_length();
+		size_t      s_str_len = this->__non_standard__get_string_length();
 
-		/* check if buffer is empty */
-		if ((s == NULL) || (s == (String::empty_string)) || (index >= s_buf_len))
+		/**
+			* check if buffer is empty or user want to get character outside string
+			* let user to get data outside string is a security risk, so don't risk it
+			*/
+		if ((s == NULL) || (s == (String::empty_string)) || (index >= s_str_len))
 		{
 			return '\0';
 		}
