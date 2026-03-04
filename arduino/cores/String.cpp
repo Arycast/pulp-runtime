@@ -22,7 +22,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h> /* strlen, memcpy, memmove etc. */
-#include <stdlib.h> /* alloc related functions */
+#include <stdlib.h> /* alloc related functions, strtol, strtod */
 #if ((SSTRING_CONF_USE_SNPRINTF_FOR_NON_BASE_CONVERSION) != 0)
 #include <stdio.h> /* snprintf */
 #endif
@@ -4414,4 +4414,55 @@ void String::trim(void)
 		* because current buffer may allocated by reserve
 		*/
 	this->__non_standard__set_new_buffer(s, this->__non_standard__get_buffer_length(), write - s);
+}
+
+/**
+	* static in declaration, but definition shouldn't have static qualifier
+	* DO NOT USE this KEYWORD OR ANY CLASS METHOD HERE
+	*/
+long String::toInt(const char *str, unsigned int base) /* base is default to DEC */
+{
+	/**
+		* just return first pass to strtol
+		* let strtol do the heavy listing to parsing the string
+		*
+		* we also don't really care with pointer to next parsing
+		*/
+
+	/**
+		* strtol can only parse number with base 8, 16, 10
+		* base 0 is considered as auto detect base
+		* other than that is automaticaly return 0 (error)
+		*/
+	switch (base)
+	{
+	case (0):
+		return strtol(str, NULL, 0);
+		break; /* control cannot reach here */
+
+	case (OCT):
+		return strtol(str, NULL, 8);
+		break; /* control cannot reach here */
+
+	case (DEC):
+		return strtol(str, NULL, 10);
+		break; /* control cannot reach here */
+
+	case (HEX):
+		return strtol(str, NULL, 16);
+		break; /* control cannot reach here */
+
+	default:
+		return 0;
+	}
+}
+
+/**
+	* static in declaration, but definition shouldn't have static qualifier
+	* DO NOT USE this KEYWORD OR ANY CLASS METHOD HERE
+	*/
+double String::toDouble(const char *str)
+{
+	/* same with toInt, just return first pass to strtod */
+	return strtod(str, NULL);
 }

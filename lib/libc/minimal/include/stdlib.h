@@ -40,6 +40,9 @@ void free(void *ptr);
 long random(void);
 void srandom(unsigned int seed);
 
+long strtol(const char *nptr, char **endptr, int base);
+double strtod(const char *nptr, char **endptr);
+
 #ifdef __cplusplus
 }
 #endif

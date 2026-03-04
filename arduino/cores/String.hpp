@@ -1021,7 +1021,11 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/toDouble
 		*/
-	double toDouble(void) const;
+	inline double toDouble(void) const
+	{
+		return String::toDouble(this->c_str());
+	}
+	static double toDouble(const char *str);
 
 	/**
 		* method toInt
@@ -1032,7 +1036,15 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/toInt
 		*/
-	long toInt(void) const;
+	/*inline long toInt(void) const
+	{
+		return String::toInt(this->c_str());
+	}*/
+	inline long toInt(unsigned int base = DEC) const
+	{
+		return String::toInt(this->c_str(), base);
+	}
+	static long toInt(const char *str, unsigned int base = DEC);
 
 	/**
 		* method toFloat

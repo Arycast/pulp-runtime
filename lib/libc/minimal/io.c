@@ -25,6 +25,11 @@
 #include "io.h"
 #include <pulp.h>
 
+/* for implementation of strtol and strtod */
+#include <ctype.h>
+#include <limits.h>
+#include <errno.h>
+
 /**
     * when arduino is used, provide implementation for:
     * strnlen
@@ -201,7 +206,7 @@ void *memcpy(void *dst0, const void *src0, size_t len0)
 
     if (src_aligned && dst_aligned && copy_full_words)
     {
-        // all accesses are aligned => can copy full words
+        /* all accesses are aligned => can copy full words */
         uint32_t *dst = (uint32_t *) dst0;
         uint32_t *src = (uint32_t *) src0;
 
@@ -213,7 +218,7 @@ void *memcpy(void *dst0, const void *src0, size_t len0)
     }
     else
     {
-        // copy bytewise
+        /* copy bytewise */
         char *dst = (char *) dst0;
         char *src = (char *) src0;
 
@@ -292,23 +297,23 @@ void *memmove(void *d, const void *s, size_t n)
 
 char *strcpy(char *d, const char *s)
 {
-	char *dest = d;
-	while (*s != '\0')
+    char *dest = d;
+    while (*s != '\0')
     {
-		*d = *s;
-		d++;
-		s++;
-	}
-	*d = '\0';
-	return dest;
+        *d = *s;
+        d++;
+        s++;
+    }
+    *d = '\0';
+    return dest;
 }
 
 
 
 char *strcat(char *dest, const char *src)
 {
-	strcpy(dest + strlen(dest), src);
-	return dest;
+    strcpy(dest + strlen(dest), src);
+    return dest;
 }
 
 
@@ -450,7 +455,7 @@ static void __attribute__((noreturn)) pos_wait_forever()
         eu_evt_maskClr(0xffffffff);
         eu_evt_wait();
 #endif
-    }   
+    }
 #elif defined(EU_VERSION) && EU_VERSION >=3
     eu_evt_maskClr(0xffffffff);
     eu_evt_wait();
@@ -547,4 +552,243 @@ int fputs(const char * restrict s, FILE * restrict stream)
     (void) stream;
 
     return puts(s);
+}
+
+long strtol(const char *nptr, char **endptr, int base)
+{
+    const char *s = nptr;
+    bool negative_number = false
+
+    int c;
+
+    /**
+        * indicate status of parsing
+        * 0: nothing to parse (not found any number)
+        * 1: something is parsed (maybe just 0)
+        * -1: overflow
+        */
+    int any = 0
+
+    int cutlim; /* set cutlim to int so comparison with c don't need cast */
+    unsigned long cutoff;
+
+    unsigned long accumulate = 0;
+
+    /* 1. Skip whitespace */
+    while (isspace((int) (*s)))
+    {
+        s++;
+    }
+
+    /* 2. Handle sign */
+    if ((*s) == '-')
+    {
+        negative_number = true;
+        s++;
+    }
+    else if ((*s) == '+')
+    {
+        s++;
+    }
+
+    /* 3. Handle base auto-detection (base 0) and at same time skip leading "0x" when found */
+    if (((base == 0) || (base == 16)) && ((*s) == '0') && (((*(s + 1)) == 'x') || ((*(s + 1)) == 'X')))
+    {
+        s += 2;
+        base = 16;
+    }
+
+    /* if base is not detected as base 16, try detect it by checking if it has prefix 0 */
+    if (base == 0)
+    {
+        base = ((*s) == '0') ? 8 : 10;
+    }
+
+    /* 4. Overflow boundaries */
+    cutoff  = negative_number ? (unsigned long) ((LONG_MIN) * (-1l)) : LONG_MAX;
+
+    /* get last value of digit possible to add right before overflow */
+    cutlim  = (int) (cutoff % ((unsigned long) base));
+
+    /* get last value of accumulated digit divisible by base right before overflow addition */
+    cutoff /= (unsigned long) base;
+
+    /* 5. Conversion loop */
+    for (accumulate = 0, any = 0;; s++) {
+        c = *s;
+        if      (isdigit(c)) c -= '0';
+        else if (isalpha(c)) c  = tolower(c) - 'a' + 10;
+        else                 break;
+
+        if (c >= base)       break;
+
+        /* keep parsing even if any is -1, because we need to consume all digits */
+        if ((any < 0) ||
+            (accumulate > cutoff) || ((accumulate == cutoff) && (c > cutlim))) /* look ahead if conversion can cause overflow */
+        {
+            /* keep flag indicate error, or set it to error */
+            any = -1;
+        }
+        else
+        {
+            /* do conversion */
+            any = 1; /* something is parsed */
+
+            /* accumulate */
+            accumulate *= base;
+            accumulate += c; /* c is already in a number (not ascii digit character) */
+        }
+    }
+
+    /* 6. Finalize result and endptr */
+    if (any < 0)
+    {
+        accumulate = negative_number ? LONG_MIN : LONG_MAX;
+        errno = ERANGE;
+    }
+    else if (negative_number)
+    {
+        accumulate *= (-1l);
+    }
+
+    /* set endptr if it not NULL */
+    if (endptr != NULL)
+    {
+        /**
+            * when no parsing was done, return nptr
+            * when error (overflow) or success occur, return next buffer
+            *
+            * cast to char * to remove qualifier
+            */
+        *endptr = (char *) ((any != 0) ? s : nptr);
+    }
+
+    /* return parsed value */
+    return accumulate;
+}
+
+double strtod(const char *nptr, char **endptr)
+{
+    const char *s = nptr;
+
+    /**
+        * set 1. if positive (default)
+        * set -1. if negative
+        */
+    double sign = 1.0;
+
+    /* accumulated all part */
+    double res = 0.0;
+
+    /* fractional indicator, getting smaller as farther we parse fraction part */
+    double factor = 1.0;
+
+    bool has_content = false;
+
+    /* 1. Skip whitespace */
+    while (isspace((int) (*s)))
+    {
+        s++;
+    }
+
+    /* 2. Handle sign */
+    if ((*s) == '-')
+    {
+        sign = -1.0;
+        s++;
+    }
+    else if ((*s) == '+')
+    {
+        s++;
+    }
+
+    /* 3. Integer part */
+    while (isdigit((int) (*s)))
+    {
+        res = (res * 10.0) + ((*s) - '0');
+        s++;
+
+        /* set flag that we found integer part */
+        has_content = true;
+    }
+
+    /**
+        * 4. Fractional part
+        *    find period, then parse fraction part
+        */
+    if ((*s) == '.')
+    {
+        s++;
+
+        /* parse fraction */
+        while (isdigit((int) (*s)))
+        {
+            factor *= 0.1;
+
+            res += ((*s) - '0') * factor;
+            s++;
+
+            /* set flag that we found fractional part */
+            has_content = true;
+        }
+    }
+
+    /* 5. Exponent part (e+10, E-5) */
+    if (has_content && (((*s) == 'e') || ((*s) == 'E')))
+    {
+        /* save current ptr before moving forward */
+        const char *backtrack = s;
+
+        /**
+            * exponent maybe negative
+            * set to 1 if positive (default)
+            * set to -1 if exponent is negative
+            */
+        int exp_sign = 1;
+
+        /* move to pointer parse exponent number */
+        s++;
+
+        /* check sign (exponent maybe don't have sign) */
+        if ((*s) == '-')
+        {
+            exp_sign = -1;
+            s++;
+        }
+        else if (*s == '+')
+        {
+            s++;
+        }
+
+        /**
+            * if after e and sign we found digit, parse it
+            * as valid exponent value, if not, backtrack
+            */
+        if (isdigit((int) (*s)))
+        {
+            int exp_val = 0; /* set accumulator to 0 */
+
+            while (isdigit((int) (*s)))
+            {
+                /* FIXME: check overflow */
+                exp_val = (exp_val * 10) + ((*s) - '0');
+                s++;
+            }
+            res *= pow(10.0, (double) (exp_sign * exp_val));
+        }
+        else
+        {
+            s = backtrack; /* No valid exponent, backtrack */
+        }
+    }
+
+    /* set endptr if not NULL */
+    if (endptr != NULL)
+    {
+        /* typecast to remove qualifier */
+        *endptr = (char *) (has_content ? s : nptr);
+    }
+
+    /* fix sign */
+    return res * sign;
 }

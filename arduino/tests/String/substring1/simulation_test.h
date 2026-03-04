@@ -22,8 +22,8 @@
 typedef uint8_t byte;
 
 /*#define BIN 2*/
-/*#define OCT 8*/
+#define OCT 8
 #define DEC 10
-/*#define HEX 16*/
+#define HEX 16
 
 #endif /* ! defined(__SIMULATION_TEST_H__) */
