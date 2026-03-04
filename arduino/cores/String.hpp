@@ -814,7 +814,7 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/length
 		*/
-	unsigned int length(void) const
+	inline unsigned int length(void) const
 	{
 		return (unsigned int) (this->__non_standard__get_string_length());
 	}
@@ -972,7 +972,7 @@ public:
 		*
 		* https://docs.arduino.cc/language-reference/en/variables/data-types/stringObject/Functions/toCharArray
 		*/
-	void toCharArray(char *buf, unsigned int len) const
+	inline void toCharArray(char *buf, unsigned int len) const
 	{
 		const char    *instance_c_str = this->c_str();
 		size_t         instance_len   = this->__non_standard__get_string_length();
@@ -1143,7 +1143,7 @@ public:
 		size_t   selected_index;
 
 		/* L-VALUE: This is called when we write to the index */
-		inline __non_standard__indexing_proxy_s &operator=(char value)
+		inline struct __non_standard__indexing_proxy_s &operator=(char rvalue)
 		{
 			/* get current instance of c string */
 			char       *s         = (this->parent).__non_standard__c_str_non_const();
@@ -1154,7 +1154,7 @@ public:
 			if ((s == NULL) || (((const char *) s) == (String::empty_string)))
 			{
 				/* set dummy storage to '\0' in case this operator used as rvalue */
-				/*String::dummy_char_storage = value;*/
+				/*String::dummy_char_storage = rvalue;*/
 			}
 			else
 			{
@@ -1168,12 +1168,12 @@ public:
 				else if ((this->selected_index)  > s_str_len)
 				{
 					/* inside buffer, but outside string, just write data */
-					s[this->selected_index] = value;
+					s[this->selected_index] = rvalue;
 				}
 				else if ((this->selected_index) == s_str_len)
 				{
 					/* user attempt to write to end of string and just before buffer end */
-					if (value == '\0')
+					if (rvalue == '\0')
 					{
 						/* it is ok only to write termination */
 						s[this->selected_index] = '\0';
@@ -1191,7 +1191,7 @@ public:
 						else
 						{
 							/* it is ok to write anything, but make sure to add '\0' after the string */
-							s[this->selected_index] = value; /* can write any character */
+							s[this->selected_index] = rvalue; /* can write any character */
 							s[          next_index] = '\0'; /* add termination */
 							(this->parent).__non_standard__set_new_buffer(s, s_buf_len, next_index);
 						}
@@ -1200,7 +1200,7 @@ public:
 				else /* ((this->selected_index)  < s_str_len) */
 				{
 					/* we need to modify character inside buffer */
-					if (value == '\0')
+					if (rvalue == '\0')
 					{
 						/* somehow user want to add '\0', this may cause string length to change */
 						s[this->selected_index] = '\0';
@@ -1211,12 +1211,20 @@ public:
 					else
 					{
 						/* user want to add '\0' outside string buffer */
-						s[this->selected_index] = value;
+						s[this->selected_index] = rvalue;
 					}
 				}
 			}
 
 			return (*this); /* return struct instance and not String instance */
+		}
+
+		inline struct __non_standard__indexing_proxy_s &operator=(int rvalue)
+		{
+			/* reuse = operator */
+			char a = (char) rvalue;
+			*this = a;
+			return (*this);
 		}
 
 		/* R-VALUE: This is called when we read from the index */
@@ -1232,11 +1240,195 @@ public:
 				*/
 			return (this->parent).charAt(this->selected_index);
 		}
+
+		/* R-VALUE: This is called when we read from the index */
+		inline operator int() const /* return type is automatically int */
+		{
+			/* reuse cast to char operator */
+			char a = (*this);
+			return (int) a;
+		}
+
+
+		/**
+			* arithmatic
+			*/
+
+		/* suffix/right ++ operator (r-value) */
+		inline char operator++(int) /* make argument anonymous, because it not used */
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* reuse assign operator (throw away return value) */
+			*this = (a + 1);
+
+			/* return old a value */
+			return a;
+		}
+
+		/* suffix/right -- operator (r-value) */
+		inline char operator--(int)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* reuse assign operator (throw away return value) */
+			*this = (a - 1);
+
+			/* return old a value */
+			return a;
+		}
+
+		/* prefix/left ++ operator */
+		inline struct __non_standard__indexing_proxy_s &operator++(void)
+		{
+			(*this)++; /* reuse increment operator, but throw away return value */
+			return (*this); /* return reference object */
+		}
+
+		/* prefix/left -- operator */
+		inline struct __non_standard__indexing_proxy_s &operator--(void)
+		{
+			(*this)--; /* reuse decrement operator, but throw away return value */
+			return (*this); /* return reference object */
+		}
+
+
+		inline char operator+=(char rvalue)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a += rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+		inline char operator-=(char rvalue)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a -= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+		inline char operator*=(char rvalue)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a *= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+		inline char operator/=(char rvalue)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a /= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+		inline char operator%=(char rvalue)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a %= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+
+		/**
+			* logic
+			*/
+
+		inline char operator&=(char rvalue) /* AND */
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a &= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+		inline char operator|=(char rvalue) /* OR */
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a |= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+		inline char operator^=(char rvalue) /* XOR */
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a ^= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+
+		/**
+			* bit manipulation
+			*/
+
+		inline char operator<<=(size_t rvalue)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a <<= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
+
+		inline char operator>>=(size_t rvalue)
+		{
+			/* reuse cast operator to get raw char value */
+			char a = *this;
+
+			/* increment a */
+			a >>= rvalue;
+
+			/* reuse assign operator */
+			return ((*this) = a);
+		}
 	}; /* we need to add ';' to struct declaration */
 
 
 	/* r-value operator */
-	char   operator[](size_t index) const
+	inline char   operator[](size_t index) const
 	{
 		/* in case we use r-value operator, don't need to use proxy */
 
