@@ -28,7 +28,7 @@
 /* for implementation of strtol and strtod */
 #include <ctype.h>
 #include <limits.h>
-#include <errno.h>
+/*#include <errno.h>*/
 
 /**
     * when arduino is used, provide implementation for:
@@ -557,7 +557,7 @@ int fputs(const char * restrict s, FILE * restrict stream)
 long strtol(const char *nptr, char **endptr, int base)
 {
     const char *s = nptr;
-    bool negative_number = false
+    bool negative_number = false;
 
     int c;
 
@@ -567,7 +567,7 @@ long strtol(const char *nptr, char **endptr, int base)
         * 1: something is parsed (maybe just 0)
         * -1: overflow
         */
-    int any = 0
+    int any = 0;
 
     int cutlim; /* set cutlim to int so comparison with c don't need cast */
     unsigned long cutoff;
@@ -605,7 +605,7 @@ long strtol(const char *nptr, char **endptr, int base)
     }
 
     /* 4. Overflow boundaries */
-    cutoff  = negative_number ? (unsigned long) ((LONG_MIN) * (-1l)) : LONG_MAX;
+    cutoff  = negative_number ? (unsigned long) -(LONG_MIN) /*((LONG_MIN) * (-1l))*/ : LONG_MAX;
 
     /* get last value of digit possible to add right before overflow */
     cutlim  = (int) (cutoff % ((unsigned long) base));
@@ -644,7 +644,7 @@ long strtol(const char *nptr, char **endptr, int base)
     if (any < 0)
     {
         accumulate = negative_number ? LONG_MIN : LONG_MAX;
-        errno = ERANGE;
+        errno = -1; /*ERANGE*/
     }
     else if (negative_number)
     {
