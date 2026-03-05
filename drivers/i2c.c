@@ -22,7 +22,7 @@ static inline int __i2c_id(int periph_id)
 }
 
 // Compute divider from desired I2C frequency
-static int i2c_get_div(int i2c_freq)
+int i2c_get_div(int i2c_freq)
 {
     int div = (pos_freq_domains[PI_FREQ_DOMAIN_PERIPH] + i2c_freq - 1) / i2c_freq;
 
@@ -67,7 +67,7 @@ void i2c_close(i2c_t *i2c)
     }
 }
 
-void i2c_write(i2c_t *dev, unsigned char *data, int length)
+void i2c_write(i2c_t *dev, unsigned char *data, int length, int send_stop)
 {
     unsigned char udma_cmd[I2C_CMD_BUFFER_SIZE];
     int seq_index = 0;
@@ -92,7 +92,9 @@ void i2c_write(i2c_t *dev, unsigned char *data, int length)
         udma_cmd[seq_index++] = data[i];
     }
 
-    udma_cmd[seq_index++] = I2C_CMD_STOP;
+    if (send_stop) {
+        udma_cmd[seq_index++] = I2C_CMD_STOP;
+    }
 
     plp_udma_enqueue(UDMA_I2C_TX_ADDR(dev->id), (unsigned int)udma_cmd, seq_index, UDMA_CHANNEL_CFG_EN);
 
