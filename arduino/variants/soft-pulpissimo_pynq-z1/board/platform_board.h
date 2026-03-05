@@ -19,18 +19,22 @@
 #define BOARD_LED0_PAD_MUX_INDEX         5
 #define BOARD_LED0_PAD_MUX_VALUE         2
 #define BOARD_LED0_GPIO_INDEX            5
+#define LED0 BOARD_LED0_GPIO_INDEX 
 
 #define BOARD_LED1_PAD_MUX_INDEX         9
 #define BOARD_LED1_PAD_MUX_VALUE         2
 #define BOARD_LED1_GPIO_INDEX            9
+#define LED1 BOARD_LED1_GPIO_INDEX
 
 #define BOARD_LED2_PAD_MUX_INDEX        10
 #define BOARD_LED2_PAD_MUX_VALUE         2
 #define BOARD_LED2_GPIO_INDEX           10
+#define LED2 BOARD_LED2_GPIO_INDEX
 
 #define BOARD_LED3_PAD_MUX_INDEX        11
 #define BOARD_LED3_PAD_MUX_VALUE         2
 #define BOARD_LED3_GPIO_INDEX           11
+#define LED3 BOARD_LED3_GPIO_INDEX
 
 
 #define BOARD_LED4_RED_PAD_MUX_INDEX    22

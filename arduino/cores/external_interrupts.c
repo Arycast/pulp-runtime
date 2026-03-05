@@ -101,7 +101,33 @@ void attachInterrupt(uint8_t pin, void (*isr)(void), uint8_t mode) {
 #endif
 
 void detachInterrupt(int interrupt){
-    /* the function returns nothing.*/
+    /* Boundary check for valid GPIO pins*/
+    if (interrupt < 0 || interrupt >= 32) {
+        return;
+    }
+
+    /* Mask the interrupt for the specific pin */
+    INTEN_REG &= ~(1 << interrupt);
+
+    /* Clear the register ISR callback */
+    gpio_callbacks[interrupt] = 0;
+
+    /* Reset the trigger type configuration */
+    if (interrupt < 16) {
+        uint8_t shift = interrupt * 2;
+        INTTYPE_0_15 &= ~(0x3 << shift);
+    } else {
+        uint8_t shift = (interrupt - 16) * 2;
+        INTTYPE_16_31 &= ~(0x3 << shift);
+    }
+
+    /* Disable main GPIO IRQ handler if no pins are active */
+    if (INTEN_REG == 0) {
+        uint32_t current_itc_mask = hal_itc_enable_value_get();
+        hal_itc_enable_set(current_itc_mask & ~(1UL << 15));
+        
+        is_handler_registered = 0;
+    }
 }
 
 int digitalPinToInterrupt(int pin){

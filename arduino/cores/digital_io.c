@@ -35,7 +35,9 @@ void pinMode(int pin, uint8_t mode){
 	setPadmuxToGPIO(pad);
 
 	/* enable the specific GPIO pin*/
-	hal_gpio_en_set(1<<pin);
+	uint32_t current_en = hal_gpio_en_get();
+	current_en |= (1 << pin);
+	hal_gpio_en_set(current_en);
 
 	/* set data direction: 1 for OUTPUT, 0 for INPUT*/
 	if (mode == OUTPUT) {
