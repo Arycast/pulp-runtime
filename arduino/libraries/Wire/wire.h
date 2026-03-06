@@ -16,6 +16,9 @@
 #include "String.hpp"
 #include "stream.h"
 
+/* The WIRE_HAS_END macro defined because end() method is available */
+#define WIRE_HAS_END
+
 /* Size of the transmission and reception buffers */
 #define BUFFER_LENGTH 32
 

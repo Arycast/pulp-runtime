@@ -130,9 +130,10 @@ typedef struct {
 
 i2c_t *i2c_open(i2c_dev_t *dev);
 void i2c_close(i2c_t *i2c);
-void i2c_write(i2c_t *dev, unsigned char *data, int length);
+void i2c_write(i2c_t *dev, unsigned char *data, int length, int send_stop);
 void i2c_read(i2c_t *dev_i2c, unsigned char *rx_buff, int length, int pending);
 void i2c_dev_init(i2c_dev_t *dev);
+int i2c_get_div(int i2c_freq);
 
 /* end of i2c section*/
 
