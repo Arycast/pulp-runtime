@@ -42,8 +42,8 @@ void SPIClass::beginTransaction(SPISettings s) {
     int div = spi_get_div(spim->max_baudrate);
     spim->div = div;
 
-    spim->polarity = (s.dataMode & 0x02)? 1 : (s.dataMode & 0x03)? 1 : 0;
-    spim->phase = (s.dataMode & 0x01)? 1 : (s.dataMode & 0x03)? 1 : 0;
+    spim->polarity = (s.dataMode & 0b10)? 1 : 0;
+    spim->phase = (s.dataMode & 0b01)? 1 : 0;
 
     spim->cfg = SPI_CMD_CFG(div, spim->polarity, spim->phase);
 }
@@ -84,8 +84,8 @@ void SPIClass::setClockDivider(uint8_t divider) {
 void SPIClass::setDataMode(uint8_t dataMode) {
     if(spim) {
         current.dataMode = dataMode;
-        spim->polarity = (dataMode & 0x02)? 1 : (dataMode & 0x03)? 1 : 0;
-        spim->phase = (dataMode & 0x01)? 1 : (dataMode & 0x03)? 1 : 0;
+        spim->polarity = (dataMode & 0b10)? 1 : 0;
+        spim->phase = (dataMode & 0b01)? 1 : 0;
         int div = spi_get_div(spim->max_baudrate);
         spim->cfg = SPI_CMD_CFG(div, spim->polarity, spim->phase);
     }

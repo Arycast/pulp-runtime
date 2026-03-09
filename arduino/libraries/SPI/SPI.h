@@ -19,15 +19,15 @@
 /**
     * define SPI Mode variant
     * CPHA = Clock Phase, CPOL = Clock Polarity
-    * Mode 0 -> CPHA = 0, CPOL = 0
-    * Mode 1 -> CPHA = 1, CPOL = 0
-    * Mode 2 -> CPHA = 0, CPOL = 1
-    * Mode 3 -> CPHA = 1, CPOL = 1
+    * Mode 0 -> CPOL = 0, CPHA = 0
+    * Mode 1 -> CPOL = 0, CPHA = 1
+    * Mode 2 -> CPOL = 1, CPHA = 0
+    * Mode 3 -> CPOL = 1, CPHA = 1
     */
-#define SPI_MODE0 0x00
-#define SPI_MODE1 0x01
-#define SPI_MODE2 0x02
-#define SPI_MODE3 0x03
+#define SPI_MODE0 0b00
+#define SPI_MODE1 0b01
+#define SPI_MODE2 0b10
+#define SPI_MODE3 0b11
 
 /**
     * SPISettings class
