@@ -125,4 +125,4 @@ debug: $(APP)
 	$(GDB) $(GDB_OPT) $<
 
 debug-valgrind: $(APP)
-	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) $(VALGRIND_OPT) --vgdb-error=1 --vgdb-stop-at=startup "./$$(basename "$$1")" & VALGRIND_PID="$$!" && sleep 2 && VGDB="$$(which "vgdb")" && $(GDB) $(GDB_OPT) -ex "target remote | $$VGDB" "$$(basename "$$1")" && wait "$$VALGRIND_PID"' -- $<
+	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) $(VALGRIND_OPT) --vgdb-error=1 --vgdb-stop-at=startup "./$$(basename "$$1")" & VALGRIND_PID="$$!" && sleep 2 && VGDB="$$(which "vgdb")" && $(GDB) $(GDB_OPT) -ex "target remote | $$VGDB --pid=$$VALGRIND_PID" "$$(basename "$$1")" && wait "$$VALGRIND_PID"' -- $<
