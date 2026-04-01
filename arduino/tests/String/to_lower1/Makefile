@@ -124,8 +124,5 @@ run-massif: $(MASSIF_OUTPUT)
 debug: $(APP)
 	$(GDB) $(GDB_OPT) $<
 
-debug-valgrind-server: $(APP)
-	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) $(VALGRIND_OPT) --vgdb-error=1 --vgdb-stop-at=startup "./$$(basename "$$1")"' -- $<
-
-debug-valgrind-client: $(APP)
-	sh -c 'VGDB="$$(which "vgdb")" && $(GDB) $(GDB_OPT) -ex "target remote | $$VGDB" "$$1"' -- $<
+debug-valgrind: $(APP)
+	sh -c 'cd "$$(dirname "$$1")" && $(VALGRIND) $(VALGRIND_OPT) --vgdb-error=1 --vgdb-stop-at=startup "./$$(basename "$$1")" & VALGRIND_PID="$$!" && sleep 2 && VGDB="$$(which "vgdb")" && $(GDB) $(GDB_OPT) -ex "target remote | $$VGDB" "$$(basename "$$1")" && wait "$$VALGRIND_PID"' -- $<

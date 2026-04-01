@@ -2,6 +2,9 @@
 *~
 *.bak
 
+# patch backup
+*.orig
+
 # archive of tools
 tools/**/*.tar.gz
 tools/**/*.tar.bz
