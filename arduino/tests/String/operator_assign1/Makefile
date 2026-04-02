@@ -57,6 +57,11 @@ VALGRIND_OPT = --verbose --read-inline-info=yes --read-var-info=yes --leak-check
 MASSIF_OUTPUT = $(patsubst %.elf,%.elf.massif.out,$(APP))
 MASSIF_OPT =
 
+# RM value default to rm -f is not part of POSIX standard,
+# (it is actually specific behavior to GNU Make)
+# define RM to maximize portability (add --verbose while do it)
+RM ?= rm --verbose -f
+
 # rules that don't need output
 .PHONY: all clean distclean
 
