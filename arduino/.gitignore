@@ -4,6 +4,7 @@
 
 # patch backup
 *.orig
+*.rej
 
 # archive of tools
 tools/**/*.tar.gz

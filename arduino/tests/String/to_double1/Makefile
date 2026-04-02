@@ -11,6 +11,50 @@ ARDUINO_BASEDIR = ../../..
 # cores
 ARDUINO_CORES = $(ARDUINO_BASEDIR)/cores
 
+# check if we compile with coverage?
+# to add coverage intrumentation, call make with environment variable: COVERAGE_TEST=1
+# e.g.:
+#
+# $ COVERAGE_TEST=1 make all
+#
+# or
+#
+# $ export COVERAGE_TEST=1
+# $ make all
+#
+# coverage test instrumentation won't be added if COVERAGE_TEST set to 0 or set to empty string
+ifeq ($(COVERAGE_TEST),)
+	# no coverage testing
+	COVERAGE_ASM_FLAGS =
+	COVERAGE_C_FLAGS =
+	COVERAGE_CXX_FLAGS =
+
+	COVERAGE_ASM_LDFLAGS =
+	COVERAGE_C_LDFLAGS =
+	COVERAGE_CXX_LDFLAGS =
+else
+ifeq ($(COVERAGE_TEST),0)
+	# no coverage testing
+	COVERAGE_ASM_FLAGS =
+	COVERAGE_C_FLAGS =
+	COVERAGE_CXX_FLAGS =
+
+	COVERAGE_ASM_LDFLAGS =
+	COVERAGE_C_LDFLAGS =
+	COVERAGE_CXX_LDFLAGS =
+else
+	# compilation flags
+	COVERAGE_ASM_FLAGS =
+	COVERAGE_C_FLAGS = -coverage
+	COVERAGE_CXX_FLAGS = -coverage
+
+	# linking flags
+	COVERAGE_ASM_LDFLAGS = -coverage
+	COVERAGE_C_LDFLAGS = -coverage
+	COVERAGE_CXX_LDFLAGS = -coverage
+endif
+endif
+
 # source
 ASM_SRCS =
 C_SRCS =
@@ -26,9 +70,9 @@ CXX_OBJS = $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(pats
 APP = main.elf
 
 # compilation flags
-ASMFLAGS = -ggdb -Wall -Wextra -pedantic -flto -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
-CFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -std=c11 -flto -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
-CXXFLAGS = -ggdb -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+ASMFLAGS = -g -Wall -Wextra -pedantic -flto $(COVERAGE_ASM_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+CFLAGS = -g -Wall -Wextra -pedantic -Wconversion -std=c11 -flto $(COVERAGE_C_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+CXXFLAGS = -g -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto $(COVERAGE_CXX_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
 
 HAS_C = $(C_SRCS)
 HAS_CXX = $(CXX_SRCS)
@@ -38,9 +82,9 @@ LD_AS = $(CC)
 LD_C = $(CC)
 LD_CXX = $(CXX)
 
-ASM_LDFLAGS =
-C_LDFLAGS =
-CXX_LDFLAGS =
+ASM_LDFLAGS = $(COVERAGE_ASM_LDFLAGS)
+C_LDFLAGS = $(COVERAGE_C_LDFLAGS)
+CXX_LDFLAGS = $(COVERAGE_CXX_LDFLAGS)
 
 ASM_LIBS = -Wl,-flto
 C_LIBS = -Wl,-flto
@@ -50,12 +94,70 @@ CXX_LIBS = -Wl,-flto
 GDB = gdb
 GDB_OPT =
 
+# valgrind (memcheck)
 VALGRIND = valgrind
 VALGRIND_OPT = --verbose --read-inline-info=yes --read-var-info=yes --leak-check=full --show-leak-kinds=all --leak-check-heuristics=all --track-origins=yes
 
-# massif
+# valgrind's massif
 MASSIF_OUTPUT = $(patsubst %.elf,%.elf.massif.out,$(APP))
 MASSIF_OPT =
+
+# coverage object
+ifeq ($(COVERAGE_TEST),)
+	# no coverage testing
+
+	ASM_COVERAGE_GCNO =
+	C_COVERAGE_GCNO =
+	CXX_COVERAGE_GCNO =
+
+	ASM_COVERAGE_GCDA =
+	C_COVERAGE_GCDA =
+	CXX_COVERAGE_GCDA =
+
+	APP_COVERAGE_GCNO =
+	APP_COVERAGE_GCDA =
+else
+ifeq ($(COVERAGE_TEST),0)
+	# no coverage testing
+
+	# compilation
+	ASM_COVERAGE_GCNO =
+	C_COVERAGE_GCNO =
+	CXX_COVERAGE_GCNO =
+
+	# running
+	ASM_COVERAGE_GCDA =
+	C_COVERAGE_GCDA =
+	CXX_COVERAGE_GCDA =
+
+	# no filtering and just add suffix to app coverage
+	# add ltrans (main.elf.ltrans0.ltrans.gcno)
+	APP_COVERAGE_GCNO =
+	APP_COVERAGE_GCDA =
+else
+	# result of compilation
+	ASM_COVERAGE_GCNO = $(filter %.gcno,$(patsubst %.S,%.S.gcno,$(ASM_SRCS))) $(filter %.gcno,$(patsubst %.s,%.s.gcno,$(ASM_SRCS)))
+	C_COVERAGE_GCNO = $(patsubst %.c,%.c.gcno,$(C_SRCS))
+	#CXX_COVERAGE_GCNO = $(filter %.gcno,$(patsubst %.C,%.C.gcno,$(CXX_SRCS))) $(filter %.gcno,$(patsubst %.cc,%.cc.gcno,$(CXX_SRCS))) $(filter %.gcno,$(patsubst %.cpp,%.cpp.gcno,$(CXX_SRCS))) $(filter %.gcno,$(patsubst %.cxx,%.cxx.gcno,$(CXX_SRCS)))
+	CXX_COVERAGE_GCNO = $(filter %.gcno,$(patsubst %.cc,%.cc.gcno,$(CXX_SRCS))) $(filter %.gcno,$(patsubst %.cpp,%.cpp.gcno,$(CXX_SRCS))) $(filter %.gcno,$(patsubst %.cxx,%.cxx.gcno,$(CXX_SRCS)))
+
+	# result of running
+	ASM_COVERAGE_GCDA = $(filter %.gcda,$(patsubst %.S,%.S.gcda,$(ASM_SRCS))) $(filter %.gcda,$(patsubst %.s,%.s.gcda,$(ASM_SRCS)))
+	C_COVERAGE_GCDA = $(patsubst %.c,%.c.gcda,$(C_SRCS))
+	#CXX_COVERAGE_GCDA = $(filter %.gcda,$(patsubst %.C,%.C.gcda,$(CXX_SRCS))) $(filter %.gcda,$(patsubst %.cc,%.cc.gcda,$(CXX_SRCS))) $(filter %.gcda,$(patsubst %.cpp,%.cpp.gcda,$(CXX_SRCS))) $(filter %.gcda,$(patsubst %.cxx,%.cxx.gcda,$(CXX_SRCS)))
+	CXX_COVERAGE_GCDA = $(filter %.gcda,$(patsubst %.cc,%.cc.gcda,$(CXX_SRCS))) $(filter %.gcda,$(patsubst %.cpp,%.cpp.gcda,$(CXX_SRCS))) $(filter %.gcda,$(patsubst %.cxx,%.cxx.gcda,$(CXX_SRCS)))
+
+	# no filtering and just add suffix to app coverage
+	# add ltrans (main.elf.ltrans0.ltrans.gcno)
+	APP_COVERAGE_GCNO = $(APP:=.*.ltrans.gcno) $(APP:=.wpa.gcno)
+	APP_COVERAGE_GCDA = $(APP:=.*.ltrans.gcda) $(APP:=.wpa.gcda)
+endif
+endif
+
+# RM value default to rm -f is not part of POSIX standard,
+# (it is actually specific behavior to GNU Make)
+# define RM to maximize portability (add --verbose while do it)
+RM ?= rm --verbose -f
 
 # rules that don't need output
 .PHONY: all clean distclean
@@ -105,7 +207,7 @@ endif
 
 # clean and distclean
 clean:
-	$(RM) --verbose $(ASM_OBJS) $(C_OBJS) $(CXX_OBJS) $(MASSIF_OUTPUT)
+	$(RM) --verbose $(ASM_OBJS) $(C_OBJS) $(CXX_OBJS) $(MASSIF_OUTPUT) $(ASM_COVERAGE_GCNO) $(C_COVERAGE_GCNO) $(CXX_COVERAGE_GCNO) $(ASM_COVERAGE_GCDA) $(C_COVERAGE_GCDA) $(CXX_COVERAGE_GCDA) $(APP_COVERAGE_GCNO) $(APP_COVERAGE_GCDA)
 
 distclean: clean
 	$(RM) --verbose $(APP)
