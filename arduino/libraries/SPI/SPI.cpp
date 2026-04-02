@@ -73,11 +73,8 @@ void SPIClass::setBitOrder(uint8_t bitOrder) {
 
 void SPIClass::setClockDivider(uint8_t divider) {
     if(spim) {
-        current.clock = divider;
-        spim->max_baudrate = divider;
-        int div = spi_get_div(spim->max_baudrate);
-        spim->div = div;
-        spim->cfg = SPI_CMD_CFG(div, spim->polarity, spim->phase);
+        spim->div = divider;
+        spim->cfg = SPI_CMD_CFG(spim->div, spim->polarity, spim->phase);
     }
 }
 
@@ -101,8 +98,13 @@ byte SPIClass::transfer(byte val) {
     return rx_data;
 }
 
-uint16_t SPIClass::transfer16(uint16_t *val16) {
-    return -1;
+uint16_t SPIClass::transfer16(uint16_t val16) {
+    if (!spim) return -1;
+
+    uint16_t rx_data;
+
+    spim_transfer16(spim, &val16, &rx_data, 16, SPIM_CS_KEEP);
+    return rx_data;
 }
 
 void SPIClass::transfer(byte *buffer, size_t size) {

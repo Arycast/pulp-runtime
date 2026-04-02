@@ -130,7 +130,7 @@ public:
         * https://docs.arduino.cc/language-reference/en/functions/communication/SPI/transfer/ 
         */
     static byte transfer(byte val);
-    static uint16_t transfer16(uint16_t *val16);
+    static uint16_t transfer16(uint16_t val16);
     static void transfer(byte *buffer, size_t size);
 
     /**

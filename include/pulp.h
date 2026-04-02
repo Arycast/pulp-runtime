@@ -181,6 +181,7 @@ typedef enum {
 spim_t *spim_open(spim_conf_t *spim);
 void spim_conf_init(spim_conf_t *spim);
 void spim_transfer(spim_t *handle, void *tx_data, void *rx_data, size_t len, spim_cs_e cs_mode);
+void spim_transfer16(spim_t *handle, void *tx_data, void *rx_data, size_t len, spim_cs_e cs_mode);
 int spi_get_div(int spi_freq);
 void spim_close(spim_t *spim);
 

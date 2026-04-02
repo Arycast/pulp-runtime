@@ -119,6 +119,28 @@ void spim_transfer(spim_t *spim, void *tx_data, void *rx_data, size_t len, spim_
   while(plp_udma_busy(UDMA_SPIM_CMD_ADDR(spim->id)));
 }
 
+void spim_transfer16(spim_t *spim, void *tx_data, void *rx_data, size_t len, spim_cs_e mode)
+{
+  static L2_DATA spim_cmd_t cmd_l2;
+  spim_cmd_t *cmd = &cmd_l2;
+
+  cmd->cmd[0] = spim->cfg;
+  cmd->cmd[1] = SPI_CMD_SOT(spim->cs);
+  cmd->cmd[2] = SPI_CMD_FUL(len/16, SPI_CMD_1_WORD_PER_TRANSF, 16, spim->bitOrder);
+  cmd->cmd[3] = SPI_CMD_EOT(1, mode == SPIM_CS_KEEP);
+
+  int buffer_size = len/16;
+  int cfg = UDMA_CHANNEL_CFG_SIZE_16 | UDMA_CHANNEL_CFG_EN;
+
+  plp_udma_enqueue(UDMA_SPIM_CMD_ADDR(spim->id), (int)cmd, 4*4, cfg);
+  plp_udma_enqueue(UDMA_SPIM_TX_ADDR(spim->id), (int)tx_data, buffer_size, cfg);
+  plp_udma_enqueue(UDMA_SPIM_RX_ADDR(spim->id), (int)rx_data, buffer_size, cfg);
+
+  while(plp_udma_busy(UDMA_SPIM_TX_ADDR(spim->id)));
+  while(plp_udma_busy(UDMA_SPIM_RX_ADDR(spim->id)));
+  while(plp_udma_busy(UDMA_SPIM_CMD_ADDR(spim->id)));
+}
+
 void spim_close(spim_t *spim)
 {
   if (spim != 0)
