@@ -1,0 +1,51 @@
+#!/bin/sh
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+# build result/test executable
+EXECUTABLE="main.elf"
+
+# add address sanitizer verbosity
+if [ -z "$ASAN_VERBOSITY_VALUE" ] ; then
+	ASAN_VERBOSITY_VALUE=1
+fi
+
+# get this script directory
+export THIS_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# enter this script directory
+cd "$THIS_SCRIPT_DIR"
+
+export CFLAGS="-fsanitize=address -fno-omit-frame-pointer"
+export CXXFLAGS="-fsanitize=address -fno-omit-frame-pointer"
+
+export LDFLAGS="-fsanitize=address -fno-omit-frame-pointer"
+
+# build
+make all
+if [ -z "$(ldd "$EXECUTABLE" | grep "libasan\\.so")" ] ; then
+	# clean and then rebuild
+	make clean distclean
+	make all
+fi
+
+# increase verbosity is not yet set
+if   [ -z "$ASAN_OPTIONS" ] ; then
+	export ASAN_OPTIONS="verbosity=$ASAN_VERBOSITY_VALUE"
+elif [ -z "$(echo "ASAN_OPTIONS" | grep "verbosity")" ] ; then
+	export ASAN_OPTIONS="$ASAN_OPTIONS:verbosity=$ASAN_VERBOSITY_VALUE"
+fi
+
+# run testing
+make run
+
+# get return value
+RETVAL="$?"
+
+echo
+
+echo "return value: $RETVAL"

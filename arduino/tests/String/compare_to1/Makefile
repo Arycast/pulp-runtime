@@ -70,9 +70,10 @@ CXX_OBJS = $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(pats
 APP = main.elf
 
 # compilation flags
-ASMFLAGS = -g -Wall -Wextra -pedantic -flto $(COVERAGE_ASM_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
-CFLAGS = -g -Wall -Wextra -pedantic -Wconversion -std=c11 -flto $(COVERAGE_C_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
-CXXFLAGS = -g -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto $(COVERAGE_CXX_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+# respect compilation flags from environment variable (ASMFLAGS, CFLAGS, CXXFLAGS)
+ASMFLAGS += -g -Wall -Wextra -pedantic -flto $(COVERAGE_ASM_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+CFLAGS += -g -Wall -Wextra -pedantic -Wconversion -std=c11 -flto $(COVERAGE_C_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
+CXXFLAGS += -g -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -flto $(COVERAGE_CXX_FLAGS) -I$(ARDUINO_CORES) -I. -DSIMULATION_TEST
 
 HAS_C = $(C_SRCS)
 HAS_CXX = $(CXX_SRCS)
@@ -82,13 +83,15 @@ LD_AS = $(CC)
 LD_C = $(CC)
 LD_CXX = $(CXX)
 
-ASM_LDFLAGS = $(COVERAGE_ASM_LDFLAGS)
-C_LDFLAGS = $(COVERAGE_C_LDFLAGS)
-CXX_LDFLAGS = $(COVERAGE_CXX_LDFLAGS)
+# respect general linking flags (LDFLAGS and LIBS) and
+# linker-specific flags from environment variable
+ASM_LDFLAGS += $(LDFLAGS) $(COVERAGE_ASM_LDFLAGS)
+C_LDFLAGS += $(LDFLAGS) $(COVERAGE_C_LDFLAGS)
+CXX_LDFLAGS += $(LDFLAGS) $(COVERAGE_CXX_LDFLAGS)
 
-ASM_LIBS = -Wl,-flto
-C_LIBS = -Wl,-flto
-CXX_LIBS = -Wl,-flto
+ASM_LIBS += $(LIBS) -Wl,-flto
+C_LIBS += $(LIBS) -Wl,-flto
+CXX_LIBS += $(LIBS) -Wl,-flto
 
 # additional tools (instrumentation)
 GDB = gdb
