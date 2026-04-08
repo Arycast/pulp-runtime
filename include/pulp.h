@@ -119,7 +119,7 @@ typedef struct {
     unsigned int  div;
 } i2c_t;
 
-#define I2C_CMD_BUFFER_SIZE 16
+#define I2C_CMD_BUFFER_SIZE 48    /*!< Size which is enough for sending the opcode bytes as well as the maximum-32-bytes array of data */
 
 typedef struct {
   signed char id;
@@ -130,10 +130,12 @@ typedef struct {
 
 i2c_t *i2c_open(i2c_dev_t *dev);
 void i2c_close(i2c_t *i2c);
-void i2c_write(i2c_t *dev, unsigned char *data, int length, int send_stop);
-void i2c_read(i2c_t *dev_i2c, unsigned char *rx_buff, int length, int pending);
+int i2c_write(i2c_t *dev, unsigned char *data, int length, int send_stop);
+int i2c_read(i2c_t *dev_i2c, unsigned char *rx_buff, int length, int pending);
 void i2c_dev_init(i2c_dev_t *dev);
 int i2c_get_div(int i2c_freq);
+void i2c_settimeout(uint32_t timeout, bool reset_on_timeout);
+bool i2c_managetimeoutflag(bool clearflag);
 
 /* end of i2c section*/
 

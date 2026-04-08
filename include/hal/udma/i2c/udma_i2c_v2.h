@@ -33,4 +33,12 @@ static inline int plp_i2c_tx_busy(int id) {
   return pulp_read32(ARCHI_UDMA_ADDR + UDMA_I2C_OFFSET(id) + UDMA_CHANNEL_CUSTOM_OFFSET + 0x10) & 1;
 }
 
+static inline void plp_i2c_tx_clear(int id) {
+  pulp_write32(ARCHI_UDMA_ADDR + UDMA_I2C_OFFSET(id) + UDMA_CHANNEL_TX_OFFSET + UDMA_CHANNEL_CFG_OFFSET, (1 << 6));
+}
+
+static inline void plp_i2c_rx_clear(int id) {
+  pulp_write32(ARCHI_UDMA_ADDR + UDMA_I2C_OFFSET(id) + UDMA_CHANNEL_RX_OFFSET + UDMA_CHANNEL_CFG_OFFSET, (1 << 6));
+}
+
 #endif

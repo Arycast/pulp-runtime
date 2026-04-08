@@ -85,17 +85,12 @@ void TwoWire::beginTransmission(int address) {
 size_t TwoWire::write(byte value) {
     if(transmitting){
         /* MASTER MODE: Buffer a single byte for later transmission */
-
-        /* Prevent buffer overflow by checking against capacity. */
-        if(txLength >= BUFFER_LENGTH){
-        return 0;
+        if(txLength < BUFFER_LENGTH){
+            /* Store the byte and advance the buffer pointers */
+            txBuffer[txIndex] = value;
+            ++txIndex;
         }
-        
-        /* Store the byte and advance the buffer pointers */
-        txBuffer[txIndex] = value;
-        ++txIndex;
-        txLength = txIndex;
-
+        txLength++;
     }else{
         /* PERIPHERAL MODE: Transmit the single byte immediately */
 
@@ -129,11 +124,20 @@ uint8_t TwoWire::endTransmission(void) {
 }
 
 uint8_t TwoWire::endTransmission(bool stop) {
+    int i2c_error = 0;
+    bool overflow = false;
+    
+    /* Checking if the buffer overflow and limit the ongoing buffer length so the exiciding byte will be dropped */
+    if (BUFFER_LENGTH < txLength){
+        txLength = BUFFER_LENGTH;
+        overflow = true;
+    }
+
     /* True will send a stop message, releasing the bus after transmission. False will send a restart, keeping the connection active. */
     if (transmitting){
 
         /* Build and enqueue I2C command sequence to uDMA for transmission. */
-        i2c_write(i2c, txBuffer, txLength, stop);
+        i2c_error = i2c_write(i2c, txBuffer, txLength, stop);
 
         /* Reset TX buffer indices to clear the buffer for the next transmission. */
         txIndex = 0;
@@ -143,8 +147,23 @@ uint8_t TwoWire::endTransmission(bool stop) {
     /* Reset transmission flag to indicate the bus is no longer busy. */
     transmitting = 0;
 
+    /* Returns 1 to indicate data too long to fit in transmit buffer*/
+    if (overflow) {
+        return 1;}
+
+    /* Returns 5 to indicate timeout */
+    else if (i2c_error == 5) {
+        return 5;}
+
     /* Return 0 to indicate success. */
-    return 0;
+    else if (i2c_error == 0) {
+        return 0;}
+
+    /* Returns 2 and 3 are not supported as the 2nd bit of uDMA I2C0 STATUS registers is disabled so the NACK flag cannot be checked*/
+
+    /* Returns 4 to indicate other error */
+    else {
+        return 4;}
 }
 
 int TwoWire::requestFrom(int address, int quantity) {
@@ -160,13 +179,13 @@ int TwoWire::requestFrom(int address, int quantity, bool stop) {
     
     /* Set target peripheral address and execute the hardware-level read. */
     i2c->cs = address;
-    i2c_read(i2c, rxBuffer, quantity, !stop);
+    int quantity_read = i2c_read(i2c, rxBuffer, quantity, !stop);
     
     /* Set read pointer to the beginning and update the count of available bytes. */
     rxIndex = 0;
-    rxLength = quantity;
+    rxLength = quantity_read;
 
-    return quantity;
+    return quantity_read;
 }
 
 int TwoWire::available(void) {
@@ -200,19 +219,15 @@ void TwoWire::onRequest(void (*handler)(void)) {
 }
 
 void TwoWire::setWireTimeout(uint32_t timeout, bool reset_on_timeout) {
-
-}
-
-void TwoWire::setWireTimeout(void) {
-
+    i2c_settimeout(timeout, reset_on_timeout);
 }
 
 void TwoWire::clearWireTimeoutFlag(void) {
-
+    i2c_managetimeoutflag(true);
 }
 
 bool TwoWire::getWireTimeoutFlag(void) {
-    return false;
+    return i2c_managetimeoutflag(false);
 }
 
 void TwoWire::flush(void)

@@ -161,8 +161,7 @@ public:
      * 
      * https://docs.arduino.cc/language-reference/en/functions/communication/wire/setWireTimeout/
      */
-    void setWireTimeout(uint32_t timeout, bool reset_on_timeout);
-    void setWireTimeout(void);
+    void setWireTimeout(uint32_t timeout = 25000, bool reset_on_timeout = false);
 
     /**
      * method clearWireTimeoutFlag
