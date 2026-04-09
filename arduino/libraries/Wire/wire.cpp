@@ -176,6 +176,11 @@ int TwoWire::requestFrom(int address, int quantity, bool stop) {
 
     /* Enforce buffer safety by limiting the request size. */
     if (quantity > BUFFER_LENGTH) quantity = BUFFER_LENGTH;
+
+    /* Manual Zeroing rxBuffer */
+    for (int i = 0; i < BUFFER_LENGTH; i++) {
+        rxBuffer[i] = 0;
+    }
     
     /* Set target peripheral address and execute the hardware-level read. */
     i2c->cs = address;
