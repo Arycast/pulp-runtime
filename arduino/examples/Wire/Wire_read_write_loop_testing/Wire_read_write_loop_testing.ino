@@ -19,6 +19,12 @@ void setup() {
 }
 void loop() {
   if (running == true) {
+
+    // Ensured rx_data always emptied before refilled
+    for (int i = 0; i < DATA_LENGTH; i++){
+      rx_data[i] = 0x00;
+    }
+
     millisVar = millis();
 
     Wire.beginTransmission(EEPROM_ADDR);
