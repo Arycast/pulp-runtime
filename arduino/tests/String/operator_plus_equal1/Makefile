@@ -216,7 +216,7 @@ distclean: clean
 	$(RM) --verbose $(APP)
 
 # instrumentation
-.PHONY: run run-valgrind run-massif debug debug-valgrind-server debug-valgrind-client
+.PHONY: run run-valgrind run-massif debug debug-valgrind
 
 run: $(APP)
 	sh -c 'cd "$$(dirname "$$1")" && "./$$(basename "$$1")"' -- $<
