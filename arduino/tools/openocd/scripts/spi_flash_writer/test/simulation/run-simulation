@@ -1,0 +1,168 @@
+#!/bin/sh
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+# get directory of this script (sh version maybe not working
+# if this sh script directory included in PATH and this sh script
+# called like calling system command or without path to this sh script)
+export THIS_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# since pushd is not available, just use regular cd command
+LAST_DIR="$PWD"
+cd "$THIS_SCRIPT_DIR"
+
+
+# NOTE 1: PLEASE MAKE SURE THIS CONFIGURATION IS SAME WITH TESTER FILE
+#         (../../spi_flash_writer.c)
+
+# NOTE 2: PLEASE USE DECIMAL NOTATION!
+
+START_WRITE_ADDRESS="0"
+#SPI_FLASH_SIZE_BYTES="8388608" # ((64 * 1024 * 1024) / 8) (8 MiB)
+SPI_FLASH_SECTOR_SIZE_BYTES="4096" # (4 * 1024)
+
+# NOTE 1: PLEASE MAKE SURE THIS CONFIGURATION IS SAME WITH TESTER FILE
+#         (spi_flash_simulation_posix.h), relative path is to executable
+#         which is defined by ../../Makefile
+FLASH_FILE="$THIS_SCRIPT_DIR/../../flash_content.bin"
+
+
+
+# test, for best TEST result, use number that not divisible by 256 (page size)
+TEST_SIZE="3150033" # ~ 3 MiB
+
+
+# random source (don't need to be cryptograpically secure)
+RANDOM_SOURCE="/dev/urandom"
+
+
+# build result/test executable
+# make sure this align with APP value in ../../Makefile or environment variable
+#EXECUTABLE="$THIS_SCRIPT_DIR/../../spi_flash_writer"
+
+
+
+# ##################################################
+# generate test file
+
+# try to build
+make all
+RETVAL="$?"
+if [ "$RETVAL" -ne "0" ] ; then
+	# exit on error
+	exit "$RETVAL"
+fi
+
+
+# ##################################################
+# prepare files
+
+# file under test
+TEST_FILE="$(mktemp)"
+
+# prepare
+dd bs="$TEST_SIZE" count="1" if="$RANDOM_SOURCE" of="$TEST_FILE" conv="nocreat,notrunc"
+
+
+# create list of splited file
+LIST_SPLIT_FILE="$(mktemp)"
+
+# create gdbinit file
+GDBINIT="$(mktemp)"
+
+
+# ##################################################
+# split file into array segment
+
+# loop
+i="0"
+
+# number of next file
+TOTAL_COPY_SIZE=$(wc -c "$TEST_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")
+
+# create splited file
+while [ "$((i * SPI_FLASH_SECTOR_SIZE_BYTES))" -lt "$TOTAL_COPY_SIZE" ] ; do
+	# create segment file
+	SEGMENT_FILE="$(mktemp)"
+
+	# copy segment
+	dd bs="$SPI_FLASH_SECTOR_SIZE_BYTES" count="1" if="$TEST_FILE" of="$SEGMENT_FILE" skip="$i" conv="nocreat,notrunc"
+
+	# append segment file to LIST_SPLIT_FILE
+	echo "$SEGMENT_FILE" >> "$LIST_SPLIT_FILE"
+
+	# increment i
+	i="$((i + 1))"
+done
+
+
+# ##################################################
+# create gdbinit file
+
+#echo "target remote | $(which "vgdb")" >> "$GDBINIT"
+echo "set pagination off" >> "$GDBINIT"
+echo "break INTERRUPT_HERE_TO_OVERWRITE_DATA_TO_SEND_TO_FLASH" >> "$GDBINIT"
+echo "run" >> "$GDBINIT"
+#echo "continue" >> "$GDBINIT"
+
+# make sure SEGMENT_SIZE is defined
+SEGMENT_SIZE="0"
+
+# config
+while IFS= read -r line ; do
+	# get this particular segment size
+	SEGMENT_SIZE=$(wc -c "$line" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")
+
+	echo "restore $line binary buffer" >> "$GDBINIT"
+	echo "set *buffer_fill_length=$SEGMENT_SIZE" >> "$GDBINIT"
+	echo "continue" >> "$GDBINIT"
+done < "$LIST_SPLIT_FILE"
+
+# in case raw file segment last size is exactly SPI_FLASH_SECTOR_SIZE_BYTES
+# disable breakpoints so loop will be terminated (althought we will get warning)
+if [ "$SEGMENT_SIZE" -eq "$SPI_FLASH_SECTOR_SIZE_BYTES" ] ; then
+	echo "disable breakpoints" >> "$GDBINIT"
+	echo "continue" >> "$GDBINIT"
+fi
+
+echo "quit" >> "$GDBINIT"
+
+
+# ##################################################
+# call do debug
+GDB_OPT="-x $GDBINIT" make debug
+
+
+# #################################################
+# make sure gdb writing correct file and simulation
+TEST_FILE_COMPARE="$(mktemp)"
+dd bs="1" count="$TEST_SIZE" if="$FLASH_FILE" of="$TEST_FILE_COMPARE" skip="$START_WRITE_ADDRESS" conv="nocreat,notrunc"
+
+TEST_FILE_SHA512SUM="$(sha512sum "$TEST_FILE" | sed -e "s/^\\([0-9a-fA-F]\\+\\)[[:blank:]]\\+.*/\\1/g")"
+TEST_FILE_COMPARE_SHA512SUM="$(sha512sum "$TEST_FILE_COMPARE" | sed -e "s/^\\([0-9a-fA-F]\\+\\)[[:blank:]]\\+.*/\\1/g")"
+if [ "$TEST_FILE_SHA512SUM" = "$TEST_FILE_COMPARE_SHA512SUM" ] ; then
+	echo "TEST PASS!"
+else
+	echo "TEST FAIL!"
+fi
+
+
+
+# popd not available
+cd "$LAST_DIR"
+
+
+# ##################################################
+# clean up temporary files
+
+# remove segment files
+while IFS= read -r line ; do
+	rm "$line"
+done < "$LIST_SPLIT_FILE"
+
+# remove list file and merge file
+rm "$TEST_FILE" "$TEST_FILE_COMPARE" "$LIST_SPLIT_FILE" "$GDBINIT"

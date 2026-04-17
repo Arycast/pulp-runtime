@@ -1,0 +1,28 @@
+# backup files
+*~
+*.bak
+
+# patch backup
+*.orig
+*.rej
+
+# object file
+*.o
+*.elf
+
+# massif analyzer output (not standardized extension, but used in makefile for massif reporting)
+*.elf.massif.out
+
+# coverage analysis tool (gcov) report
+*.gcno
+*.gcda
+
+# build directory
+**/build/*
+
+# enable
+*.bin
+
+# binary
+*/*.efl
+*/*/spi_flash_writer

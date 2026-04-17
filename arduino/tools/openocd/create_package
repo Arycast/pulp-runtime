@@ -25,7 +25,7 @@ cd "$THIS_SCRIPT_DIR"
 PACKAGE_FILENAME="scripts.tar.gz"
 
 # exclude list
-#TAR_EXCLUDE_LIST=
+TAR_EXCLUDE_LIST="tar_exclude_list.tar"
 
 # delete existing archive
 if [[ -f "$PACKAGE_FILENAME" ]] ; then
@@ -38,6 +38,10 @@ fi
 tar \
 	--exclude-vcs \
 	--exclude-vcs-ignores \
+	--exclude-from="$TAR_EXCLUDE_LIST" \
+	--exclude-from=".gitignore" \
 	--keep-directory-symlink \
 	-cvf "$PACKAGE_FILENAME" \
 	*
+
+#	--transform="" \
