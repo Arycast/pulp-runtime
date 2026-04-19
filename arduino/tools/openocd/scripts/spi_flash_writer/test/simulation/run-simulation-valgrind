@@ -145,8 +145,10 @@ dd bs="1" count="$TEST_SIZE" if="$FLASH_FILE" of="$TEST_FILE_COMPARE" skip="$STA
 TEST_FILE_SHA512SUM="$(sha512sum "$TEST_FILE" | sed -e "s/^\\([0-9a-fA-F]\\+\\)[[:blank:]]\\+.*/\\1/g")"
 TEST_FILE_COMPARE_SHA512SUM="$(sha512sum "$TEST_FILE_COMPARE" | sed -e "s/^\\([0-9a-fA-F]\\+\\)[[:blank:]]\\+.*/\\1/g")"
 if [ "$TEST_FILE_SHA512SUM" = "$TEST_FILE_COMPARE_SHA512SUM" ] ; then
+	echo "checksum (sha512sum) of random value test file and flash content is match!"
 	echo "TEST PASS!"
 else
+	echo "checksum (sha512sum) of random value test file and flash content is NOT match! or vector cannot be generated"
 	echo "TEST FAIL!"
 fi
 
