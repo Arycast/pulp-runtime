@@ -286,8 +286,8 @@ void spim_transfer(spim_t * restrict spim,
 	case (SPIM_CS_NONE):
 		/* cannot handle this case, panic, call abort */
 		fputs("PANIC: can\'t handle spim_transfer cs value SPIM_CS_NONE\n", stderr);
-	default:
-		/* cannot reach here */
+	default: /* compiler will complain "warning: this statement may fall through", but it is intended behavior; just ignore this warning */
+		/* we should not reach here */
 		abort();
 	}
 

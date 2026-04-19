@@ -40,7 +40,7 @@ echo "$0: running with PID: $THIS_SCRIPT_PID"
 # $2 openocd script to be used
 # $3 program/elf to upload
 
-if [ "$#" -ne 3 ] ; then
+if [ "$#" -lt 3 ] ; then
 	echo "Error: Illegal number of parameters."
 	echo "Usage: $0 <path to toolchain bin> <openocd script> <program elf>"
 	echo "example: $0 /opt/riscv/bin pulpissimo_jlink test.elf"

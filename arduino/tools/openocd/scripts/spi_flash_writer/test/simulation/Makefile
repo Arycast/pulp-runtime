@@ -69,6 +69,18 @@ CXX_OBJS = $(filter %.o,$(patsubst %.cc,%.cc.o,$(CXX_SRCS))) $(filter %.o,$(pats
 # application to build
 APP ?= main.elf
 
+# FLASH_FILE
+# please make this value same with FLASH_FILE macro in spi_flash_simulation_posix.h
+# but since generated flash file will be in same directory as executable/app, this
+# definition need APP_DIR
+# this variable will be used for distclean rules
+ifeq ($(APP_DIR),)
+FLASH_FILE ?= flash_content.bin
+else
+#FLASH_FILE ?= $(APP_DIR)/flash_content.bin
+FLASH_FILE ?= $(APP_DIR)flash_content.bin
+endif
+
 # compilation flags,
 #  don't use flto, we need to prevent optimization for data_from_debugger function
 #
@@ -222,7 +234,7 @@ clean:
 	$(RM) --verbose $(ASM_OBJS) $(C_OBJS) $(CXX_OBJS) $(MASSIF_OUTPUT) $(ASM_COVERAGE_GCNO) $(C_COVERAGE_GCNO) $(CXX_COVERAGE_GCNO) $(ASM_COVERAGE_GCDA) $(C_COVERAGE_GCDA) $(CXX_COVERAGE_GCDA) $(APP_COVERAGE_GCNO) $(APP_COVERAGE_GCDA)
 
 distclean: clean
-	$(RM) --verbose $(APP)
+	$(RM) --verbose $(APP) $(FLASH_FILE)
 
 # instrumentation
 .PHONY: run run-valgrind run-massif debug debug-valgrind

@@ -21,6 +21,9 @@ MAKEFILE_DIR = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 #APP ?= $(patsubst %, $(MAKEFILE_DIR)/%, $(PULP_APP))
 APP ?= $(patsubst %, $(MAKEFILE_DIR)%, $(PULP_APP))
 
+# THIS DEFINITION IS NEEDED BY SIMULATION MAKEFILE TO GET FLASH_FILE PATH
+APP_DIR = $(MAKEFILE_DIR)
+
 # source code
 #C_SRCS += $(patsubst %, $(MAKEFILE_DIR)/%, $(PULP_APP_C_SRCS))
 C_SRCS += $(patsubst %, $(MAKEFILE_DIR)%, $(PULP_APP_C_SRCS))
