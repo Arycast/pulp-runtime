@@ -91,11 +91,6 @@ size_t TwoWire::write(byte value) {
             ++txIndex;
         }
         txLength++;
-    }else{
-        /* PERIPHERAL MODE: Transmit the single byte immediately */
-
-        /* Directly push a single byte through the uDMA command pipeline */
-        if (i2c) i2c_write(i2c, &value, 1, true);
     }
     return 1;    
 }
@@ -112,9 +107,6 @@ size_t TwoWire::write(const byte *data, size_t length) {
             /* Sequentially add each byte from the array to the transmit queue */
             write(data[i]);
         }
-    }else{
-        /* PERIPHERAL MODE: Transmit the entire block immediately */
-        if (i2c) i2c_write(i2c, (unsigned char*)data, length, true);
     }
     return length;
 }
@@ -216,11 +208,11 @@ void TwoWire::setClock(uint32_t clockfrequency) {
 }
 
 void TwoWire::onReceive(void (*handler)(int)) {
-
+    // Pulpissimo doesn't support slave mode.
 }
 
 void TwoWire::onRequest(void (*handler)(void)) {
-
+    // Pulpissimo doesn't support slave mode.
 }
 
 void TwoWire::setWireTimeout(uint32_t timeout, bool reset_on_timeout) {
@@ -237,9 +229,11 @@ bool TwoWire::getWireTimeoutFlag(void) {
 
 void TwoWire::flush(void)
 {
+    // The detail for Wire library is not provided in Arduino language reference
 }
 
 int TwoWire::peek(void)
 {
+    // The detail for Wire library is not provided in Arduino language reference
     return 0;
 }

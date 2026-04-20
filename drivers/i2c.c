@@ -101,7 +101,7 @@ int i2c_write(i2c_t *dev, unsigned char *data, int length, int send_stop)
 
     if (send_stop) {
         udma_cmd[seq_index++] = I2C_CMD_STOP;
-    }    
+    }
 
     plp_udma_enqueue(UDMA_I2C_TX_ADDR(dev->id), (unsigned int)udma_cmd, seq_index, UDMA_CHANNEL_CFG_EN); 
 
