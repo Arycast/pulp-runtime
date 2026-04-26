@@ -5,5 +5,38 @@
 # OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
 # NONINFRINGEMENT.
 
-openocd.name="OpenOCD"
-openocd.protocol=default
+openocd_jlink.name="OpenOCD with J-Link"
+openocd_jlink.protocol=default
+openocd_jlink.openocd_interface_cfg=jlink.cfg
+
+openocd_hs2.name="OpenOCD with Digilent JTAG-HS2"
+openocd_hs2.protocol=default
+openocd_hs2.openocd_interface_cfg=hs2.cfg
+
+openocd_cmsis_dap_tcp.name="OpenOCD with CMSIS-DAP TCP cmsis-dap.local"
+openocd_cmsis_dap_tcp.protocol=default
+openocd_cmsis_dap_tcp.openocd_interface_cfg=cmsis-dap-tcp.cfg
+
+openocd_cmsis_dap_tcp1.name="OpenOCD with CMSIS-DAP TCP cmsis-dap-jtag1.local"
+openocd_cmsis_dap_tcp1.protocol=default
+openocd_cmsis_dap_tcp1.openocd_interface_cfg=cmsis-dap-tcp1.cfg
+
+openocd_cmsis_dap_tcp2.name="OpenOCD with CMSIS-DAP TCP cmsis-dap-jtag2.local"
+openocd_cmsis_dap_tcp2.protocol=default
+openocd_cmsis_dap_tcp2.openocd_interface_cfg=cmsis-dap-tcp2.cfg
+
+openocd_cmsis_dap_tcp3.name="OpenOCD with CMSIS-DAP TCP cmsis-dap-jtag3.local"
+openocd_cmsis_dap_tcp3.protocol=default
+openocd_cmsis_dap_tcp3.openocd_interface_cfg=cmsis-dap-tcp3.cfg
+
+openocd_cmsis_dap_tcp4.name="OpenOCD with CMSIS-DAP TCP cmsis-dap-jtag4.local"
+openocd_cmsis_dap_tcp4.protocol=default
+openocd_cmsis_dap_tcp4.openocd_interface_cfg=cmsis-dap-tcp4.cfg
+
+openocd_cmsis_dap_tcp5.name="OpenOCD with CMSIS-DAP TCP cmsis-dap-jtag5.local"
+openocd_cmsis_dap_tcp5.protocol=default
+openocd_cmsis_dap_tcp5.openocd_interface_cfg=cmsis-dap-tcp5.cfg
+
+openocd_cmsis_dap.name="OpenOCD with CMSIS-DAP USB (auto)"
+openocd_cmsis_dap.protocol=default
+openocd_cmsis_dap.openocd_interface_cfg=cmsis-dap-usb.cfg

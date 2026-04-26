@@ -9,17 +9,18 @@
 
 # script to upload/program riscv elf in single command line
 # usage:
-#     ./program    <path to toolchain bin> <openocd script> <program elf>
+#     ./program    <path to toolchain bin>   <openocd interface script>   <openocd target script>   <program elf>
 #
-# <path to toolchain> is bin directory contain executable
-#                     "riscv32-unknown-elf-gdb" and "openocd"
-# <openocd script>    is cfg file used as openocd script
-#                     (this sh script assume only one openocd script is used and
-#                     openocd script is in this sh script directory)
-# <program elf>       elf to upload to board
+# <path to toolchain>   is bin directory contain executable
+#                       "riscv32-unknown-elf-gdb" and "openocd"
+# <openocd interface script>   is cfg file used as openocd script for debug interface
+#                              (this sh script assume openocd script is
+#                              in this sh script directory it it given with relative path)
+# <openocd target script>      is cfg file used as openocd script for debug target (the cpu and/or debug unit)
+# <program elf>         elf/executable to upload to board
 #
 # example:
-#     ./program    /opt/riscv/bin    soft_pynq-z1.cfg    test.elf
+#     ./program    /opt/riscv/bin    jlink.cfg    soft_pynq-z1.cfg    test.elf
 
 # on error, exit
 set -e
@@ -30,6 +31,107 @@ OPENOCD_PORT_GDB=3333
 OPENOCD_PORT_TELNET=4444
 OPENOCD_PORT_TCL=6666
 
+OPENOCD_WAIT_TO_KILL=420   # 7 minutes
+OPENOCD_WAIT_TO_READY=360  # 6 minutes
+
+# function to conveniently kill all process and recursive subprocess
+killallsubprocess() {
+	l_all_process_with_selected_parent="$(ps -o "ppid=" -o "pid=" | grep "^[[:blank:]]*$1[[:blank:]]")"
+
+	# kill child of parent
+	if [ ! -z "$l_all_process_with_selected_parent" ] ; then
+
+		# read line by line
+		#printf '%s\n' "$ALL_PROCESS_WITH_SELECTED_PARENT" | while IFS= read -r line ; do
+		echo "$l_all_process_with_selected_parent" | while IFS= read -r line ; do
+
+			# get child pid from "$line"
+			# line format is:
+			# <space ?><parent pid><space><child pid><space ?><end of line>
+			l_child_pid="$(echo "$line" | sed -e "s/^[[:blank:]]*[[:digit:]]\\+[[:blank:]]\\+\\([[:digit:]]\\+\\)[[:blank:]]*\$/\\1/g")"
+			if [ ! -z "$l_child_pid" ] ; then
+				# kill if it has child, add || true so killallsubprocess won't stop this script
+				echo "kill subprocess of $l_child_pid"
+				killallsubprocess "$l_child_pid" || true
+			fi
+
+		done
+
+	fi
+
+	# kill parent
+
+	# check if subprocess that killed need to be recorded
+	# before kill, collect process time to track process
+	if [ ! -z "$SUBPROCESS_PIDS_FILES" ] ; then
+		ps -p "$1" -o "pid=" -o "time=" >> "$SUBPROCESS_PIDS_FILES"
+	fi
+
+	# actually try to kill parent
+	echo "kill subprocess $1"
+	kill "$1"
+}
+
+# function to conveniently kill process listed in file given by argv[1]
+# this file have format output of ps -o "pid=" -o "time="
+killprocesslistedin() {
+	while IFS= read -r line ; do
+		# use regex to get pid and time
+		l_pid="$(echo "$line" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\1/g")"
+
+		# check if process with same pid exist
+		l_check_pid="$(ps -p "$l_pid" -o "pid=" -o "time=" || true)"
+		if [ ! -z "$l_check_pid" ] ; then
+			# this pid exist, process not terminated?
+			# check with running time
+
+			# recorded time
+			l_days="$(echo "$line" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\2/g" | tr -d "-")"
+			l_hours="$(echo "$line" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\3/g" | tr -d ":")"
+			l_minutes="$(echo "$line" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\4/g")"
+			l_seconds="$(echo "$line" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\5/g")"
+
+			# posix says days and hours are optional
+			if [ -z "$l_days" ] ; then
+				l_days="0"
+			fi
+
+			if [ -z "$l_hours" ] ; then
+				l_hours="0"
+			fi
+
+			# convert to integer
+			l_recorded_integer_time="$(((l_days * 86400) + (l_hours * 3600) + (l_minutes * 60) + l_seconds))"
+
+			l_days="$(echo "$l_check_pid" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\2/g" | tr -d "-")"
+			l_hours="$(echo "$l_check_pid" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\3/g" | tr -d ":")"
+			l_minutes="$(echo "$l_check_pid" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\4/g")"
+			l_seconds="$(echo "$l_check_pid" | sed -e "s/^[[:blank:]]*\\([[:digit:]]\\+\\)[[:blank:]]\\+\\([[:digit:]]\\+-\\)*\\([0-2][0-9]:\\)*\\([0-5][0-9]\\):\\([0-5][0-9]\\)/\\5/g")"
+
+			# posix says days and hours are optional
+			if [ -z "$l_days" ] ; then
+				l_days="0"
+			fi
+
+			if [ -z "$l_hours" ] ; then
+				l_hours="0"
+			fi
+
+			# convert to integer
+			l_check_pid_integer_time="$(((l_days * 86400) + (l_hours * 3600) + (l_minutes * 60) + l_seconds))"
+
+			# only kill only if CHECK_PID integer larger than RECORDED_INTEGER_TIME
+			# if it smaller then new process already take over/recycle the pid
+			if [ "$l_check_pid_integer_time" -ge "$l_recorded_integer_time" ] ; then
+				echo "survived sub process detected (not killed), kill with sig 9... (unclean)"
+				# kill with sig 9 (unclean)
+				kill -9 "$l_pid" || true
+			fi
+		fi
+
+	done < "$1"
+}
+
 # inform this script PID to caller
 THIS_SCRIPT_PID="$$"
 echo "$0: program/upload elf executable binary to pulpissimo using gdb and openocd"
@@ -37,13 +139,14 @@ echo "$0: running with PID: $THIS_SCRIPT_PID"
 
 # argument:
 # $1 path to toolchain
-# $2 openocd script to be used
-# $3 program/elf to upload
+# $2 openocd script for interface
+# $3 openocd script for target
+# $4 program/elf to upload
 
-if [ "$#" -lt 3 ] ; then
+if [ "$#" -lt 4 ] ; then
 	echo "Error: Illegal number of parameters."
-	echo "Usage: $0 <path to toolchain bin> <openocd script> <program elf>"
-	echo "example: $0 /opt/riscv/bin pulpissimo_jlink test.elf"
+	echo "Usage: $0 <path to toolchain bin> <openocd interface script> <openocd target script> <program elf>"
+	echo "example: $0 /opt/riscv/bin jlink.cfg pulpissimo.cfg test.elf"
 	exit 1
 fi
 
@@ -53,16 +156,153 @@ fi
 export THIS_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # export path to toolchain
+# is this easy target for path traversal attack?
+# is this can lead to security threat/vulnerability?
 export PATH="$PATH:$1"
 
+# to communicate with openocd, we will use pipe
+# the idea is to create named pipe, it is ok if this pipe
+# has random path as long openocd and this script know where it is
+#
+# openocd will be called as background process, and it is part of tcl configuration
+# to write this pipe with ready if init process finished
+# if openocd exit (likely due to some failure),
+# next command in background process is to send "exit" (this is valid
+# whether openocd exit with failure or not)
+
+# create random directory to later make pipe/fifo
+OPENOCD_PIPE_DIR="$(mktemp --directory)"
+if [ -z "$OPENOCD_PIPE_DIR" ] ; then
+	echo "cannot create temporary directory (mktemp --directory)"
+	exit 1
+fi
+
+# set where the pipe will be
+export OPENOCD_PIPE="$OPENOCD_PIPE_DIR/notify"
+
+# create pipe
+mkfifo "$OPENOCD_PIPE"
+
 # call openocd and send to background
-openocd -s "$THIS_SCRIPT_DIR" -f "$2" &
+# notify.cfg is small tcl script to simulate: echo "ready" >> "$OPENOCD_PIPE"
+# add || true at the end of openocd call so if openocd exit with error, this list not exit
+# remember that "set -e" inherited to subprocess shell
+((openocd -s "$THIS_SCRIPT_DIR" -f "$2" -f "$3" -f "$THIS_SCRIPT_DIR/notify.cfg" || true) && [ -f "$OPENOCD_PIPE" -o -p "$OPENOCD_PIPE" ] && echo "exit" >> "$OPENOCD_PIPE") &
 
 # get openocd PID
 OPENOCD_PID="$!"
 
-# wait openocd up
-sleep 2
+echo "wait openocd to be ready..."
+
+# wait until openocd call notify script
+# notify script will send "ready" to pipe
+IS_READY="$(timeout -s "INT" -k "$OPENOCD_WAIT_TO_KILL" "$OPENOCD_WAIT_TO_READY" cat "$OPENOCD_PIPE" | grep "^\\(ready\\|exit\\)\$" || true)"
+
+# before checking IS_READY, delete pipe first so if openocd exited, nect command won't hang write to pipe
+echo "deleting pipe"
+rm -v "$OPENOCD_PIPE"
+rmdir "$OPENOCD_PIPE_DIR"
+
+# now we can check and optionally kill openocd if it hang
+if [ -z "$IS_READY" ] ; then
+	# cat command exit because of timeout
+	# kill openocd, because it takes too long to reach either "ready" or "exit"
+	# so, most likely openocd is still running
+
+	echo "wait for $OPENOCD_WAIT_TO_READY (at most $OPENOCD_WAIT_TO_KILL) seconds but openocd not reaching ready state nor exit state, assume hang!"
+	echo "please make sure jtag interface is responsive, target cpu/debug unit is responsive, and no other openocd is running"
+	echo "killing openocd and other related subprocess..."
+
+	# reap children
+
+	# initialize retval to success, if wait return 0 (true),
+	# it will immediately return before next sequence point (command after ||)
+	RETVAL=0
+
+	# kill with default SIGTERM (may be failed),
+	# POSIX mandated background process started by non-interactive shell required to
+	# ignore SIGINT (e.g. if you call "sleep 100", then send kill -INT $SLEEP_PID, sleep will not exit)
+	export SUBPROCESS_PIDS_FILES="$(mktemp)"
+	#kill "$OPENOCD_PID" || true
+	killallsubprocess "$OPENOCD_PID" || true
+
+	# try to kill subprocess that not killed
+	sleep 2 # give a little bit time to subprocess to respond to SIGTERM
+	killprocesslistedin "$SUBPROCESS_PIDS_FILES"
+
+	# remove subprocess list
+	rm -v "$SUBPROCESS_PIDS_FILES"
+
+	wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+	# exit with openocd return code
+	exit "$RETVAL"
+
+elif [ "$IS_READY" = "ready" ] ; then
+	# do nothing
+	echo "ok, openocd is ready"
+
+	# openocd may not open port immediately after finished all script
+	# add slight delay
+	sleep 2
+
+	# check if openocd success open port by checking if openocd not exit
+	CHECK_PID="$(ps -p "$OPENOCD_PID" -o "pid=" -o "time=" || true)"
+	if [ -z "$CHECK_PID" ] ; then
+		# openocd already exit
+		echo "oops, it seems that openocd cannot open its gdb server or telnet server or tcl server service?"
+		echo "please make sure port 3333, 4444, 6666 are availabe for openocd"
+
+		# reap children
+		wait "$OPENOCD_PID"
+
+		exit 1
+	fi
+
+elif [ "$IS_READY" = "exit" ] ; then
+	# oops, openocd exit before timeout
+	echo "oops, openocd is exit"
+	echo "PLEASE CHECK IF JTAG IS CONNECTED, TARGET CPU IS READY FOR DEBUGGING,"
+	echo "NO OTHER OPENOCD PROCESS RUNNING AND USING JTAG INTERFACE OR OPEN SAME TCP PORT (3333, 4444, 6666),"
+	echo "NO OTHER PROCESS OPEN SAME TCP PORT (3333, 4444, 6666), e.g. nc"
+
+	# reap children, same process as above, but without call kill
+	RETVAL=0
+	wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+	# show openocd return (this may reflect to subshell running openocd
+	# rather than the openocd itself)
+	echo "openocd has exit and return $RETVAL"
+
+	# exit with openocd return code
+	exit "$RETVAL"
+
+else
+	# somehow unknown string was send by openocd and catched by grep
+	# this should never happen!
+
+	# attempt to kill openocd (may be failed)
+	RETVAL=0
+
+	export SUBPROCESS_PIDS_FILES="$(mktemp)"
+	#kill "$OPENOCD_PID" || true
+	killallsubprocess "$OPENOCD_PID" || true
+
+	# try to kill subprocess that not killed
+	sleep 2 # give a little bit time to subprocess to respond to SIGTERM
+	killprocesslistedin "$SUBPROCESS_PIDS_FILES"
+
+	# remove subprocess list
+	rm -v "$SUBPROCESS_PIDS_FILES"
+
+	wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+	# show openocd return (this may reflect to subshell running openocd
+	# rather than the openocd itself)
+	echo "openocd has exit and return $RETVAL"
+
+	exit "$RETVAL"
+fi
 
 # reset and halt cpu before gdb connected
 (sleep 1 && echo "reset halt" && echo && sleep 1 && echo "exit" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
@@ -82,15 +322,18 @@ quit
 EOF
 
 # upload with gdb
-riscv32-unknown-elf-gdb --command="$GDB_SCRIPT" "$3"
+riscv32-unknown-elf-gdb --command="$GDB_SCRIPT" "$4"
 
 # remove temporary file
-rm --verbose "$GDB_SCRIPT"
+rm -v "$GDB_SCRIPT"
 
 # shutdown gdb server
 (sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
 
+# #########################
 # wait openocd exit
+
+# openocd should return ok here
 wait "$OPENOCD_PID"
 
 # inform upload process is finished

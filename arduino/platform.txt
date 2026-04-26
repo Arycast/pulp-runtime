@@ -105,10 +105,10 @@ openocd_program_script.path={runtime.tools.openocd_scripts.path}
 openocd_program_script.cmd.path={openocd_program_script.path}/program
 
 # upload a sketch to the target board (using a bootloader preinstalled on the board)
-tools.openocd.upload.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{openocd_cfg}" "{build.path}/{build.project_name}.elf"
+tools.openocd.upload.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{programmer.openocd_interface_cfg}" "{openocd_target_cfg}" "{build.path}/{build.project_name}.elf"
 
 # program a sketch to the target board using an external programmer
-tools.openocd.program.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{openocd_cfg}" "{build.path}/{build.project_name}.elf"
+tools.openocd.program.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{programmer.openocd_interface_cfg}" "{openocd_target_cfg}" "{build.path}/{build.project_name}.elf"
 
 ## erase the target board's flash memory using an external programmer
 #tools.openocd.erase.pattern=
