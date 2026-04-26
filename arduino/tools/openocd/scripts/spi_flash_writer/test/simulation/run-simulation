@@ -82,7 +82,7 @@ GDBINIT="$(mktemp)"
 i="0"
 
 # number of next file
-TOTAL_COPY_SIZE=$(wc -c "$TEST_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")
+TOTAL_COPY_SIZE="$(wc -c "$TEST_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")"
 
 # create splited file
 while [ "$((i * SPI_FLASH_SECTOR_SIZE_BYTES))" -lt "$TOTAL_COPY_SIZE" ] ; do
@@ -115,7 +115,7 @@ SEGMENT_SIZE="0"
 # config
 while IFS= read -r line ; do
 	# get this particular segment size
-	SEGMENT_SIZE=$(wc -c "$line" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")
+	SEGMENT_SIZE="$(wc -c "$line" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")"
 
 	echo "restore $line binary buffer" >> "$GDBINIT"
 	echo "set *buffer_fill_length=$SEGMENT_SIZE" >> "$GDBINIT"
