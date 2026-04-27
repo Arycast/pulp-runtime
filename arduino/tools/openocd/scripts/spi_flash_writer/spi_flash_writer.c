@@ -19,6 +19,18 @@
 #include "debugger_writer.h"
 
 
+/* spi padmux config */
+
+#define SPI_CS_PAD          4 /* CSN0 */
+#define SPI_SCK_PAD         6
+#define SPI_MOSI_IO0_PAD    0
+#define SPI_MISO_IO1_PAD    1
+
+#define SPI_CS_PAD_MUX_VALUE        0
+#define SPI_SCK_PAD_MUX_VALUE       0
+#define SPI_MOSI_IO0_PAD_MUX_VALUE  0
+#define SPI_MISO_IO1_PAD_MUX_VALUE  0
+
 /**
 	* start address to write spi flash
 	*/
@@ -199,6 +211,13 @@ int main(void)
 	size_t         buffer_len;
 
 	size_t         base_address = START_WRITE_ADDRESS;
+
+
+	/* set correct i/o pad function */
+	hal_apb_soc_pad_set_function(SPI_CS_PAD, SPI_CS_PAD_MUX_VALUE);
+	hal_apb_soc_pad_set_function(SPI_SCK_PAD, SPI_SCK_PAD_MUX_VALUE);
+	hal_apb_soc_pad_set_function(SPI_MOSI_IO0_PAD, SPI_MOSI_IO0_PAD_MUX_VALUE);
+	hal_apb_soc_pad_set_function(SPI_MISO_IO1_PAD, SPI_MISO_IO1_PAD_MUX_VALUE);
 
 
 	/*printf("Flashing External NOR Flash" LINE_END);*/

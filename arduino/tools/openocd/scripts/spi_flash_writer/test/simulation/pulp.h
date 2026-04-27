@@ -13,6 +13,7 @@
 /**
 	* pulp.h for simulation in host
 	*/
+#include "pulp_soc.h"
 #include "pulp_spim.h"
 
 #endif /* ! defined(__PULP_H__) */
