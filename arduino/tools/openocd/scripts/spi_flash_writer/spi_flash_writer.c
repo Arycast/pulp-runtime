@@ -490,8 +490,8 @@ static size_t spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector,
 	/* empty out cmd */
 	memset(cmd, 0, SPI_FLASH_PAGE_SIZE_BYTES * sizeof(uint8_t));
 
-	/* initialize command to page program */
-	cmd[0] = 0x03; /* page program */
+	/* initialize command to read data */
+	cmd[0] = 0x03; /* read data */
 	cmd[1] = (base_address >> 16) & 0xff;
 	cmd[2] = (base_address >>  8) & 0xff;
 	cmd[3] =  base_address        & 0xff;
@@ -505,7 +505,7 @@ static size_t spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector,
 	cmd[2] = 0x00;
 	cmd[3] = 0x00;
 
-	/* loop write page */
+	/* loop read data */
 	for (i = 1, data_offset = 0; /* start i from 1 to skip last data */
 		i < NUMBER_OF_PAGE_PER_SECTOR;
 		++i, data_offset += SPI_FLASH_PAGE_SIZE_BYTES)

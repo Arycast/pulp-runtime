@@ -272,6 +272,18 @@ void spim_transfer(spim_t * restrict spim,
 	}
 
 
+	/* copy rx buffer */
+	if (rx_data != NULL)
+	{
+		assert((spim->buffer_rx != NULL) && (spim->buffer_len > 0)); /* buffer_rx should not NULL */
+		assert(spim->buffer_len >= byte_len); /* buffer_rx should reallocated to be bigger buffer */
+
+		/**
+			* copy rx data if rx_data is not NULL
+			* copy last data segment
+			*/
+		memcpy(rx_data, spim->buffer_rx + spim->buffer_len - byte_len, byte_len * sizeof(uint8_t));
+	}
 
 	switch (mode)
 	{
