@@ -104,17 +104,20 @@ tools.openocd.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
 openocd_program_script.path={runtime.tools.openocd_scripts.path}
 openocd_program_script.cmd.path={openocd_program_script.path}/program
 
+# openocd_interface_cfg variable is from programmers.txt
+# openocd_target_cfg variable is from boards.txt
+
 # upload a sketch to the target board (using a bootloader preinstalled on the board)
-tools.openocd.upload.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{programmer.openocd_interface_cfg}" "{openocd_target_cfg}" "{build.path}/{build.project_name}.elf"
+upload.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{openocd_interface_cfg}" "{openocd_target_cfg}" "{build.path}/{build.project_name}.elf"
 
 # program a sketch to the target board using an external programmer
-tools.openocd.program.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{programmer.openocd_interface_cfg}" "{openocd_target_cfg}" "{build.path}/{build.project_name}.elf"
+program.pattern="{openocd_program_script.cmd.path}" "{tools.openocd.path}" "{openocd_interface_cfg}" "{openocd_target_cfg}" "{build.path}/{build.project_name}.elf"
 
 ## erase the target board's flash memory using an external programmer
-#tools.openocd.erase.pattern=
+#erase.pattern=
 
 ## burn a bootloader into the target board using an external programmer
-#tools.openocd.bootloader.pattern=
+#bootloader.pattern=
 
 # support for debugging
 
@@ -144,7 +147,8 @@ debug.server.openocd.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin/
 ## absolute path to the OpenOCD scripts directory
 #debug.server.openocd.scripts_dir={openocd_program_script.path}
 
-# if there is only one OpenOCD script to run, this directive con be used instead of the debug.server.openocd.scripts.N (this directive is ignored if debug.server.openocd.scripts.N is present)
-debug.server.openocd.script={openocd_program_script.path}/{openocd_cfg}
-## is a list of OpenOCD script files to run, where N is a number (a sequence of non-consecutive numbers is allowed)
-##debug.server.openocd.scripts.N=
+## if there is only one OpenOCD script to run, this directive con be used instead of the debug.server.openocd.scripts.N (this directive is ignored if debug.server.openocd.scripts.N is present)
+##debug.server.openocd.script=
+# is a list of OpenOCD script files to run, where N is a number (a sequence of non-consecutive numbers is allowed)
+debug.server.openocd.scripts.1={openocd_program_script.path}/{openocd_interface_cfg}
+debug.server.openocd.scripts.2={openocd_program_script.path}/{openocd_target_cfg}

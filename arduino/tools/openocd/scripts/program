@@ -132,6 +132,11 @@ killprocesslistedin() {
 	done < "$1"
 }
 
+# small function to return value based on given argumen
+returnargumentvalue() {
+	return "$1"
+}
+
 # inform this script PID to caller
 THIS_SCRIPT_PID="$$"
 echo "$0: program/upload elf executable binary to pulpissimo using gdb and openocd"
@@ -187,7 +192,7 @@ mkfifo "$OPENOCD_PIPE"
 # notify.cfg is small tcl script to simulate: echo "ready" >> "$OPENOCD_PIPE"
 # add || true at the end of openocd call so if openocd exit with error, this list not exit
 # remember that "set -e" inherited to subprocess shell
-((openocd -s "$THIS_SCRIPT_DIR" -f "$2" -f "$3" -f "$THIS_SCRIPT_DIR/notify.cfg" || true) && [ -f "$OPENOCD_PIPE" -o -p "$OPENOCD_PIPE" ] && echo "exit" >> "$OPENOCD_PIPE") &
+(RETVAL=0 && (openocd -s "$THIS_SCRIPT_DIR" -f "$2" -f "$3" -f "$THIS_SCRIPT_DIR/notify.cfg" || RETVAL="$?" || true) && [ -f "$OPENOCD_PIPE" -o -p "$OPENOCD_PIPE" ] && echo "exit" >> "$OPENOCD_PIPE" && returnargumentvalue "$RETVAL") &
 
 # get openocd PID
 OPENOCD_PID="$!"
@@ -334,7 +339,8 @@ rm -v "$GDB_SCRIPT"
 # wait openocd exit
 
 # openocd should return ok here
-wait "$OPENOCD_PID"
+RETVAL=0
+wait "$OPENOCD_PID" || RETVAL="$?" || true
 
 # inform upload process is finished
-echo "openocd (PID: $OPENOCD_PID) exited, upload is finished!"
+echo "openocd (PID: $OPENOCD_PID) exit with return value $RETVAL, upload is finished!"
