@@ -128,6 +128,11 @@ SECTIONS
     . = ALIGN(16);
     stack_start = .;
     . = . + 0x800;
+    /* add more stack if user want it */
+    KEEP(*(.stack));
+    /* realign */
+    . = ALIGN(4);
+    . = ALIGN(16);
     stack = .;
   } > L2
 

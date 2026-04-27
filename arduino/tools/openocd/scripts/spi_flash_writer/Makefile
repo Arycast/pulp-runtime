@@ -35,6 +35,9 @@ CFLAGS += -DSIMULATION=1 -DLINE_END=\"\\n\"
 
 else
 
+# add more stack in pulpissimo implementation
+PULP_APP_C_SRCS += more_stack.c
+
 # if we don't run simulation, link and use actual hardware
 include $(PULPRT_HOME)/rules/pulp.mk
 
