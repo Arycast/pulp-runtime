@@ -34,6 +34,9 @@ OPENOCD_PORT_TCL=6666
 OPENOCD_WAIT_TO_KILL=420   # 7 minutes
 OPENOCD_WAIT_TO_READY=360  # 6 minutes
 
+GDB_WAIT_TO_KILL=960    # 16 minutes
+GDB_WAIT_TO_READY=900   # 15 minutes
+
 # function to conveniently kill all process and recursive subprocess
 killallsubprocess() {
 	l_all_process_with_selected_parent="$(ps -o "ppid=" -o "pid=" | grep "^[[:blank:]]*$1[[:blank:]]")"
@@ -327,10 +330,36 @@ quit
 EOF
 
 # upload with gdb
-riscv32-unknown-elf-gdb --command="$GDB_SCRIPT" "$4"
+RETVAL=0
+timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" riscv32-unknown-elf-gdb --command="$GDB_SCRIPT" "$4" || RETVAL="$?" || true
 
 # remove temporary file
 rm -v "$GDB_SCRIPT"
+
+# check if gdb return ok
+if [ "$RETVAL" -ne "0" ] ; then
+	echo "looks like gdb is hang"
+
+	echo "clean up openocd subprocess..."
+
+	export SUBPROCESS_PIDS_FILES="$(mktemp)"
+	#kill "$OPENOCD_PID" || true
+	killallsubprocess "$OPENOCD_PID" || true
+
+	# try to kill subprocess that not killed
+	sleep 2 # give a little bit time to subprocess to respond to SIGTERM
+	killprocesslistedin "$SUBPROCESS_PIDS_FILES"
+
+	# remove subprocess list
+	rm -v "$SUBPROCESS_PIDS_FILES"
+
+	RETVAL=0
+	wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+	# exit with openocd return code
+	#exit "$RETVAL"
+	exit 2
+fi
 
 # shutdown gdb server
 (sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
