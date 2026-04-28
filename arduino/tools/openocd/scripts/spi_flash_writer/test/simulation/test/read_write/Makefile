@@ -74,10 +74,10 @@ FLASH_FILE ?= flash_content.bin
 # omit -std=c11, and put it rule
 #
 # respect compilation flags from environment variable (ASMFLAGS, CFLAGS, CXXFLAGS)
-ASMFLAGS += -g -Wall -Wextra -pedantic -I../.. $(COVERAGE_ASM_FLAGS)
-#CFLAGS += -g -Wall -Wextra -pedantic -Wconversion -std=c11 -I../.. $(COVERAGE_C_FLAGS)
-CFLAGS += -g -Wall -Wextra -pedantic -Wconversion          -I../.. $(COVERAGE_C_FLAGS)
-CXXFLAGS += -g -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -I../.. $(COVERAGE_CXX_FLAGS)
+ASMFLAGS += -g -Wall -Wextra -pedantic -DSIMULATION=1 -DSPI_FLASH_SIZE_BYTES=8388608 -I../.. $(COVERAGE_ASM_FLAGS)
+#CFLAGS += -g -Wall -Wextra -pedantic -Wconversion -std=c11 -DSIMULATION=1 -DSPI_FLASH_SIZE_BYTES=8388608 -I../.. $(COVERAGE_C_FLAGS)
+CFLAGS += -g -Wall -Wextra -pedantic -Wconversion          -DSIMULATION=1 -DSPI_FLASH_SIZE_BYTES=8388608 -I../.. $(COVERAGE_C_FLAGS)
+CXXFLAGS += -g -Wall -Wextra -pedantic -Wconversion -Wnoexcept -std=c++11 -DSIMULATION=1 -DSPI_FLASH_SIZE_BYTES=8388608 -I../.. $(COVERAGE_CXX_FLAGS)
 
 HAS_C = $(C_SRCS)
 HAS_CXX = $(CXX_SRCS)

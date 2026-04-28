@@ -184,7 +184,7 @@ static size_t  spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector
 
 
 /* write data to random address */
-static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_address, const void * restrict data, size_t size);
+/*static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_address, const void * restrict data, size_t size);*/
 
 
 /**
@@ -211,7 +211,7 @@ int main(void)
 	spim_t         *spim;
 	spim_conf_t     spim_conf;
 
-	uint8_t         sector_buffer[SPI_FLASH_SECTOR_SIZE_BYTES];
+	/*uint8_t         sector_buffer[SPI_FLASH_SECTOR_SIZE_BYTES];*/
 	size_t          sector_buffer_len;
 	const  uint8_t *p;
 
@@ -284,9 +284,12 @@ int main(void)
 
 	/**
 		* initialize buffer
+		* when do simulation, do not memset read buffer so valgrind can sanitize error
 		*/
+#if (((! defined(SIMULATION))) || ((defined(SIMULATION)) && ((SIMULATION) == 0)))
 	memset(read_after_write_buffer, 0, BUFFER_SIZE * sizeof(uint8_t));
 	memset(read_after_erase_buffer, 0, BUFFER_SIZE * sizeof(uint8_t));
+#endif
 
 	/* fill buffer i with sequential number */
 	for (i = 0; i < BUFFER_SIZE; ++i)
@@ -302,12 +305,15 @@ int main(void)
 
 	puts("Erasing Sector");
 
-	spi_nor_flash_erase_sector(spim, (uint32_t) base_address / SPI_FLASH_SECTOR_SIZE_BYTES);
+	spi_nor_flash_erase_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES));
 
 	puts("Reading and storing original data from external flash");
 
-	/* read sector */
-	sector_buffer_len = spi_nor_flash_read_sector(spim, (uint32_t) base_address / SPI_FLASH_SECTOR_SIZE_BYTES, sector_buffer);
+	/* read whole sector; but before read, clear shared buffer */
+#if (((! defined(SIMULATION))) || ((defined(SIMULATION)) && ((SIMULATION) == 0)))
+	memset(global_shared_buffer, 0, SPI_FLASH_SECTOR_SIZE_BYTES * sizeof(uint8_t));
+#endif
+	sector_buffer_len = spi_nor_flash_read_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES), global_shared_buffer);
 	if (sector_buffer_len != SPI_FLASH_SECTOR_SIZE_BYTES) /* check read sector validity */
 	{
 		printf("ERROR: read sector not counting bytes as %d" LINE_END, SPI_FLASH_SECTOR_SIZE_BYTES);
@@ -321,7 +327,7 @@ int main(void)
 	}
 
 	/* set p to previous read (value after erase) */
-	p = &(sector_buffer[base_address % SPI_FLASH_SECTOR_SIZE_BYTES]);
+	p = &(global_shared_buffer[base_address % SPI_FLASH_SECTOR_SIZE_BYTES]);
 
 	/* copy to previous read, keep it inside boundary */
 	for (i = 0, address_within_sector = base_address % SPI_FLASH_SECTOR_SIZE_BYTES;
@@ -341,12 +347,28 @@ int main(void)
 
 	puts("Writing new data to external flash");
 
-	spi_nor_flash_write_data(spim, (uint32_t) base_address, write_buffer, BUFFER_SIZE);
+
+	/*spi_nor_flash_write_data(spim, (uint32_t) base_address, write_buffer, BUFFER_SIZE);*/
+
+	/* modify sector in-place */
+	for (i = 0, address_within_sector = base_address % SPI_FLASH_SECTOR_SIZE_BYTES;
+		(i < BUFFER_SIZE) && (address_within_sector < SPI_FLASH_SECTOR_SIZE_BYTES);
+		++i, ++address_within_sector)
+	{
+		global_shared_buffer[address_within_sector] = write_buffer[i];
+	}
+
+
+	/* write whole sector */
+	spi_nor_flash_write_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES), global_shared_buffer);
 
 	puts("Reading and storing updated data from external flash");
 
-	/* read sector for checking write validity */
-	sector_buffer_len = spi_nor_flash_read_sector(spim, (uint32_t) base_address / SPI_FLASH_SECTOR_SIZE_BYTES, sector_buffer);
+	/* read sector for checking write validity; but before read, clear shared buffer  */
+#if (((! defined(SIMULATION))) || ((defined(SIMULATION)) && ((SIMULATION) == 0)))
+	memset(global_shared_buffer, 0, SPI_FLASH_SECTOR_SIZE_BYTES * sizeof(uint8_t));
+#endif
+	sector_buffer_len = spi_nor_flash_read_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES), global_shared_buffer);
 	if (sector_buffer_len != SPI_FLASH_SECTOR_SIZE_BYTES) /* check read sector validity */
 	{
 		printf("ERROR: read sector not counting bytes as %d" LINE_END, SPI_FLASH_SECTOR_SIZE_BYTES);
@@ -360,7 +382,7 @@ int main(void)
 	}
 
 	/* set p to previous read (value after erase) */
-	p = &(sector_buffer[base_address % SPI_FLASH_SECTOR_SIZE_BYTES]);
+	p = &(global_shared_buffer[base_address % SPI_FLASH_SECTOR_SIZE_BYTES]);
 
 	/* copy to previous read, keep it inside boundary */
 	for (i = 0, address_within_sector = base_address % SPI_FLASH_SECTOR_SIZE_BYTES;
@@ -533,11 +555,6 @@ static void spi_nor_flash_write_sector(spim_t * restrict spim, uint32_t sector, 
 		return;
 	}
 
-	/**
-		* enable writing
-		*/
-	spi_nor_flash_write_enable(spim);
-
 	/* initialize command to page program */
 	cmd[0] = 0x02; /* page program */
 
@@ -549,6 +566,11 @@ static void spi_nor_flash_write_sector(spim_t * restrict spim, uint32_t sector, 
 		cmd[1] = (base_address >> 16) & 0xff;
 		cmd[2] = (base_address >>  8) & 0xff;
 		cmd[3] =  base_address        & 0xff;
+
+		/**
+			* enable writing
+			*/
+		spi_nor_flash_write_enable(spim);
 
 		/* send command, keep cs */
 		spim_transfer(spim, cmd, spi_rx, 4 * 8, SPIM_CS_KEEP);
@@ -628,6 +650,7 @@ static size_t spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector,
 	return number_of_data_received;
 }
 
+#if 0
 static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_address, const void * restrict data, size_t size)
 {
 	/* we should not read data again, use _data! */
@@ -739,3 +762,4 @@ static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_ad
 		/* loop until size is 0 */
 	}
 }
+#endif
