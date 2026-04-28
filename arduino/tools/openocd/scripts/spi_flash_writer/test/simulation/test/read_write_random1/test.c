@@ -184,7 +184,8 @@ static size_t  spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector
 
 
 /* write data to random address */
-/*static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_address, const void * restrict data, size_t size);*/
+static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_address, const void * restrict data, size_t size);
+static size_t  spi_nor_flash_read_data(spim_t * restrict spim, uint32_t base_address, void * restrict data, size_t size);
 
 
 /**
@@ -199,8 +200,6 @@ void pe_start(void);
 	* private variable declaration & definition
 	*/
 
-uint8_t global_shared_buffer[SPI_FLASH_SECTOR_SIZE_BYTES];
-
 /**
 	* **************************************************
 	* private & public function definition
@@ -211,10 +210,6 @@ int main(void)
 	spim_t         *spim;
 	spim_conf_t     spim_conf;
 
-	/*uint8_t         sector_buffer[SPI_FLASH_SECTOR_SIZE_BYTES];*/
-	size_t          sector_buffer_len;
-	const  uint8_t *p;
-
 	size_t          base_address = START_WRITE_ADDRESS;
 
 
@@ -222,9 +217,10 @@ int main(void)
 
 	uint8_t         write_buffer[BUFFER_SIZE];
 
-	size_t          address, address_within_sector;
+	size_t          address;
 	size_t          i;
 
+	size_t          read_write_len;
 
 	printf("Testing WRITE and READ External NOR Flash @ address 0x%08x" LINE_END,
 		(unsigned int) base_address);
@@ -309,14 +305,11 @@ int main(void)
 
 	puts("Reading and storing original data from external flash");
 
-	/* read whole sector; but before read, clear shared buffer */
-#if (((! defined(SIMULATION))) || ((defined(SIMULATION)) && ((SIMULATION) == 0)))
-	memset(global_shared_buffer, 0, SPI_FLASH_SECTOR_SIZE_BYTES * sizeof(uint8_t));
-#endif
-	sector_buffer_len = spi_nor_flash_read_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES), global_shared_buffer);
-	if (sector_buffer_len != SPI_FLASH_SECTOR_SIZE_BYTES) /* check read sector validity */
+	/* random read flash */
+	read_write_len = spi_nor_flash_read_data(spim, (uint32_t) base_address, read_after_erase_buffer, BUFFER_SIZE);
+	if (read_write_len != BUFFER_SIZE) /* check read validity */
 	{
-		printf("ERROR: read sector not counting bytes as %d" LINE_END, SPI_FLASH_SECTOR_SIZE_BYTES);
+		printf("ERROR: read sector not counting bytes as %d" LINE_END, BUFFER_SIZE);
 
 		/* release spi */
 		spim_close(spim);
@@ -325,18 +318,6 @@ int main(void)
 		/* exit */
 		return 1;
 	}
-
-	/* set p to previous read (value after erase) */
-	p = &(global_shared_buffer[base_address % SPI_FLASH_SECTOR_SIZE_BYTES]);
-
-	/* copy to previous read, keep it inside boundary */
-	for (i = 0, address_within_sector = base_address % SPI_FLASH_SECTOR_SIZE_BYTES;
-		(i < BUFFER_SIZE) && (address_within_sector < SPI_FLASH_SECTOR_SIZE_BYTES);
-		++i, ++address_within_sector)
-	{
-		read_after_erase_buffer[i] = *p++;
-	}
-
 
 
 
@@ -347,31 +328,15 @@ int main(void)
 
 	puts("Writing new data to external flash");
 
-
-	/*spi_nor_flash_write_data(spim, (uint32_t) base_address, write_buffer, BUFFER_SIZE);*/
-
-	/* modify sector in-place */
-	for (i = 0, address_within_sector = base_address % SPI_FLASH_SECTOR_SIZE_BYTES;
-		(i < BUFFER_SIZE) && (address_within_sector < SPI_FLASH_SECTOR_SIZE_BYTES);
-		++i, ++address_within_sector)
-	{
-		global_shared_buffer[address_within_sector] = write_buffer[i];
-	}
-
-
-	/* write whole sector */
-	spi_nor_flash_write_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES), global_shared_buffer);
+	spi_nor_flash_write_data(spim, (uint32_t) base_address, write_buffer, BUFFER_SIZE);
 
 	puts("Reading and storing updated data from external flash");
 
 	/* read sector for checking write validity; but before read, clear shared buffer  */
-#if (((! defined(SIMULATION))) || ((defined(SIMULATION)) && ((SIMULATION) == 0)))
-	memset(global_shared_buffer, 0, SPI_FLASH_SECTOR_SIZE_BYTES * sizeof(uint8_t));
-#endif
-	sector_buffer_len = spi_nor_flash_read_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES), global_shared_buffer);
-	if (sector_buffer_len != SPI_FLASH_SECTOR_SIZE_BYTES) /* check read sector validity */
+	read_write_len = spi_nor_flash_read_data(spim, (uint32_t) base_address, read_after_write_buffer, BUFFER_SIZE);
+	if (read_write_len != BUFFER_SIZE) /* check read sector validity */
 	{
-		printf("ERROR: read sector not counting bytes as %d" LINE_END, SPI_FLASH_SECTOR_SIZE_BYTES);
+		printf("ERROR: read sector not counting bytes as %d" LINE_END, BUFFER_SIZE);
 
 		/* release spi */
 		spim_close(spim);
@@ -381,27 +346,12 @@ int main(void)
 		return 2;
 	}
 
-	/* set p to previous read (value after erase) */
-	p = &(global_shared_buffer[base_address % SPI_FLASH_SECTOR_SIZE_BYTES]);
-
-	/* copy to previous read, keep it inside boundary */
-	for (i = 0, address_within_sector = base_address % SPI_FLASH_SECTOR_SIZE_BYTES;
-		(i < BUFFER_SIZE) && (address_within_sector < SPI_FLASH_SECTOR_SIZE_BYTES);
-		++i, ++address_within_sector)
-	{
-		read_after_write_buffer[i] = *p++;
-	}
-
-
-
 
 	/**
 		* **************************************************
 		* comparison, display written value
 		*/
-	for (i = 0, address = base_address, address_within_sector = base_address % SPI_FLASH_SECTOR_SIZE_BYTES;
-		(i < BUFFER_SIZE) && (address_within_sector < SPI_FLASH_SECTOR_SIZE_BYTES);
-		++i, ++address, ++address_within_sector)
+	for (i = 0, address = base_address; i < BUFFER_SIZE; ++i, ++address)
 	{
 		printf("Address: 0x%08x | Value Before: 0x%x | Value After: 0x%x | TEST: 0x%x" LINE_END,
 			(unsigned int) address,
@@ -409,13 +359,6 @@ int main(void)
 			(unsigned int) read_after_write_buffer[i],
 			(unsigned int) write_buffer[i]
 		);
-	}
-
-	if (i < BUFFER_SIZE)
-	{
-		printf("address going pass through sector boundary: 0x%08x, " \
-			"not testing, not checking" LINE_END,
-			(unsigned int) address);
 	}
 
 	/**
@@ -650,7 +593,6 @@ static size_t spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector,
 	return number_of_data_received;
 }
 
-#if 0
 /**
 	* this function wraps read sector, modify in-place, and write sector
 	* thus need stack at least as big as sector size! please be aware
@@ -768,4 +710,82 @@ static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_ad
 		/* loop until size is 0 */
 	}
 }
-#endif
+
+static size_t spi_nor_flash_read_data(spim_t * restrict spim, uint32_t base_address, void * restrict data, size_t size)
+{
+	/* allocate in page basis */
+	uint8_t cmd[SPI_FLASH_PAGE_SIZE_BYTES];
+	uint8_t spi_rx[4];
+
+	/* we should not write data again, use _data! */
+	uint8_t * restrict _data = data;
+
+	size_t number_of_data_received;
+
+	/* make sure data is not NULL */
+	if (_data == NULL)
+	{
+		return 0;
+	}
+
+	/* empty out cmd */
+	memset(cmd, 0, SPI_FLASH_PAGE_SIZE_BYTES * sizeof(uint8_t));
+
+	/* read per page size */
+	number_of_data_received = 0; /* set number_of_data_received to 0 */
+	while ((size > 0) && (base_address < SPI_FLASH_SIZE_BYTES))
+	{
+		size_t read_size;
+
+		/* check if number of read is more than page size */
+		if (size > SPI_FLASH_PAGE_SIZE_BYTES)
+		{
+			read_size = SPI_FLASH_PAGE_SIZE_BYTES;
+		}
+		else
+		{
+			read_size = size;
+		}
+
+		/* check if number of read will pass flash size */
+		if (base_address + read_size >= SPI_FLASH_SIZE_BYTES)
+		{
+			read_size = SPI_FLASH_PAGE_SIZE_BYTES - base_address;
+		}
+
+		/* otherwise, don't need to change read_size */
+
+
+		/* initialize command to read data */
+		cmd[0] = 0x03; /* read data */
+		cmd[1] = (base_address >> 16) & 0xff;
+		cmd[2] = (base_address >>  8) & 0xff;
+		cmd[3] =  base_address        & 0xff;
+
+		/* send command read, keep cs low */
+		spim_transfer(spim, cmd, spi_rx, 4 * 8, SPIM_CS_KEEP);
+
+		/* make cmd empty again for transfer data so tx will send 0x00 */
+		cmd[0] = 0x00;
+		cmd[1] = 0x00;
+		cmd[2] = 0x00;
+		cmd[3] = 0x00;
+
+		/* read data, at max 1 page at a time */
+		spim_transfer(spim, cmd, _data, read_size * 8, SPIM_CS_AUTO);
+
+		/* move buffer */
+		_data        += read_size;
+
+		/* accumulate number of data received */
+		number_of_data_received += read_size;
+
+		/* rest of the buffer to fill */
+		size         -= read_size;
+		base_address += (uint32_t) read_size;
+
+		/* loop until size is 0 */
+	}
+
+	return number_of_data_received;
+}

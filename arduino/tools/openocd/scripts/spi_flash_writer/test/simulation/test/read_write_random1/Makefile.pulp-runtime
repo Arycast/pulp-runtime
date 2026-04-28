@@ -1,0 +1,13 @@
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+PULP_APP = test
+PULP_APP_C_SRCS = test.c ../../../../more_stack.c
+
+PULP_CFLAGS = -O3 -g -Wall -Wextra -Wconversion -pedantic # -std=c11
+
+include $(PULPRT_HOME)/rules/pulp.mk
