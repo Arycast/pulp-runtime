@@ -7,14 +7,16 @@
 	* NONINFRINGEMENT.
 	*/
 
-#ifndef __PULP_H__
-#define __PULP_H__
+#ifndef __PULP_KERNEL_TICK_H__
+#define __PULP_KERNEL_TICK_H__
 
-/**
-	* pulp.h for simulation in host
-	*/
-#include "pulp_kernel_tick.h"
-#include "pulp_soc.h"
-#include "pulp_spim.h"
+/* no tick needed for simulation */
+static inline void pos_tick_init(void)
+{
+}
 
-#endif /* ! defined(__PULP_H__) */
+static inline void pos_tick_stop(void)
+{
+}
+
+#endif /* ! defined(__PULP_KERNEL_TICK_H__) */

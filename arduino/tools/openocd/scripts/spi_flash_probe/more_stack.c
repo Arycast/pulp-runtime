@@ -12,7 +12,7 @@
 /* additional stack */
 
 #ifndef PULPISIMO_ADDITIONAL_STACK
-#define PULPISIMO_ADDITIONAL_STACK  (10 * 1024)
+#define PULPISIMO_ADDITIONAL_STACK  (8 * 1024)
 #endif
 
 /* make sure we don't add too much */

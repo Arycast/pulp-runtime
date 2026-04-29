@@ -195,8 +195,6 @@ void pe_start(void);
 	* private variable declaration & definition
 	*/
 
-uint8_t global_shared_buffer[SPI_FLASH_SECTOR_SIZE_BYTES];
-
 /**
 	* **************************************************
 	* private & public function definition
@@ -204,14 +202,16 @@ uint8_t global_shared_buffer[SPI_FLASH_SECTOR_SIZE_BYTES];
 
 int main(void)
 {
-	spim_t        *spim;
-	spim_conf_t    spim_conf;
+	spim_t         *spim;
+	spim_conf_t     spim_conf;
 
-	uint8_t        buffer[SPI_FLASH_SECTOR_SIZE_BYTES];
-	size_t         buffer_len;
+	size_t          base_address = START_WRITE_ADDRESS;
 
-	size_t         base_address = START_WRITE_ADDRESS;
+	uint8_t         buffer[SPI_FLASH_SECTOR_SIZE_BYTES];
+	size_t          buffer_len;
 
+	/* stop tick for this whole process */
+	pos_tick_stop();
 
 	/* set correct i/o pad function */
 	hal_apb_soc_pad_set_function(SPI_CS_PAD, SPI_CS_PAD_MUX_VALUE);
@@ -426,11 +426,6 @@ static void spi_nor_flash_write_sector(spim_t * restrict spim, uint32_t sector, 
 		return;
 	}
 
-	/**
-		* enable writing
-		*/
-	spi_nor_flash_write_enable(spim);
-
 	/* initialize command to page program */
 	cmd[0] = 0x02; /* page program */
 
@@ -442,6 +437,11 @@ static void spi_nor_flash_write_sector(spim_t * restrict spim, uint32_t sector, 
 		cmd[1] = (base_address >> 16) & 0xff;
 		cmd[2] = (base_address >>  8) & 0xff;
 		cmd[3] =  base_address        & 0xff;
+
+		/**
+			* enable writing
+			*/
+		spi_nor_flash_write_enable(spim);
 
 		/* send command, keep cs */
 		spim_transfer(spim, cmd, spi_rx, 4 * 8, SPIM_CS_KEEP);
@@ -521,10 +521,16 @@ static size_t spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector,
 	return number_of_data_received;
 }
 
+/**
+	* this function wraps read sector, modify in-place, and write sector
+	* thus need stack at least as big as sector size! please be aware
+	*/
 static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_address, const void * restrict data, size_t size)
 {
 	/* we should not read data again, use _data! */
 	const uint8_t * restrict _data = data;
+
+	uint8_t         sector_data[SPI_FLASH_SECTOR_SIZE_BYTES];
 
 	/* make sure data is not NULL */
 	if (_data == NULL)
@@ -586,8 +592,8 @@ static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_ad
 			*/
 		if (read_sector)
 		{
-			/* store read data in global buffer to save stack */
-			size_t retval = spi_nor_flash_read_sector(spim, sector, global_shared_buffer);
+			/* store read data in sector data buffer */
+			size_t retval = spi_nor_flash_read_sector(spim, sector, sector_data);
 
 			/* we should read exactly 1 sector */
 			if (retval != SPI_FLASH_SECTOR_SIZE_BYTES)
@@ -614,13 +620,13 @@ static void    spi_nor_flash_write_data(spim_t * restrict spim, uint32_t base_ad
 		}
 
 		/* write data to buffer */
-		memcpy(&(global_shared_buffer[sector_offset_bytes]), _data, write_size * sizeof(uint8_t));
+		memcpy(&(sector_data[sector_offset_bytes]), _data, write_size * sizeof(uint8_t));
 
 		/* erase flash */
 		spi_nor_flash_erase_sector(spim, sector);
 
 		/* write to flash */
-		spi_nor_flash_write_sector(spim, sector, global_shared_buffer);
+		spi_nor_flash_write_sector(spim, sector, sector_data);
 
 		/* move buffer */
 		_data         += write_size;

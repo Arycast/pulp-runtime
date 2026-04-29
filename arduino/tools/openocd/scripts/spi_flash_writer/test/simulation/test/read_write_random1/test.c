@@ -236,6 +236,8 @@ int main(void)
 		return 4;
 	}
 
+	/* stop tick for this whole process */
+	pos_tick_stop();
 
 	/* set correct i/o pad function */
 	hal_apb_soc_pad_set_function(SPI_CS_PAD, SPI_CS_PAD_MUX_VALUE);
