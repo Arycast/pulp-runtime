@@ -354,6 +354,8 @@ break INTERRUPT_HERE_TO_GET_REPORT
 continue
 disable breakpoints 1
 dump memory $FLASH_PROBE_REPORT report report+$REPORT_SIZE
+disconnect
+#detach
 quit
 EOF
 
@@ -559,6 +561,8 @@ done
 
 # add gdb init epilogue
 cat >> "$GDBINIT" <<EOF
+disconnect
+#detach
 quit
 EOF
 
