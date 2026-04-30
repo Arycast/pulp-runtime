@@ -9,6 +9,19 @@
 
 # for now, we only support bash
 
+# IMPORTANT: to run this script, you need to have riscv32-unknown-elf toolchain
+#            (riscv32-unknown-elf-gcc, riscv32-unknown-elf-readelf, etc.)
+#            in yout path
+#            before running this script, include you toolchain in PATH variable:
+#            $ export PATH="$PATH:<absolute path to toolchain>"
+#            $ ./create_package
+#            or prepend the script command with modified path:
+#            $ PATH="$PATH:<absolute path to toolchain>" ./create_package
+
+# SECURITY NOTICE: dependency to external PATH variable may impose security risk
+#                  in environment where execution of this script is network-controlled;
+#                  please at least sanitize PATH before calling this script
+
 # get this directory
 export THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -27,6 +40,73 @@ PACKAGE_FILENAME="scripts.tar.gz"
 # exclude list
 TAR_EXCLUDE_LIST="tar_exclude_list.txt"
 
+# additional binary to load to pulpissimo soc to help flashing
+
+# run Makefile in this directory to build converter elf32 to pulpissimo elf
+# notice that this executable will run in current machine (native build)
+if [[ ! -f "$THIS_SCRIPT_DIR/scripts/elf_to_flash_image" ]] ; then
+	# run make
+	(cd "$THIS_SCRIPT_DIR/scripts" && make all && [ -f "elf_to_flash_image" -a -x "elf_to_flash_image" ])
+	RETVAL="$?"
+	if [[ "$RETVAL" -ne "0" ]] ; then
+		exit $RETVAL;
+	fi
+
+	# return to this directory
+	cd "$THIS_SCRIPT_DIR"
+fi
+
+# check if probe and writer already built?
+HAS_FLASH_PROBE="0"
+if [[ -f "$THIS_SCRIPT_DIR/scripts/spi_flash_probe/build/spi_flash_probe/spi_flash_probe" ]] ; then
+	HAS_FLASH_PROBE="1"
+fi
+
+HAS_FLASH_WRITER="0"
+if [[ -f "$THIS_SCRIPT_DIR/scripts/spi_flash_writer/build/spi_flash_writer/spi_flash_writer" ]] ; then
+	HAS_FLASH_WRITER="1"
+fi
+
+
+# build if necessary
+if [[ ("$HAS_FLASH_PROBE" -eq "0") || ($HAS_FLASH_WRITER -eq "0") ]] ; then
+
+	# do build
+
+	# resolve pulp-runtime directory relative to this script:
+	PULP_RUNTIME_ROOT_DIR="$THIS_SCRIPT_DIR/../../.."
+
+	# get pulp configuration if flash binary not yet compiled
+	PULP_RUNTIME_CONFIG_PULPISSIMO="$PULP_RUNTIME_ROOT_DIR/configs/pulpissimo.sh"
+	PULP_RUNTIME_CONFIG_FPGA_PULPISSIMO="$PULP_RUNTIME_ROOT_DIR/configs/fpgas/pulpissimo/genesys2.sh"
+
+	# import config
+	. "$PULP_RUNTIME_CONFIG_PULPISSIMO" || true
+	. "$PULP_RUNTIME_CONFIG_FPGA_PULPISSIMO" || true
+
+	if [[ "$HAS_FLASH_PROBE" -eq "0" ]] ; then
+		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_probe" && make clean && make all && [ -f "build/spi_flash_probe/spi_flash_probe" -a -x "build/spi_flash_probe/spi_flash_probe" ])
+		RETVAL="$?"
+		if [[ "$RETVAL" -ne "0" ]] ; then
+			exit $RETVAL;
+		fi
+
+		# go back to THIS_SCRIPT_DIR
+		cd "$THIS_SCRIPT_DIR"
+	fi
+
+	if [[ "$HAS_FLASH_WRITER" -eq "0" ]] ; then
+		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_writer" && make clean && make all && [ -f "build/spi_flash_writer/spi_flash_writer" -a -x "build/spi_flash_writer/spi_flash_writer" ])
+		RETVAL="$?"
+		if [[ "$RETVAL" -ne "0" ]] ; then
+			exit $RETVAL;
+		fi
+
+		# go back to THIS_SCRIPT_DIR
+		cd "$THIS_SCRIPT_DIR"
+	fi
+fi
+
 # delete existing archive
 if [[ -f "$PACKAGE_FILENAME" ]] ; then
 	rm --verbose "$PACKAGE_FILENAME"
@@ -34,7 +114,8 @@ fi
 
 # name of archive should follow package_*_index.json
 # exclusion given by .gitignore and tar_exclusion.txt
-# archive all file in current directory
+
+# archive openocd config files
 tar \
 	--exclude-vcs \
 	--exclude-vcs-ignores \
@@ -42,6 +123,20 @@ tar \
 	--exclude-from=".gitignore" \
 	--keep-directory-symlink \
 	-cvf "$PACKAGE_FILENAME" \
-	*
+	"scripts"/*."cfg"
 
-#	--transform="" \
+# archive helper tools, keep path consistent
+# since we hand pick what files to be archived, don't use exclude list
+tar \
+	--exclude-vcs \
+	--exclude-vcs-ignores \
+	--keep-directory-symlink \
+	-rvf "$PACKAGE_FILENAME" \
+	"scripts/program" \
+	"scripts/program_flash" \
+	"scripts/elf_to_flash_image" \
+	"scripts/spi_flash_probe/build/spi_flash_probe/spi_flash_probe" \
+	"scripts/spi_flash_writer/build/spi_flash_writer/spi_flash_writer"
+
+#--exclude-from="$TAR_EXCLUDE_LIST" \
+#--exclude-from=".gitignore" \
