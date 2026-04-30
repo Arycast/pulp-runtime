@@ -49,7 +49,7 @@ if [[ ! -f "$THIS_SCRIPT_DIR/scripts/elf_to_flash_image" ]] ; then
 	(cd "$THIS_SCRIPT_DIR/scripts" && make all && [ -f "elf_to_flash_image" -a -x "elf_to_flash_image" ])
 	RETVAL="$?"
 	if [[ "$RETVAL" -ne "0" ]] ; then
-		exit $RETVAL;
+		exit "$RETVAL"
 	fi
 
 	# return to this directory
@@ -92,7 +92,7 @@ if [[ ("$HAS_FLASH_PROBE" -eq "0") || ("$HAS_FLASH_WRITER" -eq "0") || ("$HAS_FL
 		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_probe" && make clean && make all && [ -f "build/spi_flash_probe/spi_flash_probe" -a -x "build/spi_flash_probe/spi_flash_probe" ])
 		RETVAL="$?"
 		if [[ "$RETVAL" -ne "0" ]] ; then
-			exit $RETVAL;
+			exit "$RETVAL"
 		fi
 
 		# go back to THIS_SCRIPT_DIR
@@ -103,7 +103,7 @@ if [[ ("$HAS_FLASH_PROBE" -eq "0") || ("$HAS_FLASH_WRITER" -eq "0") || ("$HAS_FL
 		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_writer" && make clean && make all && [ -f "build/spi_flash_writer/spi_flash_writer" -a -x "build/spi_flash_writer/spi_flash_writer" ])
 		RETVAL="$?"
 		if [[ "$RETVAL" -ne "0" ]] ; then
-			exit $RETVAL;
+			exit "$RETVAL"
 		fi
 
 		# go back to THIS_SCRIPT_DIR
@@ -114,7 +114,7 @@ if [[ ("$HAS_FLASH_PROBE" -eq "0") || ("$HAS_FLASH_WRITER" -eq "0") || ("$HAS_FL
 		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_reader" && make clean && make all && [ -f "build/spi_flash_reader/spi_flash_reader" -a -x "build/spi_flash_reader/spi_flash_reader" ])
 		RETVAL="$?"
 		if [[ "$RETVAL" -ne "0" ]] ; then
-			exit $RETVAL;
+			exit "$RETVAL"
 		fi
 
 		# go back to THIS_SCRIPT_DIR
