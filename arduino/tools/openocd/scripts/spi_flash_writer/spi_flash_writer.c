@@ -301,6 +301,14 @@ int main(void)
 
 	puts("Done");
 
+	__asm__ volatile (
+		".global     INTERRUPT_HERE_TO_FINISH_PROGRAM\n" \
+		"INTERRUPT_HERE_TO_FINISH_PROGRAM:\n"
+		:
+		:
+		:
+	);
+
 	return 0;
 }
 

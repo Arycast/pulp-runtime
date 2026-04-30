@@ -320,6 +320,8 @@ fi
 GDB_SCRIPT="$(mktemp)"
 
 cat > "$GDB_SCRIPT" <<EOF
+set pagination off
+#set debuginfod enabled off
 target extended-remote $OPENOCD_HOST:$OPENOCD_PORT_GDB
 monitor reset halt
 load

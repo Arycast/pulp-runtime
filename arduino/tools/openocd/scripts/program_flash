@@ -345,6 +345,8 @@ FLASH_PROBE_REPORT="$(mktemp)"
 
 # build gdb init
 cat >> "$GDBINIT" <<EOF
+set pagination off
+#set debuginfod enabled off
 target extended-remote $OPENOCD_HOST:$OPENOCD_PORT_GDB
 monitor reset halt
 load
@@ -513,11 +515,16 @@ dd if="/dev/null" of="$GDBINIT" count=0 seek=0
 LIST_SPLIT_FILE="$(mktemp)"
 
 # add gdb init prologue
+# if pagination not set to off, gdb will be stop to paginate, but because
+# we are in non interactive shell, gdb will just hang
 cat >> "$GDBINIT" <<EOF
+set pagination off
+#set debuginfod enabled off
 target extended-remote $OPENOCD_HOST:$OPENOCD_PORT_GDB
 monitor reset halt
 load
 break INTERRUPT_HERE_TO_OVERWRITE_DATA_TO_SEND_TO_FLASH
+break INTERRUPT_HERE_TO_FINISH_PROGRAM
 continue
 EOF
 
@@ -542,6 +549,7 @@ while [ "$((i * SPI_FLASH_SECTOR_SIZE_BYTES))" -lt "$EXECUTABLE_SIZE" ] ; do
 cat >> "$GDBINIT" <<EOF
 restore $SEGMENT_FILE binary buffer
 set *buffer_fill_length=$LAST_SEGMENT_SIZE
+echo WRITING $LAST_SEGMENT_SIZE DATA TO FLASH, SEQUENCE $i
 continue
 EOF
 
