@@ -550,8 +550,8 @@ while [ "$((i * SPI_FLASH_SECTOR_SIZE_BYTES))" -lt "$EXECUTABLE_SIZE" ] ; do
 # add to gdbinit
 cat >> "$GDBINIT" <<EOF
 restore $SEGMENT_FILE binary buffer
-set *buffer_fill_length=$LAST_SEGMENT_SIZE
-echo WRITING $LAST_SEGMENT_SIZE DATA TO FLASH, SEQUENCE $i
+set variable *buffer_fill_length=$LAST_SEGMENT_SIZE
+echo WRITING $LAST_SEGMENT_SIZE BYTES DATA TO FLASH, SEQUENCE $i
 continue
 EOF
 
@@ -570,6 +570,96 @@ EOF
 # upload with gdb
 RETVAL=0
 timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" riscv32-unknown-elf-gdb --command="$GDBINIT" "$THIS_SCRIPT_DIR/spi_flash_writer/build/spi_flash_writer/spi_flash_writer" || RETVAL="$?" || true
+
+# check if gdb return ok
+if [ "$RETVAL" -ne "0" ] ; then
+	echo "looks like gdb is hang"
+
+	echo "clean up openocd subprocess..."
+
+	export SUBPROCESS_PIDS_FILES="$(mktemp)"
+	#kill "$OPENOCD_PID" || true
+	killallsubprocess "$OPENOCD_PID" || true
+
+	# try to kill subprocess that not killed
+	sleep 2 # give a little bit time to subprocess to respond to SIGTERM
+	killprocesslistedin "$SUBPROCESS_PIDS_FILES"
+
+	# remove subprocess list
+	rm -v "$SUBPROCESS_PIDS_FILES"
+
+	RETVAL=0
+	wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+	while IFS= read -r line ; do
+		rm -v "$line"
+	done < "$LIST_SPLIT_FILE"
+
+	# remove list file and merge file
+	rm -v "$PULPISIMMO_EXECUTABLE" "$LIST_SPLIT_FILE"
+
+	# exit with openocd return code
+	#exit "$RETVAL"
+	exit 2
+fi
+
+
+# ##################################################
+# ok, flash is written
+#
+# now verify flash
+#
+# prepare to flashing by generating splice file and new gdbinit
+
+# truncate gdbinit (with dd)
+dd if="/dev/null" of="$GDBINIT" count=0 seek=0
+
+# create verify file
+FLASH_VERIFY_FILE="$(mktemp)"
+
+# add gdb init prologue
+# if pagination not set to off, gdb will be stop to paginate, but because
+# we are in non interactive shell, gdb will just hang
+cat >> "$GDBINIT" <<EOF
+set pagination off
+#set debuginfod enabled off
+target extended-remote $OPENOCD_HOST:$OPENOCD_PORT_GDB
+monitor reset halt
+load
+break INTERRUPT_HERE_TO_READ_DATA_FROM_FLASH
+break INTERRUPT_HERE_TO_FINISH_PROGRAM
+EOF
+
+# loop to create multiple session to read flash, all memory data will be append to single file
+i=0
+while [ "$((i * SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES))" -lt "$EXECUTABLE_SIZE" ] ; do
+
+# add to gdbinit
+cat >> "$GDBINIT" <<EOF
+continue
+set variable stop_read=0
+append memory $FLASH_VERIFY_FILE buffer buffer+$SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES
+echo RECEIVED $SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES BYTES DATA FROM FLASH, SEQUENCE $i
+EOF
+
+	# increment i
+	i="$((i + 1))"
+done
+
+# add gdb init epilogue
+cat >> "$GDBINIT" <<EOF
+set variable stop_read=1
+disconnect
+#detach
+quit
+EOF
+
+
+# receive data using with gdb
+RETVAL=0
+timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" riscv32-unknown-elf-gdb --command="$GDBINIT" "$THIS_SCRIPT_DIR/spi_flash_reader/build/spi_flash_reader/spi_flash_reader" || RETVAL="$?" || true
+#cat "$GDBINIT"
+#riscv32-unknown-elf-gdb "$THIS_SCRIPT_DIR/spi_flash_reader/build/spi_flash_reader/spi_flash_reader" || RETVAL="$?" || true
 
 # remove temporary file
 rm -v "$GDBINIT"
@@ -607,18 +697,33 @@ if [ "$RETVAL" -ne "0" ] ; then
 fi
 
 
-# ##################################################
-# TODO: verify flash
+# FINISH!
 
 
+# do verify!
 
+# check size
+FLASH_VERIFY_FILE_SIZE="$(wc -c "$FLASH_VERIFY_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*\$/\\1/g")"
+if [ "$FLASH_VERIFY_FILE_SIZE" -lt "$EXECUTABLE_SIZE" ] ; then
+	echo "ERROR: FLASH READ OUT SIZE LESS THAN EXECUTABLE:  read out: $FLASH_VERIFY_FILE_SIZE  executable: $EXECUTABLE_SIZE"
+	echo "ERROR: FIX YOUR GDBINIT FILE!"
+else
+	# flash FLASH_VERIFY_FILE_SIZE is bigger than executable
+	# truncate!
+	dd if="/dev/null" of="$FLASH_VERIFY_FILE" bs=1 count=0 seek="$EXECUTABLE_SIZE"
 
+	# compare using cmp
+	RETVAL=0
+	cmp "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE" || RETVAL="$?" || true
+	if [ "$RETVAL" -ne "0" ] ; then
+		echo "ERROR: FLASH READ OUT DO NOT MATCH WITH EXECUTABLE"
+	else
+		echo "VERIFY SUCCESS! FLASH CONTENT IS MATCH"
+	fi
+fi
 
-
-
-
-
-
+# remove flash verify file
+rm -v "$FLASH_VERIFY_FILE"
 
 # shutdown gdb server
 (sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
