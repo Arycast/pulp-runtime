@@ -390,6 +390,7 @@ fi
 
 
 # check FLASH_PROBE_REPORT
+#   add space between bracket to prevent shell to translate grouping command into math statement
 END_OF_REPORT_LINE="$( (grep -a -n "^END OF REPORT\$" "$FLASH_PROBE_REPORT" | sed -e "s/\\([0-9]\\+\\):END OF REPORT/\\1/g") || true )"
 if [ -z "$END_OF_REPORT_LINE" ] ; then
 	# looks like flash is not found
@@ -596,7 +597,7 @@ if [ "$RETVAL" -ne "0" ] ; then
 	done < "$LIST_SPLIT_FILE"
 
 	# remove list file and merge file
-	rm -v "$PULPISIMMO_EXECUTABLE" "$LIST_SPLIT_FILE"
+	rm -v "$PULPISIMMO_EXECUTABLE" "$GDBINIT" "$LIST_SPLIT_FILE"
 
 	# exit with openocd return code
 	#exit "$RETVAL"
@@ -689,7 +690,7 @@ if [ "$RETVAL" -ne "0" ] ; then
 	done < "$LIST_SPLIT_FILE"
 
 	# remove list file and merge file
-	rm -v "$PULPISIMMO_EXECUTABLE" "$LIST_SPLIT_FILE"
+	rm -v "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE" "$LIST_SPLIT_FILE"
 
 	# exit with openocd return code
 	#exit "$RETVAL"
@@ -722,8 +723,8 @@ else
 	fi
 fi
 
-# remove flash verify file
-rm -v "$FLASH_VERIFY_FILE"
+# remove flash verify file and generated flash image
+rm -v "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE"
 
 # shutdown gdb server
 (sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
@@ -739,7 +740,7 @@ while IFS= read -r line ; do
 	rm -v "$line"
 done < "$LIST_SPLIT_FILE"
 
-rm -v "$PULPISIMMO_EXECUTABLE" "$LIST_SPLIT_FILE"
+rm -v "$LIST_SPLIT_FILE"
 
 # inform upload process is finished
 echo "openocd (PID: $OPENOCD_PID) exit with return value $RETVAL, upload is finished!"
