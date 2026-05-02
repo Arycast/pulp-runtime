@@ -103,8 +103,8 @@ done
 # ##################################################
 # create gdbinit file
 
-echo "target remote | $(which "vgdb")" >> "$GDBINIT"
 echo "set pagination off" >> "$GDBINIT"
+echo "target remote | $(which "vgdb")" >> "$GDBINIT"
 echo "break INTERRUPT_HERE_TO_OVERWRITE_DATA_TO_SEND_TO_FLASH" >> "$GDBINIT"
 #echo "run" >> "$GDBINIT"
 echo "continue" >> "$GDBINIT"

@@ -24,5 +24,8 @@
 *.bin
 
 # binary
-*/*.efl
+*/*.elf
+scripts/elf_to_flash_image
+*/*/spi_flash_probe
 */*/spi_flash_writer
+*/*/spi_flash_reader

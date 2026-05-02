@@ -1,0 +1,102 @@
+#!/bin/sh
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+# get directory of this script (sh version maybe not working
+# if this sh script directory included in PATH and this sh script
+# called like calling system command or without path to this sh script)
+export THIS_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# since pushd is not available, just use regular cd command
+LAST_DIR="$PWD"
+cd "$THIS_SCRIPT_DIR"
+
+
+# NOTE 1: PLEASE MAKE SURE THIS CONFIGURATION IS SAME WITH TESTER FILE
+#         (../../spi_flash_writer.c)
+
+# NOTE 2: PLEASE USE DECIMAL NOTATION!
+REPORT_SIZE=384
+
+
+# build result/test executable
+# make sure this align with APP value in ../../Makefile or environment variable
+#EXECUTABLE="$THIS_SCRIPT_DIR/../../spi_flash_probe"
+
+
+
+# ##################################################
+# generate test file
+
+# try to build
+make all
+RETVAL="$?"
+if [ "$RETVAL" -ne "0" ] ; then
+	# exit on error
+	exit "$RETVAL"
+fi
+
+
+# ##################################################
+# prepare files
+
+# create report file
+REPORT_FILE="$(mktemp)"
+
+# create gdbinit file
+GDBINIT="$(mktemp)"
+
+# ##################################################
+# create gdbinit file
+
+cat >> "$GDBINIT" <<EOF
+set pagination off
+break INTERRUPT_HERE_TO_GET_REPORT
+run
+dump memory $REPORT_FILE report report+$REPORT_SIZE
+continue
+quit
+EOF
+
+
+# ##################################################
+# call do debug
+GDB_OPT="-x $GDBINIT" make debug
+
+
+# #################################################
+# print report
+
+# remove trailing byte
+END_OF_REPORT_LINE="$( (grep -a -n "^END OF REPORT\$" "$REPORT_FILE" | sed -e "s/\\([0-9]\\+\\):END OF REPORT/\\1/g") || true )"
+if [ -z "$END_OF_REPORT_LINE" ] ; then
+	# looks like flash is not found
+	# clean-up and exit failed
+	echo "ERROR: flash probe report don't have \"END OF REPORT\" line"
+	echo "ERROR: spi flash probably don't attached or not responding to SFDP command"
+
+	# clean up!
+	rm "$REPORT_FILE" "$GDBINIT"
+
+	# exit failed
+	exit 1
+fi
+
+# truncate report so that we don't have to use grep -a again and again
+TRUNCATE_TO="$(head -n "$END_OF_REPORT_LINE" "$REPORT_FILE" | wc -c)"
+
+# use dd to truncate instead of truncate, because truncate is not posix command
+dd if="/dev/null" of="$REPORT_FILE" bs=1 count=0 seek="$TRUNCATE_TO"
+
+# print flash info
+cat "$REPORT_FILE"
+
+# ##################################################
+# clean up temporary files
+
+# remove list file and merge file
+rm "$REPORT_FILE" "$GDBINIT"
