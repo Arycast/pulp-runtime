@@ -101,8 +101,10 @@ recipe.c.combine.pattern="{compiler.path}/{compiler.c.elf.cmd}" {compiler.c.elf.
 tools.openocd.path={runtime.tools.pulpissimo_toolchain_openocd.path}/bin
 #tools.openocd.cmd.path={tools.openocd.path}/openocd
 
+# script/program to help upload the executable to device varies between scenarios
+# helper script/program resolved by symbol program_helper_script in programmers.txt
 openocd_program_script.path={runtime.tools.openocd_scripts.path}
-openocd_program_script.cmd.path={openocd_program_script.path}/program
+openocd_program_script.cmd.path={openocd_program_script.path}/{program_helper_script}
 
 # openocd_interface_cfg variable is from programmers.txt
 # openocd_target_cfg variable is from boards.txt
