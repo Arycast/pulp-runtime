@@ -662,9 +662,6 @@ timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" riscv32-unknown-elf
 #cat "$GDBINIT"
 #riscv32-unknown-elf-gdb "$THIS_SCRIPT_DIR/spi_flash_reader/build/spi_flash_reader/spi_flash_reader" || RETVAL="$?" || true
 
-# remove temporary file
-rm -v "$GDBINIT"
-
 # check if gdb return ok
 if [ "$RETVAL" -ne "0" ] ; then
 	echo "looks like gdb is hang"
@@ -690,7 +687,7 @@ if [ "$RETVAL" -ne "0" ] ; then
 	done < "$LIST_SPLIT_FILE"
 
 	# remove list file and merge file
-	rm -v "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE" "$LIST_SPLIT_FILE"
+	rm -v "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE" "$GDBINIT" "$LIST_SPLIT_FILE"
 
 	# exit with openocd return code
 	#exit "$RETVAL"
@@ -708,6 +705,24 @@ FLASH_VERIFY_FILE_SIZE="$(wc -c "$FLASH_VERIFY_FILE" | sed -e "s/^\\([0-9]\\+\\)
 if [ "$FLASH_VERIFY_FILE_SIZE" -lt "$EXECUTABLE_SIZE" ] ; then
 	echo "ERROR: FLASH READ OUT SIZE LESS THAN EXECUTABLE:  read out: $FLASH_VERIFY_FILE_SIZE  executable: $EXECUTABLE_SIZE"
 	echo "ERROR: FIX YOUR GDBINIT FILE!"
+
+	# shutdown server and cleanup
+	(sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
+
+	# wait openocd exit
+	# openocd should return ok here
+	RETVAL=0
+	wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+	while IFS= read -r line ; do
+		rm -v "$line"
+	done < "$LIST_SPLIT_FILE"
+
+	# delete gdbinit and flash report
+	rm -v "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE" "$GDBINIT" "$LIST_SPLIT_FILE"
+
+	# exit failed
+	exit 1
 else
 	# flash FLASH_VERIFY_FILE_SIZE is bigger than executable
 	# truncate!
@@ -718,6 +733,24 @@ else
 	cmp "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE" || RETVAL="$?" || true
 	if [ "$RETVAL" -ne "0" ] ; then
 		echo "ERROR: FLASH READ OUT DO NOT MATCH WITH EXECUTABLE"
+
+		# shutdown server and cleanup
+		(sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
+
+		# wait openocd exit
+		# openocd should return ok here
+		RETVAL=0
+		wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+		while IFS= read -r line ; do
+			rm -v "$line"
+		done < "$LIST_SPLIT_FILE"
+
+		# delete gdbinit and flash report
+		rm -v "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE" "$GDBINIT" "$LIST_SPLIT_FILE"
+
+		# exit failed
+		exit 1
 	else
 		echo "VERIFY SUCCESS! FLASH CONTENT IS MATCH"
 	fi
@@ -725,6 +758,33 @@ fi
 
 # remove flash verify file and generated flash image
 rm -v "$PULPISIMMO_EXECUTABLE" "$FLASH_VERIFY_FILE"
+
+
+# ##################################################
+# load program to memory
+
+# truncate gdbinit (with dd)
+dd if="/dev/null" of="$GDBINIT" count=0 seek=0
+
+cat >> "$GDBINIT" <<EOF
+set pagination off
+#set debuginfod enabled off
+target extended-remote $OPENOCD_HOST:$OPENOCD_PORT_GDB
+monitor reset halt
+load
+monitor resume
+#monitor shutdown
+disconnect
+#detach
+quit
+EOF
+
+# upload with gdb
+RETVAL=0
+timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" riscv32-unknown-elf-gdb --command="$GDBINIT" "$4" || RETVAL="$?" || true
+
+# remove temporary file
+rm -v "$GDBINIT"
 
 # shutdown gdb server
 (sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
