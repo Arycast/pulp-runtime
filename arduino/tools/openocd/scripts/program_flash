@@ -659,8 +659,6 @@ EOF
 # receive data using with gdb
 RETVAL=0
 timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" riscv32-unknown-elf-gdb --command="$GDBINIT" "$THIS_SCRIPT_DIR/spi_flash_reader/build/spi_flash_reader/spi_flash_reader" || RETVAL="$?" || true
-#cat "$GDBINIT"
-#riscv32-unknown-elf-gdb "$THIS_SCRIPT_DIR/spi_flash_reader/build/spi_flash_reader/spi_flash_reader" || RETVAL="$?" || true
 
 # check if gdb return ok
 if [ "$RETVAL" -ne "0" ] ; then
@@ -786,7 +784,39 @@ timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" riscv32-unknown-elf
 # remove temporary file
 rm -v "$GDBINIT"
 
-# shutdown gdb server
+# check if gdb return ok
+if [ "$RETVAL" -ne "0" ] ; then
+	echo "looks like gdb is hang"
+
+	echo "clean up openocd subprocess..."
+
+	export SUBPROCESS_PIDS_FILES="$(mktemp)"
+	#kill "$OPENOCD_PID" || true
+	killallsubprocess "$OPENOCD_PID" || true
+
+	# try to kill subprocess that not killed
+	sleep 2 # give a little bit time to subprocess to respond to SIGTERM
+	killprocesslistedin "$SUBPROCESS_PIDS_FILES"
+
+	# remove subprocess list
+	rm -v "$SUBPROCESS_PIDS_FILES"
+
+	RETVAL=0
+	wait "$OPENOCD_PID" || RETVAL="$?" || true
+
+	while IFS= read -r line ; do
+		rm -v "$line"
+	done < "$LIST_SPLIT_FILE"
+
+	# remove list file and merge file
+	rm -v "$LIST_SPLIT_FILE"
+
+	# exit with openocd return code
+	#exit "$RETVAL"
+	exit 2
+fi
+
+# all process are finished, finally we can shutdown gdb server (openocd)
 (sleep 1 && echo "shutdown" && echo && sleep 1) | telnet "$OPENOCD_HOST" "$OPENOCD_PORT_TELNET"
 
 # #########################
