@@ -220,7 +220,7 @@ extern "C"
 	*             The field 30:0 defines 'N' where the density is computed as 2^N bits (N must be >= 32).
 	*             Example: 0x80000021 = 2^33 = 8 gigabits
 	*/
-#define JESD216_PARAMETER1_VALUE2_MEMORY_DENSITY_IN_BIT               (SPI_FLASH_SIZE_BITS - 1)
+#define JESD216_PARAMETER1_VALUE2_MEMORY_DENSITY_IN_BIT               ((SPI_FLASH_SIZE_BITS) - 1)
 
 
 
