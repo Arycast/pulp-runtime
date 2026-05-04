@@ -52,7 +52,7 @@ REPORT_SIZE=384
 
 # function to conveniently kill all process and recursive subprocess
 killallsubprocess() {
-	l_all_process_with_selected_parent="$(ps -o "ppid=" -o "pid=" | grep "^[[:blank:]]*$1[[:blank:]]")"
+	l_all_process_with_selected_parent="$( (ps -o "ppid=" -o "pid=" | grep "^[[:blank:]]*$1[[:blank:]]") || true )"
 
 	# kill child of parent
 	if [ ! -z "$l_all_process_with_selected_parent" ] ; then
@@ -218,7 +218,7 @@ echo "wait openocd to be ready..."
 
 # wait until openocd call notify script
 # notify script will send "ready" to pipe
-IS_READY="$(timeout -s "INT" -k "$OPENOCD_WAIT_TO_KILL" "$OPENOCD_WAIT_TO_READY" cat "$OPENOCD_PIPE" | grep "^\\(ready\\|exit\\)\$" || true)"
+IS_READY="$( (timeout -s "INT" -k "$OPENOCD_WAIT_TO_KILL" "$OPENOCD_WAIT_TO_READY" cat "$OPENOCD_PIPE" | grep "^\\(ready\\|exit\\)\$") || true )"
 
 # before checking IS_READY, delete pipe first so if openocd exited, nect command won't hang write to pipe
 echo "deleting pipe"
@@ -431,7 +431,7 @@ dd if="/dev/null" of="$FLASH_PROBE_REPORT" bs=1 count=0 seek="$TRUNCATE_TO"
 cat "$FLASH_PROBE_REPORT"
 
 # check if flash exist
-SPI_FLASH_FOUND="$(grep "^FLASH FOUND\$" "$FLASH_PROBE_REPORT")"
+SPI_FLASH_FOUND="$(grep "^FLASH FOUND\$" "$FLASH_PROBE_REPORT" || true)"
 if [ -z "$SPI_FLASH_FOUND" -o "$SPI_FLASH_FOUND" != "FLASH FOUND" ] ; then
 	# flash is not found
 
@@ -463,7 +463,7 @@ fi
 
 # check spi flash size
 HAS_SPI_FLASH_SIZE_BIT=1
-SPI_FLASH_SIZE_BIT="$(grep "^FLASH DENSITY BIT: ==" "$FLASH_PROBE_REPORT" | sed -e "s/^FLASH DENSITY BIT[^0-9]\\+\\([0-9]\\+\\)\$/\\1/g")"
+SPI_FLASH_SIZE_BIT="$( (grep "^FLASH DENSITY BIT: ==" "$FLASH_PROBE_REPORT" | sed -e "s/^FLASH DENSITY BIT[^0-9]\\+\\([0-9]\\+\\)\$/\\1/g") || true )"
 if [ -z "$SPI_FLASH_SIZE_BIT" ] ; then
 	HAS_SPI_FLASH_SIZE_BIT=0
 fi
