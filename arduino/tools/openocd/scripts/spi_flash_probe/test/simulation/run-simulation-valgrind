@@ -59,6 +59,7 @@ target remote | $(which "vgdb")
 break INTERRUPT_HERE_TO_GET_REPORT
 continue
 dump memory $REPORT_FILE report report+$REPORT_SIZE
+p /x info
 continue
 quit
 EOF

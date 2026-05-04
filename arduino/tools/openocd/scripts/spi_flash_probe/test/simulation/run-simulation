@@ -58,6 +58,7 @@ set pagination off
 break INTERRUPT_HERE_TO_GET_REPORT
 run
 dump memory $REPORT_FILE report report+$REPORT_SIZE
+p /x info
 continue
 quit
 EOF
