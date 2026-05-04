@@ -1,0 +1,372 @@
+#!/bin/sh
+
+# Copyright (C) 2026 Indonesia Chip Design Collaborative Center (ICDEC)
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+# OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT.
+
+# on error, exit
+set -e
+
+GDB_WAIT_TO_KILL=30    # 30 sec
+GDB_WAIT_TO_READY=20   # 20 sec
+
+
+# flash configuration, make sure this configuration align with
+# helper program configuration, and the spi flash
+SPI_FLASH_SECTOR_SIZE_BYTES=4096 # (4 * 1024)
+
+# make sure to have same setting with flash reader
+#SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES=256
+SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES="$SPI_FLASH_SECTOR_SIZE_BYTES"
+
+# size of report variable
+REPORT_SIZE=384
+
+
+# get directory of this script (sh version maybe not working
+# if this sh script directory included in PATH and this sh script
+# called like calling system command or without path to this sh script)
+export THIS_SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+
+# ##################################################
+# OPENOCD IS NOT CALLED!
+# instead, prepare executable and test vector
+
+# we don't have to run this script in this script directory
+# but we need to build the binary in makefile directory
+SPI_FLASH_PROBE_DIR="$THIS_SCRIPT_DIR/spi_flash_probe"
+SPI_FLASH_WRITER_DIR="$THIS_SCRIPT_DIR/spi_flash_writer"
+SPI_FLASH_READER_DIR="$THIS_SCRIPT_DIR/spi_flash_reader"
+
+SPI_FLASH_PROBE_EXECUTABLE="$SPI_FLASH_PROBE_DIR/spi_flash_probe"
+SPI_FLASH_WRITER_EXECUTABLE="$SPI_FLASH_WRITER_DIR/spi_flash_writer"
+SPI_FLASH_READER_EXECUTABLE="$SPI_FLASH_READER_DIR/spi_flash_reader"
+
+# build simulator
+LAST_DIR="$PWD"
+cd "$SPI_FLASH_PROBE_DIR/test/simulation" && make
+cd "$SPI_FLASH_WRITER_DIR/test/simulation" && make
+cd "$SPI_FLASH_READER_DIR/test/simulation" && make
+cd "$LAST_DIR"
+
+
+
+# random source for test (don't need to be cryptograpically secure)
+RANDOM_SOURCE="/dev/urandom"
+
+# test size, for best TEST result, use number that not divisible by 256 (page size)
+TEST_FILE_SIZE=20892
+
+# test file is temporary file
+TEST_FILE="$(mktemp)"
+
+# prepare test file
+dd bs="$TEST_FILE_SIZE" count="1" if="$RANDOM_SOURCE" of="$TEST_FILE" conv="nocreat,notrunc"
+
+
+# ##################################################
+
+
+# create gdbinit file up front, we will reuse this file for the whole process
+# FIXME: in here, we assume mktemp success but it not always the case, please handle if mktemp failed too
+GDBINIT="$(mktemp)"
+
+
+# ##################################################
+# ok, simulation preaparation is finished
+#
+# probe spi flash
+
+# create report file
+# FIXME: add handling for failed mktemp
+FLASH_PROBE_REPORT="$(mktemp)"
+
+# build gdb init
+cat >> "$GDBINIT" <<EOF
+set pagination off
+#set debuginfod enabled off
+break INTERRUPT_HERE_TO_GET_REPORT
+run
+disable breakpoints 1
+dump memory $FLASH_PROBE_REPORT report report+$REPORT_SIZE
+continue
+quit
+EOF
+
+# run helper spi_flash_probe with gdb
+cd "$SPI_FLASH_PROBE_DIR/test/simulation" && GDB_OPT="-x $GDBINIT" timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" make debug && cd "$LAST_DIR"
+
+## add little delay
+#sleep 2
+
+# check FLASH_PROBE_REPORT
+#   add space between bracket to prevent shell to translate grouping command into math statement
+END_OF_REPORT_LINE="$( (grep -a -n "^END OF REPORT\$" "$FLASH_PROBE_REPORT" | sed -e "s/\\([0-9]\\+\\):END OF REPORT/\\1/g") || true )"
+if [ -z "$END_OF_REPORT_LINE" ] ; then
+	# looks like flash is not found
+	# clean-up and exit failed
+	echo "ERROR: flash probe report don't have \"END OF REPORT\" line"
+	echo "ERROR: spi flash probably don't attached or not responding to SFDP command"
+
+	# clean up!
+
+	# delete gdbinit and flash report
+	rm "$GDBINIT" "$FLASH_PROBE_REPORT" "$TEST_FILE"
+
+	# exit failed
+	exit 1
+fi
+
+# truncate report so that we don't have to use grep -a again and again
+TRUNCATE_TO="$(head -n "$END_OF_REPORT_LINE" "$FLASH_PROBE_REPORT" | wc -c)"
+
+# use dd to truncate instead of truncate, because truncate is not posix command
+dd if="/dev/null" of="$FLASH_PROBE_REPORT" bs=1 count=0 seek="$TRUNCATE_TO"
+
+# print flash info
+cat "$FLASH_PROBE_REPORT"
+
+# check if flash exist
+SPI_FLASH_FOUND="$(grep "^FLASH FOUND\$" "$FLASH_PROBE_REPORT" || true)"
+if [ -z "$SPI_FLASH_FOUND" -o "$SPI_FLASH_FOUND" != "FLASH FOUND" ] ; then
+	# flash is not found
+
+	# clean-up and exit failed
+	echo "ERROR: flash probe report don't have \"FLASH FOUND\" line"
+	echo "ERROR: spi flash probably don't attached or not responding to SFDP command"
+
+	# clean up!
+
+	# delete gdbinit and flash report
+	rm "$GDBINIT" "$FLASH_PROBE_REPORT" "$TEST_FILE"
+
+	# exit failed
+	exit 1
+fi
+
+# check spi flash size
+HAS_SPI_FLASH_SIZE_BIT=1
+SPI_FLASH_SIZE_BIT="$( (grep "^FLASH DENSITY BIT: ==" "$FLASH_PROBE_REPORT" | sed -e "s/^FLASH DENSITY BIT[^0-9]\\+\\([0-9]\\+\\)\$/\\1/g") || true )"
+if [ -z "$SPI_FLASH_SIZE_BIT" ] ; then
+	HAS_SPI_FLASH_SIZE_BIT=0
+fi
+
+# instead of writing executable, just write random generated file
+
+# is input file will fit into flash?
+EXECUTABLE_SIZE="$TEST_FILE_SIZE"
+
+if [ "$HAS_SPI_FLASH_SIZE_BIT" -ne "0" -a "$EXECUTABLE_SIZE" -ge "$((SPI_FLASH_SIZE_BIT / 8))" ] ; then
+	# executable is larger than flash size
+
+	# clean-up and exit failed
+	echo "ERROR: executable is larger than flash size"
+
+	# clean up!
+
+	# delete gdbinit and flash report
+	rm "$GDBINIT" "$FLASH_PROBE_REPORT" "$TEST_FILE"
+
+	# exit failed
+	exit 1
+fi
+
+# remove flash probe report
+rm "$FLASH_PROBE_REPORT"
+
+
+# ##################################################
+# ok, flash is ready
+# prepare to flashing by generating splice file and new gdbinit
+
+# truncate gdbinit (with dd)
+dd if="/dev/null" of="$GDBINIT" count=0 seek=0
+
+# create splice list file
+LIST_SPLIT_FILE="$(mktemp)"
+
+# add gdb init prologue
+# if pagination not set to off, gdb will be stop to paginate, but because
+# we are in non interactive shell, gdb will just hang
+cat >> "$GDBINIT" <<EOF
+set pagination off
+#set debuginfod enabled off
+break INTERRUPT_HERE_TO_OVERWRITE_DATA_TO_SEND_TO_FLASH
+break INTERRUPT_HERE_TO_FINISH_PROGRAM
+run
+EOF
+
+# loop create splited file
+i=0
+LAST_SEGMENT_SIZE=0 # set last segment tovalue different from SPI_FLASH_SECTOR_SIZE_BYTES
+while [ "$((i * SPI_FLASH_SECTOR_SIZE_BYTES))" -lt "$EXECUTABLE_SIZE" ] ; do
+	# create segment file
+	SEGMENT_FILE="$(mktemp)"
+
+	# copy segment
+	dd bs="$SPI_FLASH_SECTOR_SIZE_BYTES" count="1" if="$TEST_FILE" of="$SEGMENT_FILE" skip="$i" conv="nocreat,notrunc"
+
+	# append segment file to LIST_SPLIT_FILE
+	echo "$SEGMENT_FILE" >> "$LIST_SPLIT_FILE"
+
+	# record last segment size
+	# this is also the length of actual copied data
+	LAST_SEGMENT_SIZE="$(wc -c "$SEGMENT_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*\$/\\1/g")"
+
+# add to gdbinit
+cat >> "$GDBINIT" <<EOF
+restore $SEGMENT_FILE binary buffer
+set variable *buffer_fill_length=$LAST_SEGMENT_SIZE
+echo WRITING $LAST_SEGMENT_SIZE BYTES DATA TO FLASH, SEQUENCE $i
+continue
+EOF
+
+	# increment i
+	i="$((i + 1))"
+done
+
+# in case LAST_SEGMENT_SIZE is as same as SPI_FLASH_SECTOR_SIZE_BYTES, set buffer fill to 0
+if [ "$LAST_SEGMENT_SIZE" -eq "$SPI_FLASH_SECTOR_SIZE_BYTES" ] ; then
+cat >> "$GDBINIT" <<EOF
+set variable *buffer_fill_length=0
+continue
+EOF
+fi
+
+# add gdb init epilogue
+cat >> "$GDBINIT" <<EOF
+disable breakpoints
+continue
+quit
+EOF
+
+
+# upload with gdb
+cd "$SPI_FLASH_WRITER_DIR/test/simulation" && GDB_OPT="-x $GDBINIT" timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" make debug && cd "$LAST_DIR"
+
+## add little delay
+#sleep 2
+
+# ##################################################
+# ok, flash is written
+#
+# now verify flash
+#
+# prepare to flashing by generating splice file and new gdbinit
+
+# (force) transfer written file from writer simulator to reader simulator
+cp -vf "$(dirname "$SPI_FLASH_WRITER_EXECUTABLE")/flash_content.bin" "$(dirname "$SPI_FLASH_READER_EXECUTABLE")/flash_content.bin"
+
+# truncate gdbinit (with dd)
+dd if="/dev/null" of="$GDBINIT" count=0 seek=0
+
+# create verify file
+FLASH_VERIFY_FILE="$(mktemp)"
+
+# add gdb init prologue
+# if pagination not set to off, gdb will be stop to paginate, but because
+# we are in non interactive shell, gdb will just hang
+cat >> "$GDBINIT" <<EOF
+set pagination off
+#set debuginfod enabled off
+break INTERRUPT_HERE_TO_READ_DATA_FROM_FLASH
+break INTERRUPT_HERE_TO_FINISH_PROGRAM
+EOF
+
+# loop to create multiple session to read flash, all memory data will be append to single file
+i=0
+while [ "$((i * SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES))" -lt "$EXECUTABLE_SIZE" ] ; do
+
+	if [ "$i" -eq "0" ] ; then
+		echo "run" >> "$GDBINIT"
+	else
+		echo "continue" >> "$GDBINIT"
+	fi
+
+# add to gdbinit
+cat >> "$GDBINIT" <<EOF
+set variable stop_read=0
+append memory $FLASH_VERIFY_FILE buffer buffer+$SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES
+echo RECEIVED $SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES BYTES DATA FROM FLASH, SEQUENCE $i
+EOF
+
+	# increment i
+	i="$((i + 1))"
+done
+
+# add gdb init epilogue
+cat >> "$GDBINIT" <<EOF
+disable breakpoints
+set variable stop_read=1
+continue
+quit
+EOF
+
+
+# receive data using with gdb
+cd "$SPI_FLASH_READER_DIR/test/simulation" && GDB_OPT="-x $GDBINIT" timeout -s "INT" -k "$GDB_WAIT_TO_KILL" "$GDB_WAIT_TO_READY" make debug && cd "$LAST_DIR"
+
+## add little delay
+#sleep 2
+
+# FINISH!
+
+
+# do verify!
+
+# check size
+FLASH_VERIFY_FILE_SIZE="$(wc -c "$FLASH_VERIFY_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*\$/\\1/g")"
+if [ "$FLASH_VERIFY_FILE_SIZE" -lt "$EXECUTABLE_SIZE" ] ; then
+	echo "ERROR: FLASH READ OUT SIZE LESS THAN EXECUTABLE:  read out: $FLASH_VERIFY_FILE_SIZE  executable: $EXECUTABLE_SIZE"
+	echo "ERROR: FIX YOUR GDBINIT FILE!"
+
+	while IFS= read -r line ; do
+		rm "$line"
+	done < "$LIST_SPLIT_FILE"
+
+	# delete gdbinit and flash report
+	rm "$GDBINIT" "$TEST_FILE" "$FLASH_VERIFY_FILE" "$LIST_SPLIT_FILE"
+
+	# exit failed
+	exit 1
+else
+	# flash FLASH_VERIFY_FILE_SIZE is bigger than executable
+	# truncate!
+	dd if="/dev/null" of="$FLASH_VERIFY_FILE" bs=1 count=0 seek="$EXECUTABLE_SIZE"
+
+	# compare using cmp
+	RETVAL=0
+	cmp "$TEST_FILE" "$FLASH_VERIFY_FILE" || RETVAL="$?" || true
+	if [ "$RETVAL" -ne "0" ] ; then
+		echo "ERROR: FLASH READ OUT DO NOT MATCH WITH EXECUTABLE"
+
+		while IFS= read -r line ; do
+			rm "$line"
+		done < "$LIST_SPLIT_FILE"
+
+		# delete gdbinit and flash report
+		rm "$GDBINIT" "$TEST_FILE" "$FLASH_VERIFY_FILE" "$LIST_SPLIT_FILE"
+
+		# exit failed
+		exit 1
+	else
+		echo "VERIFY SUCCESS! FLASH CONTENT IS MATCH"
+	fi
+fi
+
+# remove flash verify file and generated flash image
+rm "$GDBINIT" "$TEST_FILE" "$FLASH_VERIFY_FILE"
+
+
+# ##################################################
+# don't need to load program to memory
+
+while IFS= read -r line ; do
+	rm "$line"
+done < "$LIST_SPLIT_FILE"
+
+rm "$LIST_SPLIT_FILE"
