@@ -60,6 +60,7 @@ RANDOM_SOURCE="/dev/urandom"
 
 # test size, for best TEST result, use number that not divisible by 256 (page size)
 TEST_FILE_SIZE=20892
+#TEST_FILE_SIZE=16384
 
 # test file is temporary file
 TEST_FILE="$(mktemp)"
