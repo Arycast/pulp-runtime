@@ -239,7 +239,7 @@ int main(void)
 			/**
 				* read data from spi flash
 				*/
-			read_length = spi_nor_flash_read_sector(spim, (uint32_t) base_address, buffer);
+			read_length = spi_nor_flash_read_sector(spim, (uint32_t) (base_address / SPI_FLASH_SECTOR_SIZE_BYTES), buffer);
 			/*read_length = spi_nor_flash_read_data(spim, (uint32_t) base_address, buffer, buffer_len);*/
 
 			/* move address */

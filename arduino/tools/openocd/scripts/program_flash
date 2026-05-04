@@ -389,6 +389,8 @@ if [ "$RETVAL" -ne "0" ] ; then
 	exit 2
 fi
 
+# add little delay
+sleep 2
 
 # check FLASH_PROBE_REPORT
 #   add space between bracket to prevent shell to translate grouping command into math statement
@@ -605,6 +607,8 @@ if [ "$RETVAL" -ne "0" ] ; then
 	exit 2
 fi
 
+# add little delay
+sleep 2
 
 # ##################################################
 # ok, flash is written
@@ -693,6 +697,8 @@ if [ "$RETVAL" -ne "0" ] ; then
 	exit 2
 fi
 
+# add little delay
+sleep 2
 
 # FINISH!
 
