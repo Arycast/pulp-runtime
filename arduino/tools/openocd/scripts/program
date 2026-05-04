@@ -39,7 +39,7 @@ GDB_WAIT_TO_READY=900   # 15 minutes
 
 # function to conveniently kill all process and recursive subprocess
 killallsubprocess() {
-	l_all_process_with_selected_parent="$(ps -o "ppid=" -o "pid=" | grep "^[[:blank:]]*$1[[:blank:]]")"
+	l_all_process_with_selected_parent="$( (ps -o "ppid=" -o "pid=" | grep "^[[:blank:]]*$1[[:blank:]]") || true )"
 
 	# kill child of parent
 	if [ ! -z "$l_all_process_with_selected_parent" ] ; then
@@ -205,7 +205,7 @@ echo "wait openocd to be ready..."
 
 # wait until openocd call notify script
 # notify script will send "ready" to pipe
-IS_READY="$(timeout -s "INT" -k "$OPENOCD_WAIT_TO_KILL" "$OPENOCD_WAIT_TO_READY" cat "$OPENOCD_PIPE" | grep "^\\(ready\\|exit\\)\$" || true)"
+IS_READY="$( (timeout -s "INT" -k "$OPENOCD_WAIT_TO_KILL" "$OPENOCD_WAIT_TO_READY" cat "$OPENOCD_PIPE" | grep "^\\(ready\\|exit\\)\$") || true )"
 
 # before checking IS_READY, delete pipe first so if openocd exited, nect command won't hang write to pipe
 echo "deleting pipe"
