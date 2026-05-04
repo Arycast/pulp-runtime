@@ -8,7 +8,10 @@
 PULP_APP = spi_flash_reader
 PULP_APP_C_SRCS = spi_flash_reader.c
 
-PULP_CFLAGS = -O3 -g -Wall -Wextra -Wconversion -pedantic # -std=c11
+# we cannot use -O3 because it will produce duplicate loop thus produce
+# global label INTERRUPT_HERE_TO_READ_DATA_FROM_FLASH twice
+#PULP_CFLAGS = -O3 -g -Wall -Wextra -Wconversion -pedantic # -std=c11
+PULP_CFLAGS = -Os -g -Wall -Wextra -Wconversion -pedantic # -std=c11
 
 # check if we in simulation
 ifeq ($(SIMULATION),1)

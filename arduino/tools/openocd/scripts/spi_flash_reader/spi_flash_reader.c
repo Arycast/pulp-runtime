@@ -67,7 +67,7 @@
 	* but the simulation result may not reflect with
 	* actual hardware behavior
 	*/
-/*#ifdef SPI_FLASH_SECTOR_SIZE_BYTES
+#ifdef SPI_FLASH_SECTOR_SIZE_BYTES
 	#warning  SPI_FLASH_SECTOR_SIZE_BYTES is defined \
 		(default sector size is 4 kiB if \
 		SPI_FLASH_SECTOR_SIZE_BYTES is undefined), \
@@ -75,7 +75,7 @@
 		please undefine SPI_FLASH_SECTOR_SIZE_BYTES
 #else
 	#define SPI_FLASH_SECTOR_SIZE_BYTES    (4 * 1024)
-#endif*/
+#endif
 
 /**
 	* check if page size is changed by user
@@ -95,7 +95,7 @@
 
 
 /* check and make sure page size is smaller than sector size */
-/*#if ((SPI_FLASH_SECTOR_SIZE_BYTES) < (SPI_FLASH_PAGE_SIZE_BYTES))
+#if ((SPI_FLASH_SECTOR_SIZE_BYTES) < (SPI_FLASH_PAGE_SIZE_BYTES))
 	#error  SPI_FLASH_SECTOR_SIZE_BYTES value should be bigger than \
 		SPI_FLASH_PAGE_SIZE_BYTES
 #elif (((SPI_FLASH_SECTOR_SIZE_BYTES) % (SPI_FLASH_PAGE_SIZE_BYTES)) != 0)
@@ -103,19 +103,22 @@
 		SPI_FLASH_PAGE_SIZE_BYTES \
 		(SPI_FLASH_SECTOR_SIZE_BYTES = SPI_FLASH_PAGE_SIZE_BYTES * N ; \
 		where N is integer)
-#endif*/
+#endif
 
 
 /**
 	* check whether we start to write flash from sector start or not
 	* if not, give warning
 	*/
-/*#if (((START_READ_ADDRESS) % (SPI_FLASH_SECTOR_SIZE_BYTES)) != 0)
-	#warning  START_READ_ADDRESS not align with start of sector, \
+#if (((START_READ_ADDRESS) % (SPI_FLASH_SECTOR_SIZE_BYTES)) != 0)
+	#error  this program only support read address start align with sector address \
+		plese set START_READ_ADDRESS align with with SPI_FLASH_SECTOR_SIZE_BYTES \
+		(SPI_FLASH_SECTOR_SIZE_BYTES * n, with n = {0, 1, 2, 3, ...})
+	/*#warning  START_READ_ADDRESS not align with start of sector, \
 		sector write will be done twice per session; \
 		set START_READ_ADDRESS to any of sector start address \
-		(SPI_FLASH_SECTOR_SIZE_BYTES * n, with n = {0, 1, 2, 3, ...})
-#endif*/
+		(SPI_FLASH_SECTOR_SIZE_BYTES * n, with n = {0, 1, 2, 3, ...})*/
+#endif
 
 
 /**
@@ -135,11 +138,11 @@
 
 
 /* read full sector */
-/*static size_t  spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector, void * restrict data);*/
+static size_t  spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector, void * restrict data);
 
 
 /* write data to random address */
-static size_t  spi_nor_flash_read_data(spim_t * restrict spim, uint32_t base_address, void * restrict data, size_t size);
+/*static size_t  spi_nor_flash_read_data(spim_t * restrict spim, uint32_t base_address, void * restrict data, size_t size);*/
 
 
 /**
@@ -169,8 +172,8 @@ int main(void)
 
 	size_t          base_address = START_READ_ADDRESS;
 
-	uint8_t         buffer[SPI_FLASH_PAGE_SIZE_BYTES];
-	size_t          buffer_len = SPI_FLASH_PAGE_SIZE_BYTES; /* preset to page size */
+	uint8_t         buffer[SPI_FLASH_SECTOR_SIZE_BYTES];
+	size_t          buffer_len = SPI_FLASH_SECTOR_SIZE_BYTES; /* preset to sector size */
 
 	/* stop tick for this whole process */
 	pos_tick_stop();
@@ -231,12 +234,13 @@ int main(void)
 
 			printf("Reading data from external flash " \
 				"at address: 0x%08lx, with length: %lu" LINE_END,
-				(unsigned long) base_address, (unsigned long) buffer_len);
+				(unsigned long) base_address, (unsigned long) /*buffer_len*/ SPI_FLASH_SECTOR_SIZE_BYTES);
 
 			/**
-				* write data to spi flash
+				* read data from spi flash
 				*/
-			read_length = spi_nor_flash_read_data(spim, (uint32_t) base_address, buffer, buffer_len);
+			read_length = spi_nor_flash_read_sector(spim, (uint32_t) base_address, buffer);
+			/*read_length = spi_nor_flash_read_data(spim, (uint32_t) base_address, buffer, buffer_len);*/
 
 			/* move address */
 			base_address += read_length;
@@ -244,7 +248,17 @@ int main(void)
 
 
 
-		/* add label for breakpoint */
+		/**
+			* add label for breakpoint
+			* NOTICE: when optimization -O3 is used, this loop will be duplicated
+			*         thus appear twice in proper form before assembly
+			*         as the result this function will have 2 assembly label
+			*         (you can check the generated proper with -S switch in gcc)
+			*         therefore, you should use other optimization strategy for this file
+			*         currently -Os (optimize for size), -Og (optimize for size), -O0 (no optimization)
+			*         will produce single label
+			*         -O2, -O3 will produce duplicate
+			*/
 		__asm__ volatile (
 			".global     INTERRUPT_HERE_TO_READ_DATA_FROM_FLASH\n" \
 			"INTERRUPT_HERE_TO_READ_DATA_FROM_FLASH:\n"
@@ -256,7 +270,7 @@ int main(void)
 
 
 		/**
-			* keep looping until debugger not changeing stop_read
+			* keep looping until debugger not changing stop_read
 			*/
 	}
 	while ((stop_read == 0) && (base_address < SPI_FLASH_SIZE_BYTES));
@@ -297,7 +311,6 @@ void pe_start(void)
 	* this function expect data buffer is as big as 1 sector
 	* return number of data written
 	*/
-#if 0
 static size_t spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector, void * restrict data)
 {
 	const uint32_t NUMBER_OF_SECTOR =
@@ -359,8 +372,8 @@ static size_t spi_nor_flash_read_sector(spim_t * restrict spim, uint32_t sector,
 
 	return number_of_data_received;
 }
-#endif
 
+#if 0
 static size_t spi_nor_flash_read_data(spim_t * restrict spim, uint32_t base_address, void * restrict data, size_t size)
 {
 	/* allocate in page basis */
@@ -439,3 +452,4 @@ static size_t spi_nor_flash_read_data(spim_t * restrict spim, uint32_t base_addr
 
 	return number_of_data_received;
 }
+#endif
