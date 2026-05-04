@@ -25,6 +25,8 @@ START_WRITE_ADDRESS="0"
 #SPI_FLASH_SIZE_BYTES="8388608" # ((64 * 1024 * 1024) / 8) (8 MiB)
 SPI_FLASH_SECTOR_SIZE_BYTES="4096" # (4 * 1024)
 
+SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES="$SPI_FLASH_SECTOR_SIZE_BYTES"
+
 # NOTE 1: PLEASE MAKE SURE THIS CONFIGURATION IS SAME WITH TESTER FILE
 #         (spi_flash_simulation_posix.h), relative path is to executable
 #         which is defined by ../../Makefile
@@ -33,7 +35,7 @@ FLASH_FILE="$THIS_SCRIPT_DIR/../../flash_content.bin"
 
 
 # test, for best TEST result, use number that not divisible by 256 (page size)
-TEST_SIZE="3150033" # ~ 3 MiB
+TEST_FILE_SIZE="3150033" # ~ 3 MiB
 
 
 # random source (don't need to be cryptograpically secure)
@@ -65,39 +67,19 @@ fi
 TEST_FILE="$(mktemp)"
 
 # prepare
-dd bs="$TEST_SIZE" count="1" if="$RANDOM_SOURCE" of="$TEST_FILE" conv="nocreat,notrunc"
+dd bs="$TEST_FILE_SIZE" count="1" if="$RANDOM_SOURCE" of="$TEST_FILE" conv="nocreat,notrunc"
 
-
-# create list of splited file
-LIST_SPLIT_FILE="$(mktemp)"
 
 # create gdbinit file
 GDBINIT="$(mktemp)"
 
 
-# ##################################################
-# split file into array segment
+# (force) copy test file to flash file, flash file will be truncated by simulation
+cp -vf "$TEST_FILE" "$FLASH_FILE"
 
-# loop
-i="0"
 
-# number of next file
-TOTAL_COPY_SIZE="$(wc -c "$TEST_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")"
-
-# create splited file
-while [ "$((i * SPI_FLASH_SECTOR_SIZE_BYTES))" -lt "$TOTAL_COPY_SIZE" ] ; do
-	# create segment file
-	SEGMENT_FILE="$(mktemp)"
-
-	# copy segment
-	dd bs="$SPI_FLASH_SECTOR_SIZE_BYTES" count="1" if="$TEST_FILE" of="$SEGMENT_FILE" skip="$i" conv="nocreat,notrunc"
-
-	# append segment file to LIST_SPLIT_FILE
-	echo "$SEGMENT_FILE" >> "$LIST_SPLIT_FILE"
-
-	# increment i
-	i="$((i + 1))"
-done
+# create memory dump file
+FLASH_VERIFY_FILE="$(mktemp)"
 
 
 # ##################################################
@@ -105,30 +87,25 @@ done
 
 echo "set pagination off" >> "$GDBINIT"
 #echo "target remote | $(which "vgdb")" >> "$GDBINIT"
-echo "break INTERRUPT_HERE_TO_OVERWRITE_DATA_TO_SEND_TO_FLASH" >> "$GDBINIT"
+echo "break INTERRUPT_HERE_TO_READ_DATA_FROM_FLASH" >> "$GDBINIT"
+echo "#break INTERRUPT_HERE_TO_FINISH_PROGRAM" >> "$GDBINIT"
 echo "run" >> "$GDBINIT"
 #echo "continue" >> "$GDBINIT"
 
-# make sure SEGMENT_SIZE is defined
-SEGMENT_SIZE="0"
+i="0"
+while [ "$((i * SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES))" -lt "$TEST_FILE_SIZE" ] ; do
 
-# config
-while IFS= read -r line ; do
-	# get this particular segment size
-	SEGMENT_SIZE="$(wc -c "$line" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")"
-
-	echo "restore $line binary buffer" >> "$GDBINIT"
-	echo "set *buffer_fill_length=$SEGMENT_SIZE" >> "$GDBINIT"
+	echo "set variable stop_read=0" >> "$GDBINIT"
+	echo "append memory $FLASH_VERIFY_FILE buffer buffer+$SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES" >> "$GDBINIT"
 	echo "continue" >> "$GDBINIT"
-done < "$LIST_SPLIT_FILE"
+	echo "echo RECEIVED $SPI_FLASH_VERIFY_READ_BLOCK_SIZE_BYTES BYTES DATA FROM FLASH, SEQUENCE $i" >> "$GDBINIT"
 
-# in case raw file segment last size is exactly SPI_FLASH_SECTOR_SIZE_BYTES
-# disable breakpoints so loop will be terminated (althought we will get warning)
-if [ "$SEGMENT_SIZE" -eq "$SPI_FLASH_SECTOR_SIZE_BYTES" ] ; then
-	echo "disable breakpoints" >> "$GDBINIT"
-	echo "continue" >> "$GDBINIT"
-fi
+	i="$((i + 1))"
+done
 
+echo "set variable stop_read=1" >> "$GDBINIT"
+echo "disable breakpoints" >> "$GDBINIT"
+echo "continue" >> "$GDBINIT"
 echo "quit" >> "$GDBINIT"
 
 
@@ -136,22 +113,40 @@ echo "quit" >> "$GDBINIT"
 # call do debug
 GDB_OPT="-x $GDBINIT" make debug
 
-
 # #################################################
-# make sure gdb writing correct file and simulation
-TEST_FILE_COMPARE="$(mktemp)"
-dd bs="1" count="$TEST_SIZE" if="$FLASH_FILE" of="$TEST_FILE_COMPARE" skip="$START_WRITE_ADDRESS" conv="nocreat,notrunc"
+# test simulation result
 
-TEST_FILE_SHA512SUM="$(sha512sum "$TEST_FILE" | sed -e "s/^\\([0-9a-fA-F]\\+\\)[[:blank:]]\\+.*/\\1/g")"
-TEST_FILE_COMPARE_SHA512SUM="$(sha512sum "$TEST_FILE_COMPARE" | sed -e "s/^\\([0-9a-fA-F]\\+\\)[[:blank:]]\\+.*/\\1/g")"
-if [ "$TEST_FILE_SHA512SUM" = "$TEST_FILE_COMPARE_SHA512SUM" ] ; then
-	echo "checksum (sha512sum) of random value test file and flash content is match!"
-	echo "TEST PASS!"
+# check memory dump file size
+FLASH_VERIFY_FILE_SIZE="$(wc -c "$FLASH_VERIFY_FILE" | sed -e "s/^\\([0-9]\\+\\)[[:blank:]]\\+.*/\\1/g")"
+if [ "$FLASH_VERIFY_FILE_SIZE" -lt "$TEST_FILE_SIZE" ] ; then
+	# error because FLASH_VERIFY_FILE_SIZE less than TEST_FILE_SIZE
+	# GDBINIT file generation need to be fixed!
+	echo "ERROR: FLASH_VERIFY_FILE_SIZE less than TEST_FILE_SIZE!"
+	echo "ERROR: fix your GDBINIT file!"
+
+	# cleanup temporary file
+	rm "$TEST_FILE" "$FLASH_VERIFY_FILE" "$GDBINIT"
+
+	exit 2
 else
-	echo "checksum (sha512sum) of random value test file and flash content is NOT match! or vector cannot be generated"
-	echo "TEST FAIL!"
-fi
+	# truncate flash verify file
+	dd if="/dev/null" of="$FLASH_VERIFY_FILE" bs=1 count=0 seek="$TEST_FILE_SIZE"
 
+	# check binary
+	RETVAL="0"
+	cmp "$TEST_FILE" "$FLASH_VERIFY_FILE" || RETVAL="$?" || true
+	if [ "$RETVAL" -ne "0" ] ; then
+		echo "ERROR: TEST_FILE content don't match with FLASH_VERIFY_FILE"
+
+		# cleanup
+		rm "$TEST_FILE" "$FLASH_VERIFY_FILE" "$GDBINIT"
+
+		exit 3
+	else
+		echo "TEST_FILE and FLASH_VERIFY_FILE content match!"
+		echo "TEST PASS!"
+	fi
+fi
 
 
 # popd not available
@@ -161,10 +156,5 @@ cd "$LAST_DIR"
 # ##################################################
 # clean up temporary files
 
-# remove segment files
-while IFS= read -r line ; do
-	rm "$line"
-done < "$LIST_SPLIT_FILE"
-
 # remove list file and merge file
-rm "$TEST_FILE" "$TEST_FILE_COMPARE" "$LIST_SPLIT_FILE" "$GDBINIT"
+rm "$TEST_FILE" "$FLASH_VERIFY_FILE" "$GDBINIT"
