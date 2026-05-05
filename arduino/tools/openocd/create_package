@@ -56,71 +56,45 @@ if [[ ! -f "$THIS_SCRIPT_DIR/scripts/elf_to_flash_image" ]] ; then
 	cd "$THIS_SCRIPT_DIR"
 fi
 
-# check if probe and writer already built?
-HAS_FLASH_PROBE="0"
-if [[ -f "$THIS_SCRIPT_DIR/scripts/spi_flash_probe/build/spi_flash_probe/spi_flash_probe" ]] ; then
-	HAS_FLASH_PROBE="1"
+# do build
+
+# resolve pulp-runtime directory relative to this script:
+PULP_RUNTIME_ROOT_DIR="$THIS_SCRIPT_DIR/../../.."
+
+# get pulp configuration if flash binary not yet compiled
+PULP_RUNTIME_CONFIG_PULPISSIMO="$PULP_RUNTIME_ROOT_DIR/configs/pulpissimo.sh"
+PULP_RUNTIME_CONFIG_FPGA_PULPISSIMO="$PULP_RUNTIME_ROOT_DIR/configs/fpgas/pulpissimo/genesys2.sh"
+
+# import config
+. "$PULP_RUNTIME_CONFIG_PULPISSIMO" || true
+. "$PULP_RUNTIME_CONFIG_FPGA_PULPISSIMO" || true
+
+(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_probe" && make clean && make all && [ -f "build/spi_flash_probe/spi_flash_probe" -a -x "build/spi_flash_probe/spi_flash_probe" ])
+RETVAL="$?"
+if [[ "$RETVAL" -ne "0" ]] ; then
+	exit "$RETVAL"
 fi
 
-HAS_FLASH_WRITER="0"
-if [[ -f "$THIS_SCRIPT_DIR/scripts/spi_flash_writer/build/spi_flash_writer/spi_flash_writer" ]] ; then
-	HAS_FLASH_WRITER="1"
+# go back to THIS_SCRIPT_DIR
+cd "$THIS_SCRIPT_DIR"
+
+(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_writer" && make clean && make all && [ -f "build/spi_flash_writer/spi_flash_writer" -a -x "build/spi_flash_writer/spi_flash_writer" ])
+RETVAL="$?"
+if [[ "$RETVAL" -ne "0" ]] ; then
+	exit "$RETVAL"
 fi
 
-HAS_FLASH_READER="0"
-if [[ -f "$THIS_SCRIPT_DIR/scripts/spi_flash_reader/build/spi_flash_reader/spi_flash_reader" ]] ; then
-	HAS_FLASH_READER="1"
-fi
+# go back to THIS_SCRIPT_DIR
+cd "$THIS_SCRIPT_DIR"
 
-# build if necessary
-if [[ ("$HAS_FLASH_PROBE" -eq "0") || ("$HAS_FLASH_WRITER" -eq "0") || ("$HAS_FLASH_READER" -eq "0") ]] ; then
-
-	# do build
-
-	# resolve pulp-runtime directory relative to this script:
-	PULP_RUNTIME_ROOT_DIR="$THIS_SCRIPT_DIR/../../.."
-
-	# get pulp configuration if flash binary not yet compiled
-	PULP_RUNTIME_CONFIG_PULPISSIMO="$PULP_RUNTIME_ROOT_DIR/configs/pulpissimo.sh"
-	PULP_RUNTIME_CONFIG_FPGA_PULPISSIMO="$PULP_RUNTIME_ROOT_DIR/configs/fpgas/pulpissimo/genesys2.sh"
-
-	# import config
-	. "$PULP_RUNTIME_CONFIG_PULPISSIMO" || true
-	. "$PULP_RUNTIME_CONFIG_FPGA_PULPISSIMO" || true
-
-	if [[ "$HAS_FLASH_PROBE" -eq "0" ]] ; then
-		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_probe" && make clean && make all && [ -f "build/spi_flash_probe/spi_flash_probe" -a -x "build/spi_flash_probe/spi_flash_probe" ])
-		RETVAL="$?"
-		if [[ "$RETVAL" -ne "0" ]] ; then
-			exit "$RETVAL"
-		fi
-
-		# go back to THIS_SCRIPT_DIR
-		cd "$THIS_SCRIPT_DIR"
+	(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_reader" && make clean && make all && [ -f "build/spi_flash_reader/spi_flash_reader" -a -x "build/spi_flash_reader/spi_flash_reader" ])
+	RETVAL="$?"
+	if [[ "$RETVAL" -ne "0" ]] ; then
+		exit "$RETVAL"
 	fi
 
-	if [[ "$HAS_FLASH_WRITER" -eq "0" ]] ; then
-		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_writer" && make clean && make all && [ -f "build/spi_flash_writer/spi_flash_writer" -a -x "build/spi_flash_writer/spi_flash_writer" ])
-		RETVAL="$?"
-		if [[ "$RETVAL" -ne "0" ]] ; then
-			exit "$RETVAL"
-		fi
-
-		# go back to THIS_SCRIPT_DIR
-		cd "$THIS_SCRIPT_DIR"
-	fi
-
-	if [[ "$HAS_FLASH_READER" -eq "0" ]] ; then
-		(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_reader" && make clean && make all && [ -f "build/spi_flash_reader/spi_flash_reader" -a -x "build/spi_flash_reader/spi_flash_reader" ])
-		RETVAL="$?"
-		if [[ "$RETVAL" -ne "0" ]] ; then
-			exit "$RETVAL"
-		fi
-
-		# go back to THIS_SCRIPT_DIR
-		cd "$THIS_SCRIPT_DIR"
-	fi
-fi
+	# go back to THIS_SCRIPT_DIR
+	cd "$THIS_SCRIPT_DIR"
 
 # delete existing archive
 if [[ -f "$PACKAGE_FILENAME" ]] ; then
