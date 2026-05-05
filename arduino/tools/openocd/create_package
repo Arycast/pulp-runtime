@@ -42,21 +42,17 @@ TAR_EXCLUDE_LIST="tar_exclude_list.txt"
 
 # additional binary to load to pulpissimo soc to help flashing
 
+# build host executable to generate spi flash image
+
 # run Makefile in this directory to build converter elf32 to pulpissimo elf
 # notice that this executable will run in current machine (native build)
-if [[ ! -f "$THIS_SCRIPT_DIR/scripts/elf_to_flash_image" ]] ; then
-	# run make
-	(cd "$THIS_SCRIPT_DIR/scripts" && make all && [ -f "elf_to_flash_image" -a -x "elf_to_flash_image" ])
-	RETVAL="$?"
-	if [[ "$RETVAL" -ne "0" ]] ; then
-		exit "$RETVAL"
-	fi
-
-	# return to this directory
-	cd "$THIS_SCRIPT_DIR"
+(cd "$THIS_SCRIPT_DIR/scripts" && make clean && make all && [ -f "elf_to_flash_image" -a -x "elf_to_flash_image" ])
+RETVAL="$?"
+if [[ "$RETVAL" -ne "0" ]] ; then
+	exit "$RETVAL"
 fi
 
-# do build
+# build pulpissimo executable to help writing spi flash
 
 # resolve pulp-runtime directory relative to this script:
 PULP_RUNTIME_ROOT_DIR="$THIS_SCRIPT_DIR/../../.."
@@ -87,7 +83,7 @@ if [[ "$RETVAL" -ne "0" ]] ; then
 	exit "$RETVAL"
 fi
 
-# go back to THIS_SCRIPT_DIR
+# go back to THIS_SCRIPT_DIR directory
 cd "$THIS_SCRIPT_DIR"
 
 # delete existing archive
