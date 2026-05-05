@@ -75,10 +75,13 @@ if [[ "$RETVAL" -ne "0" ]] ; then
 	exit "$RETVAL"
 fi
 
-# go back to THIS_SCRIPT_DIR
-cd "$THIS_SCRIPT_DIR"
-
 (cd "$THIS_SCRIPT_DIR/scripts/spi_flash_writer" && make clean && make all && [ -f "build/spi_flash_writer/spi_flash_writer" -a -x "build/spi_flash_writer/spi_flash_writer" ])
+RETVAL="$?"
+if [[ "$RETVAL" -ne "0" ]] ; then
+	exit "$RETVAL"
+fi
+
+(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_reader" && make clean && make all && [ -f "build/spi_flash_reader/spi_flash_reader" -a -x "build/spi_flash_reader/spi_flash_reader" ])
 RETVAL="$?"
 if [[ "$RETVAL" -ne "0" ]] ; then
 	exit "$RETVAL"
@@ -86,15 +89,6 @@ fi
 
 # go back to THIS_SCRIPT_DIR
 cd "$THIS_SCRIPT_DIR"
-
-	(cd "$THIS_SCRIPT_DIR/scripts/spi_flash_reader" && make clean && make all && [ -f "build/spi_flash_reader/spi_flash_reader" -a -x "build/spi_flash_reader/spi_flash_reader" ])
-	RETVAL="$?"
-	if [[ "$RETVAL" -ne "0" ]] ; then
-		exit "$RETVAL"
-	fi
-
-	# go back to THIS_SCRIPT_DIR
-	cd "$THIS_SCRIPT_DIR"
 
 # delete existing archive
 if [[ -f "$PACKAGE_FILENAME" ]] ; then
