@@ -14,7 +14,7 @@ mkdir --verbose "<project root>/arduino/tools/riscv-toolchain-openocd"
 (replace `<project root>` with root directory of the project, that contain `.git`)
 
 Put your tools archive (`chroot.tar.xz` which is contain compiler, debugger, jtag server/openocd) inside `tools/riscv-toolchain-openocd` directory (all files with various tar extension inside `tools` directory is ignored by version control).
-Toolchain is available to download at (https://drive.google.com/file/d/1mzljznFbGxnvn5V_P4foVcp7WK74oBoJ/view?usp=sharing).
+Toolchain is available to download at (https://drive.google.com/file/d/1__6p8jx-Qt0C8FRpU4kLljtaSZTyyiFG/view?usp=sharing).
 
 Check (and edit if necessary) `package_*_index.json.in` in the same directory with this README file, check if tools url and archiveFileName is already correct.
 
