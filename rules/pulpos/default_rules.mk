@@ -361,6 +361,16 @@ build: all
 
 all: $(TARGETS)
 
+.PHONY:test
+test:
+	@echo "TARGETS: $(TARGETS)"
+
+.PHONY: stim
+stim: all
+	@mkdir -p $(TARGET_BUILD_DIR)/vectors
+	@echo "GEN  $(TARGET_BUILD_DIR)/vectors/stim.txt"
+	$(V)$(PULPRT_HOME)/bin/stim_utils.py --binary=$(TARGETS) --vectors=$(TARGET_BUILD_DIR)/vectors/stim.txt
+
 .PHONY:clean
 clean:
 	@echo "RM  $(TARGET_BUILD_DIR)"
