@@ -14,6 +14,15 @@
 #ifndef __BOARD_PLATFORM_BOARD_H__
 #define __BOARD_PLATFORM_BOARD_H__
 
+/* board macro should be defined */
+#ifndef ARDUINO_SOFT_PULPISSIMO_PYNQ_Z1
+#error  macro ARDUINO_SOFT_PULPISSIMO_PYNQ_Z1 is not defined, \
+	it seems that this file is included in compilation unit \
+	that is being built without arduino or \
+	misconfiguration in platform.txt or board.txt or \
+	this file is included in wrong board configuration
+#endif
+
 /* available LED definion for soft-pulpissimo PYNQ-Z1 */
 
 #define BOARD_LED0_PAD_MUX_INDEX         5
@@ -83,5 +92,17 @@
 #define BOARD_BTN3_PAD_MUX_VALUE		 2
 #define BOARD_BTN3_GPIO_INDEX			16
 #define BTN3 BOARD_BTN3_GPIO_INDEX
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+int platform_board_analog_read(size_t pin, uint32_t *value);
+int platform_board_analog_write(size_t pin, uint32_t value);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* ! defined(__BOARD_PLATFORM_BOARD_H__) */
