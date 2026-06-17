@@ -35,7 +35,7 @@ compiler.warning_flags.all=-Wall -Wextra -Wconversion -pedantic
 
 compiler.arch_flags=-march=rv32imfcxpulpv2
 arduino_related_defines=-DARDUINO={runtime.ide.version} -DARDUINO_{build.board} -DARDUINO_ARCH_{build.arch}
-compiler.define_flags=-D__riscv__ -D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12500000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0 {arduino_related_defines}
+compiler.define_flags=-D__riscv__ {board_define_flags} {arduino_related_defines}
 compiler.include_flags=-I{pulp_runtime.include.path} -I{pulp_runtime.include.path}/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/archi/chips/{pulp_runtime.soc} -I{pulp_runtime.include.path}/hal/chips/{pulp_runtime.soc} -I{pulp_runtime_libc.include.path} -include {pulp_runtime.include.path}/chips/pulpissimo/config.h
 
 

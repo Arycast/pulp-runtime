@@ -10,9 +10,23 @@ softpulpissimopynqz1.build.mcu=riscv
 softpulpissimopynqz1.build.board=SOFT_PULPISSIMO_PYNQ_Z1
 #softpulpissimopynqz1.build.core=
 softpulpissimopynqz1.build.variant=soft-pulpissimo_pynq-z1
+softpulpissimopynqz1.board_define_flags=-D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=12500000 -DARCHI_FPGA_SOC_FREQUENCY=10000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0
 softpulpissimopynqz1.programmer.default=openocd_jlink
 softpulpissimopynqz1.upload.tool.default=openocd_jlink
 softpulpissimopynqz1.program.tool.default=openocd_jlink
 #softpulpissimopynqz1.erase.tool.default=
 #softpulpissimopynqz1.bootloader.tool.default=
 softpulpissimopynqz1.openocd_target_cfg=soft_pynq-z1.cfg
+
+softpulpissimonusacore.name=Soft-Pulpissimo NUSACORE
+softpulpissimonusacore.build.mcu=riscv
+softpulpissimonusacore.build.board=SOFT_PULPISSIMO_NUSACORE
+#softpulpissimonusacore.build.core=
+softpulpissimonusacore.build.variant=soft-pulpissimo_nusacore
+softpulpissimonusacore.board_define_flags=-D__PLATFORM__=ARCHI_PLATFORM_FPGA -DARCHI_FPGA_PER_FREQUENCY=10000000 -DARCHI_FPGA_SOC_FREQUENCY=15000000 -DCONFIG_IO_UART=1 -DCONFIG_IO_UART_BAUDRATE=115200 -DCONFIG_IO_UART_ITF=0
+softpulpissimonusacore.programmer.default=openocd_jlink
+softpulpissimonusacore.upload.tool.default=openocd_jlink
+softpulpissimonusacore.program.tool.default=openocd_jlink
+#softpulpissimonusacore.erase.tool.default=
+#softpulpissimonusacore.bootloader.tool.default=
+softpulpissimonusacore.openocd_target_cfg=soft_nusacore.cfg
