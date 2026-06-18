@@ -692,6 +692,23 @@ do_exit:
 	);
 
 
+	/* actually print the report to serial */
+	if (report_offset < REPORT_SIZE)
+	{
+		report[report_offset] = '\0'; /* make sure we have zero termination */
+		puts(report); /* send report to serial */
+	}
+	else
+	{
+		/**
+			* cannot add '\0' to report buffer to terminate string
+			* it is unsafe to send unterminated string to serial with
+			* stdio's functions
+			*/
+		puts("cannot print report because " \
+			"report_offset already match or more than REPORT_SIZE");
+	}
+
 	/**
 		* **************************************************
 		* close spi
