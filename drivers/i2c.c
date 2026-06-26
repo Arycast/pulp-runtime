@@ -105,9 +105,9 @@ int i2c_write(i2c_t *dev, unsigned char *data, int length, int send_stop)
 
     plp_udma_enqueue(UDMA_I2C_TX_ADDR(dev->id), (unsigned int)udma_cmd, seq_index, UDMA_CHANNEL_CFG_EN); 
 
-    uint32_t startMicros = micros();
+    uint32_t startMicros = pos_tick_get_counter_us();
     while (plp_udma_busy(UDMA_I2C_TX_ADDR(dev->id))){
-        if ((i2c_timeout > 0) && ((micros() - startMicros) > i2c_timeout)) {
+        if ((i2c_timeout > 0) && ((pos_tick_get_counter_us() - startMicros) > i2c_timeout)) {
             
             // Stop and clear the on-going transfer
             plp_i2c_tx_clear(dev->id);
@@ -159,9 +159,9 @@ int i2c_read(i2c_t *dev, unsigned char *rx_buff, int length, int pending)
     plp_udma_enqueue(UDMA_I2C_DATA_ADDR(dev->id), (unsigned int)rx_buff, length, UDMA_CHANNEL_CFG_EN);
     plp_udma_enqueue(UDMA_I2C_TX_ADDR(dev->id), (unsigned int)udma_cmd, seq_index, UDMA_CHANNEL_CFG_EN);
 
-    uint32_t startMicros = micros();
+    uint32_t startMicros = pos_tick_get_counter_us();
     while (plp_udma_busy(UDMA_I2C_DATA_ADDR(dev->id))){
-        if ((i2c_timeout > 0) && ((micros() - startMicros) > i2c_timeout)) {
+        if ((i2c_timeout > 0) && ((pos_tick_get_counter_us() - startMicros) > i2c_timeout)) {
             // Stop and clear the on-going transfer
             plp_i2c_rx_clear(dev->id);
             plp_i2c_tx_clear(dev->id);
