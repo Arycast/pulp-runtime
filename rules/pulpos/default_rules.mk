@@ -370,6 +370,8 @@ stim: all
 	@mkdir -p $(TARGET_BUILD_DIR)/vectors
 	@echo "GEN  $(TARGET_BUILD_DIR)/vectors/stim.txt"
 	$(V)$(PULPRT_HOME)/bin/stim_utils.py --binary=$(TARGETS) --vectors=$(TARGET_BUILD_DIR)/vectors/stim.txt
+	$(PULPRT_HOME)/bin/plp_mkflash  --flash-boot-binary=$(TARGETS)  --stimuli=$(TARGET_BUILD_DIR)/vectors/flash_stim.slm --flash-type=spi --qpi
+	$(PULPRT_HOME)/bin/slm_hyper.py  --input=$(TARGET_BUILD_DIR)/vectors/flash_stim.slm  --output=$(TARGET_BUILD_DIR)/vectors/hyper_stim.slm
 
 .PHONY:clean
 clean:
